@@ -17,6 +17,14 @@ Legion.prototype.getMessageAPI = function () {
     return this.messagingAPI;
 };
 
+/**
+ * For generating messages that can be sent.
+ * Type is required.
+ * Data (optional) is compressed to save bandwidth.
+ * @param type {String}
+ * @param data {Object}
+ * @param callback {Function}
+ */
 Legion.prototype.generateMessage = function (type, data, callback) {
     var message = {
         type: type,

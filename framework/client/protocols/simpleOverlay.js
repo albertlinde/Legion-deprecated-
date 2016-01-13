@@ -35,9 +35,13 @@ SimpleOverlay.prototype.init = function (contact_node) {
 };
 
 SimpleOverlay.prototype.floodJoin = function () {
-    var peers = this.overlay.peers;
+    //random sample of peers
+    var peers = this.overlay.getPeers(this.overlay.peerCount());
+
     var serverConnection = this.legion.connectionManager.serverConnection;
+
     if (!serverConnection) {
+        //this forces a connection to the server.
         this.legion.connectionManager.startSignallingConnection();
     }
 
