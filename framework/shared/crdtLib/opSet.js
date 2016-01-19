@@ -15,10 +15,10 @@ var op_orset = {
     propagation: CRDT.OP_BASED,
     crdt: {
         base_value: {
-            state: {adds: ALMap, removes: new ALMap}
+            state: {adds: ALMap, removes: ALMap}
         },
         getValue: function () {
-            return this.adds.keys();
+            return this.state.adds.keys();
         },
         operations: {
             add: {
@@ -27,7 +27,7 @@ var op_orset = {
                     return {element: element, unique: unique};
                 },
                 remote: function (data) {
-                    if (!this.removes.contains(data.unique)) {
+                    if (!this.state.removes.contains(data.unique)) {
                         if (!this.state.adds.contains(data.element)) {
                             this.state.adds.set(data.element, new ALMap());
                         }
@@ -42,32 +42,33 @@ var op_orset = {
             remove: {
                 local: function (element) {
                     var e = this.state.adds.get(element);
+                    if (!e) {
+                        return {element: element, removes: []};
+                    }
                     var removes = e.keys();
                     return {element: element, removes: removes};
                 },
                 remote: function (data) {
+                    if (data.removes.length == 0) {
+                        return {}
+                    }
                     var e = this.state.adds.get(data.element);
                     for (var i = 0; i < data.removes.length; i++) {
-                        this.removes.add(data.removes[i]);
+                        this.state.removes.set(data.removes[i], true);
                         e.delete(data.removes[i]);
                     }
-                    if (e.size == 0) {
+                    if (e.size() == 0) {
+                        this.state.adds.delete(data.element);
                         return {remove: data.element};
-l                    }
+                    }
                 }
             }
-        },
-        fromJSONString: function (jsObject) {
-            //TODO
-        },
-        toJSONString: function (state) {
-            //TODO
         }
     }
-};l
+};
+
 if (typeof exports != "undefined") {
     exports.OP_ORSet = op_orset;
-}
-else {
+} else {
     CRDT_LIB.OP_ORSet = op_orset;
 }

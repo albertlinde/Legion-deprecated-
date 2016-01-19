@@ -21,6 +21,20 @@ function CRDT_Database() {
     this.types = new AL.ALMap();
 }
 
+
+/**
+ *
+ * @param clientID {number}
+ * @param operationID {number}
+ * @param l_ret {Object}
+ * @param dependencyVV {Object}
+ */
+CRDT_Database.prototype.propagate = function (clientID, operationID, l_ret, dependencyVV) {
+    //TODO: send to client nodes.
+
+};
+
+
 CRDT_Database.prototype.defineCRDT = function (crdt) {
     if (this.types.contains(crdt.type)) {
         console.error("Can't redefine existing CRDT.", crdt);
@@ -35,7 +49,7 @@ CRDT_Database.prototype.createCRDT = function (objectID, type) {
         console.error("No typedef found for CRDT.", type);
     } else {
         var crdt = this.types.get(type);
-        var instance = new CRDT(objectID, crdt);
+        var instance = new CRDT(objectID, crdt, this);
         this.crdts.set(objectID, instance);
         return instance;
     }
@@ -95,10 +109,10 @@ function initService() {
             console.log("CRDT 2 update:" + data);
         });
         crdt3.setOnStateChange(function (data) {
-            console.log("CRDT 3 update:" + data);
+            console.log("CRDT 3 update:" + JSON.stringify(data));
         });
         crdt4.setOnStateChange(function (data) {
-            console.log("CRDT 4 update:" + data);
+            console.log("CRDT 4 update:" + JSON.stringify(data));
         });
     }
 
@@ -131,23 +145,29 @@ function initService() {
         var set2 = db.getCRDT("randomSet2");
 
         var intervalSet = setInterval(function () {
-            if (Math.random() > 0.3) {
+            if (Math.random() > 0.2) {
                 console.log("Adding.");
                 var rand = newRandomValue();
                 set1.add(rand);
                 var rand = newRandomValue();
                 set2.add(rand);
             } else {
-                var k1 = set1.state.adds.keys[0];
-                var k2 = set2.state.adds.keys[0];
+                var k1 = set1.getState().adds.keys()[0];
+                var k2 = set2.getState().adds.keys()[0];
                 console.log("Removing:" + k1 + "-" + k2);
-                set1.remove(k1);
-                set2.remove(k2);
+                if (k1)
+                    set1.remove(k1);
+                if (k2)
+                    set2.remove(k2);
             }
             console.log("Set 1: " + set1.getValue());
-            console.log("Set 1: " + JSON.stringify(set1.toJSONString(set1.getState())));
             console.log("Set 2: " + set2.getValue());
-            console.log("Set 2: " + JSON.stringify(set2.toJSONString(set2.getState())));
+
+            console.log("Following is metadata");
+            console.log("Set 1: " + JSON.stringify(set1.getState().adds.keys()));
+            console.log("Set 1: " + JSON.stringify(set1.getState().removes.keys()));
+            console.log("Set 2: " + JSON.stringify(set2.getState().adds.keys()));
+            console.log("Set 2: " + JSON.stringify(set2.getState().removes.keys()));
             console.log();
         }, 500);
     }

@@ -1,6 +1,6 @@
 if (typeof exports != "undefined") {
     CRDT = require('./../crdt.js');
-    CRDT=CRDT.CRDT;
+    CRDT = CRDT.CRDT;
 }
 var state_counter = {
     type: "STATE_Counter",
@@ -119,7 +119,6 @@ var state_counter = {
 };
 if (typeof exports != "undefined") {
     exports.STATE_Counter = state_counter;
-}
-else {
+} else {
     CRDT_LIB.STATE_Counter = state_counter;
 }

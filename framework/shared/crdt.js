@@ -1,5 +1,7 @@
-if (typeof exports != "undefined")
+if (typeof exports != "undefined") {
+    CRDT_Database = true;
     exports.CRDT = CRDT;
+}
 
 
 /**
@@ -49,9 +51,11 @@ var crtd_type = {
  * CRDT instance as encapsulation.
  * @param objectID
  * @param crdt {crtd_type}
+ * @param objectStore {ObjectStore | CRDT_Database}
  * @constructor
  */
-function CRDT(objectID, crdt) {
+function CRDT(objectID, crdt, objectStore) {
+    this.objectStore = objectStore;
     this.objectID = objectID;
     this.crdt = crdt;
 
@@ -102,6 +106,18 @@ function CRDT(objectID, crdt) {
     this.locals = [];
     this.remotes = [];
 
+    this.localOP = 0;
+
+    /**
+     * Each pos (clientID) contain  s an ALMap, which contains at each pos the opID and the l_ret value.
+     */
+    this.opHistory = new ALMap();
+
+    /**
+     * Each pos (clientID) contains the highest op applied.
+     * @type {ALMap}
+     */
+    this.versionVector = new ALMap();
     /**
      * Assigns local operations.
      */
@@ -114,9 +130,27 @@ function CRDT(objectID, crdt) {
                 c.locals[key] = c.crdt.crdt.operations[key].local;
                 c.remotes[key] = c.crdt.crdt.operations[key].remote;
                 c[key] = function () {
-                    var l_ret = c.locals[key].apply(arguments);
-                    //TODO: propagate l_ret;
-                    return c.remotes[key](l_ret);
+                    var l_ret = c.locals[key].apply(c, arguments);
+                    var beforeVV = c.getVersionVector();
+
+                    if (typeof CRDT_Database != undefined) {
+                        //Special case for merge from remote-server.
+                        //TODO: redefine the following.
+                        c.addOpToHistory("ObjectServer", ++c.localOP, l_ret);
+                        c.addOpToCurrentVersionVector("ObjectServer", c.localOP);
+                        c.objectStore.propagate("ObjectServer", c.localOP, l_ret, beforeVV);
+                        var cbVal = c.remotes[key].apply(c, [l_ret]);
+                        if (c.callback)
+                            c.callback(cbVal);
+                    } else {
+                        //Client operation.
+                        c.addOpToHistory(c.objectStore.legion.id, ++c.localOP, l_ret);
+                        c.addOpToCurrentVersionVector(c.objectStore.legion.id, c.localOP);
+                        c.objectStore.propagate(c.objectStore.legion.id, c.localOP, l_ret, beforeVV);
+                        var cbVal = c.remotes[key].apply(c, [l_ret]);
+                        if (c.callback)
+                            c.callback(cbVal);
+                    }
                 };
             })();
         }
@@ -163,6 +197,31 @@ CRDT.STATE = Object.freeze({
     }
 });
 
+CRDT.prototype.addOpToCurrentVersionVector = function (clientID, operationID) {
+    this.versionVector.set(clientID, operationID);
+};
+
+CRDT.prototype.getOpFromCurrentVersionVector = function (clientID) {
+    return this.versionVector.get(clientID);
+};
+
+CRDT.prototype.addOpToHistory = function (clientID, operationID, local_ret) {
+    var clientMap = this.opHistory.get(clientID);
+    if (!clientMap) {
+        clientMap = new ALMap();
+        this.opHistory.set(clientID, clientMap);
+    }
+    clientMap.set(operationID, {operationID: operationID, localRet: local_ret});
+};
+
+CRDT.prototype.getOpFromHistory = function (clientID, operationID) {
+    var clientMap = this.opHistory.get(clientID);
+    if (!clientMap) {
+        return undefined;
+    }
+    return clientMap.get(operationID);
+};
+
 /**
  * Return the internal state of the object.
  * @returns {Object}
@@ -189,12 +248,12 @@ CRDT.prototype.setOnStateChange = function (callback) {
 };
 
 CRDT.prototype.getOperations = function (ids) {
-    console.error("Not implemented.");
+    console.warn("Not implemented: getOperations");
     return {};
 };
 
 CRDT.prototype.getVersionVector = function () {
-    console.error("Not implemented.");
+    console.warn("Not implemented: getVersionVector");
     //TODO
 };
 
@@ -204,7 +263,7 @@ CRDT.prototype.getVersionVector = function () {
  * @param connection {PeerConnection | ServerConnection}
  */
 CRDT.prototype.stateFromNetwork = function (state, connection) {
-    console.error("Not implemented.");
+    console.warn("Not implemented: stateFromNetwork");
 };
 
 /**
@@ -213,6 +272,6 @@ CRDT.prototype.stateFromNetwork = function (state, connection) {
  * @param connection {PeerConnection | ServerConnection}
  */
 CRDT.prototype.operationsFromNetwork = function (operations, connection) {
-    console.error("Not implemented.");
+    console.warn("Not implemented: operationsFromNetwork");
 
 };

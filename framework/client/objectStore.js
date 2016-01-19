@@ -246,7 +246,7 @@ ObjectStore.prototype.defineCRDT = function (crdt) {
  * Creates or obtains a CRDT.
  * @param objectID
  * @param type
- * @returns {*}
+ * @returns {CRDT}
  */
 ObjectStore.prototype.get = function (objectID, type) {
     if (!this.types.contains(type)) {
@@ -256,10 +256,22 @@ ObjectStore.prototype.get = function (objectID, type) {
             return this.crdts.get(objectID);
         } else {
             var crdt = this.types.get(type);
-            this.crdts.set(objectID, crdt);
-            return new CRDT(objectID, crdt);
+            var instance = new CRDT(objectID, crdt, this);
+            this.crdts.set(objectID, instance);
+            return instance;
         }
     }
+};
+
+/**
+ *
+ * @param clientID {number}
+ * @param operationID {number}
+ * @param l_ret {Object}
+ * @param dependencyVV {Object}
+ */
+ObjectStore.prototype.propagate = function (clientID, operationID, l_ret, dependencyVV) {
+    console.warn("Not implemented: propagate");
 };
 
 /**
@@ -276,7 +288,7 @@ ObjectStore.prototype.onServerDisconnection = function (serverConnection) {
  * @param serverConnection
  */
 ObjectStore.prototype.onServerConnection = function (serverConnection) {
-    console.warn("Not Implemented.");
+    console.warn("Not Implemented: ObjectStore.onServerConnection");
     //TODO: objectsStore NO LONGER in charge of adding objects to objects server.
 };
 
