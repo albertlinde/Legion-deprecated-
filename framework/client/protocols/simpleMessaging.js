@@ -12,6 +12,15 @@ FloodMessaging.prototype.onMessage = function (connection, message, original) {
 //assumes message is ready to be send
 FloodMessaging.prototype.broadcastMessage = function (message) {
     var peers = this.legion.overlay.getPeers(this.legion.overlay.peerCount());
+
+    if (message.destination) {
+        for (var i = 0; i < peers.length; i++) {
+            if (peers[i].remoteID == message.destination) {
+                peers[i].send(message);
+                return;
+            }
+        }
+    }
     for (var i = 0; i < peers.length; i++) {
         peers[i].send(message);
     }

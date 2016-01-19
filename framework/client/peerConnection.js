@@ -30,6 +30,20 @@ PeerConnection.prototype.setChannelHandlers = function () {
     };
 };
 
+/**
+ * This method is called to remove a concurrently created and started PeerConnection.
+ */
+PeerConnection.prototype.cancelAll = function () {
+    this.channel.onclose = function () {
+        console.log("Forced a channel close for duplicate PeerConnection.");
+    };
+    this.channel = null;
+    this.legion = null;
+    this.remoteID = null;
+    this.peer.close();
+    this.peer = null;
+};
+
 PeerConnection.prototype.returnOffer = function (offer) {
     if (detailedDebug)console.log(offer);
     this.peer.setRemoteDescription(new RTCSessionDescription(offer));
@@ -104,6 +118,9 @@ PeerConnection.prototype.send = function (message) {
     }
     if (this.channel && this.channel.readyState == "open")
         this.channel.send(message);
+    else {
+        console.warn("Peer has no open channel.")
+    }
 };
 
 /**

@@ -1,5 +1,6 @@
 var legion;
 var messaging;
+var objectStore;
 
 var debug = false;
 var detailedDebug = false;
@@ -21,6 +22,11 @@ function start(clientID) {
     legion = new Legion(options);
     legion.join();
 
+    messages();
+    objects();
+}
+
+function messages() {
     messaging = legion.getMessageAPI();
     messaging.setHandlerFor("Message", function (message) {
         console.info(message);
@@ -34,4 +40,29 @@ function start(clientID) {
         messaging.broadcast("Message", "Hello.");
     }, 15 * 1000);
 
+}
+
+function objects() {
+    objectStore = legion.getObjectStore();
+
+    objectStore.defineCRDT(CRDT_LIB.STATE_Counter);
+    objectStore.defineCRDT(CRDT_LIB.OP_ORSet);
+
+    var counter_state = objectStore.get("objectID1", CRDT_LIB.STATE_Counter);
+    var op_set = objectStore.get("objectID2", CRDT_LIB.OP_ORSet);
+
+    counter_state.setOnStateChange(function (state) {
+        //TODO
+    });
+    op_set.setOnStateChange(function (state, updates) {
+        //TODO
+    });
+
+    setInterval(function () {
+        if (Math.random > 0.3) {
+            counter_state.increment();
+        } else {
+            counter_state.decrement();
+        }
+    }, 15 * 1000);
 }
