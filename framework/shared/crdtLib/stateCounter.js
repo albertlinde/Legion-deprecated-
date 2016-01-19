@@ -67,12 +67,81 @@ var state_counter = {
          * @returns {number}
          */
         compare: function (local, remote) {
-            console.error("Not Implemented.");
-            return;
             var first = false;
             var second = false;
 
-            //TODO: the rest
+            var v1Inc = local.state.inc;
+            var v2Inc = remote.state.inc;
+
+            var v1Dec = local.state.dec;
+            var v2Dec = remote.state.dec;
+
+            if (v1Inc.size() > v2Inc.size() || v1Dec.size() > v2Dec.size()) {
+                first = true;
+            }
+
+            if (v2Inc.size() > v1Inc.size() || v2Dec.size() > v1Dec.size()) {
+                second = true;
+            }
+            if (first && second) {
+                return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
+            }
+
+            if (!first) {
+                var keysInc1 = v1Inc.keys();
+                for (var i = 0; i < keysInc1; i++) {
+                    var currKey = keysInc1[i];
+                    if (!v2Inc.contains(currKey)) {
+                        return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
+                    } else {
+                        if (v1Inc.get(currKey) > v2Inc.get(currKey)) {
+                            first = true;
+                            break;
+                        }
+                    }
+                }
+
+                var keysDec1 = v1Dec.keys();
+                for (var i = 0; i < keysDec1; i++) {
+                    var currKey = keysDec1[i];
+                    if (!v2Dec.contains(currKey)) {
+                        return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
+                    } else {
+                        if (v1Dec.get(currKey) > v2Dec.get(currKey)) {
+                            first = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!second) {
+                var keysInc2 = v2Inc.keys();
+                for (var i = 0; i < keysInc2; i++) {
+                    var currKey = keysInc2[i];
+                    if (!v1Inc.contains(currKey)) {
+                        return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
+                    } else {
+                        if (v2Inc.get(currKey) > v1Inc.get(currKey)) {
+                            second = true;
+                            break;
+                        }
+                    }
+                }
+
+                var keysDec2 = v2Dec.keys();
+                for (var i = 0; i < keysDec2; i++) {
+                    var currKey = keysDec2[i];
+                    if (!v1Dec.contains(currKey)) {
+                        return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
+                    } else {
+                        if (v2Dec.get(currKey) > v1Dec.get(currKey)) {
+                            second = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
 
             if (first && !second) {
                 return CRDT.STATE.COMPARE_RESPONSE.LOWER;
