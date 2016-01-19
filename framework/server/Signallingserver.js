@@ -26,9 +26,9 @@ function initService() {
             nodes.push(socket);
             socket.on('message', function incoming(message) {
                 util.log(message);
-                if (!duplicates.contains(message.sender, message.ID)) {
-                    duplicates.add(message.sender, message.ID);
-                    var parsed = JSON.parse(message);
+                var parsed = JSON.parse(message);
+                if (!duplicates.contains(parsed.sender, parsed.ID)) {
+                    duplicates.add(parsed.sender, parsed.ID);
                     if (parsed.type == "Message") {
                         console.log("Not propagating: " + message)
                     } else {

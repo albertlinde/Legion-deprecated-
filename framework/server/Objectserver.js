@@ -30,7 +30,7 @@ function CRDT_Database() {
  * @param dependencyVV {Object}
  */
 CRDT_Database.prototype.propagate = function (clientID, operationID, l_ret, dependencyVV) {
-    //TODO: send to client nodes.
+    console.warn("Not Implemented: propagate");
 
 };
 
