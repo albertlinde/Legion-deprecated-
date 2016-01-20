@@ -22,6 +22,9 @@ FloodMessaging.prototype.broadcastMessage = function (message) {
         }
     }
     for (var i = 0; i < peers.length; i++) {
+        if (peers[i].remoteID == message.sender) {
+            continue;
+        }
         peers[i].send(message);
     }
     var server = this.legion.connectionManager.serverConnection;
