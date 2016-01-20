@@ -1,7 +1,7 @@
 function Legion(options) {
     this.options = options;
 
-    this.messageCount = 0;
+    this.messageCount = Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
     this.id = this.options.clientID;
 
     this.messagingAPI = new MessagingAPI(this, this.legion);
