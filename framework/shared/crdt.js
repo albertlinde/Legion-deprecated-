@@ -19,19 +19,11 @@ var crtd_type = {
         base_value: function () {
         },
 
-        /**
-         * Returns the CRDT value (application use-able).
-         * @type {Function}
-         */
         getValue: function () {
         },
 
         operations: {},
 
-        /**
-         * Receives two arguments, returning the merge of both objects applied on the first argument.
-         * @type {Function}
-         */
         merge: function (local, remote) {
         },
 
@@ -62,14 +54,23 @@ function CRDT(objectID, crdt, objectStore) {
 
     this.state = {};
 
-
+    /**
+     * Returns the CRDT value (application use-able).
+     * @type {Function}
+     */
     this.getValue = crdt.crdt.getValue;
 
-
+    /**
+     * Receives two arguments, returning the merge of both objects applied on the first argument.
+     * Returns {mergeResult = local, stateChange = amount}.
+     * mergeResult has the merge result.
+     * stateChange has the value to be sent to the application.
+     * @type {Function}
+     */
     this.merge = crdt.crdt.merge;
 
     /**
-     * Accepts two arguments (state).
+     * Receives two arguments (state).
      * Returns L,E,H if the second argument is, in order, lower, equal or higher then the first argument.
      * Returns MM if no conclusion can be made (i.e., must merge).
      * Returns {CRDT.STATE.COMPARE_RESPONSE.EQUALS|CRDT.STATE.COMPARE_RESPONSE.LOWER|CRDT.STATE.COMPARE_RESPONSE.HIGHER|CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE}
@@ -133,30 +134,39 @@ function CRDT(objectID, crdt, objectStore) {
                     var l_ret = c.locals[key].apply(c, arguments);
                     var beforeVV = c.getVersionVector();
 
-                    if (typeof CRDT_Database != undefined) {
+                    if (typeof CRDT_Database != "undefined") {
                         //Special case for merge from remote-server.
-                        //TODO: redefine the following.
-                        c.addOpToHistory("ObjectServer", ++c.localOP, l_ret);
-                        c.addOpToCurrentVersionVector("ObjectServer", c.localOP);
-                        c.objectStore.propagate("ObjectServer", c.localOP, l_ret, beforeVV);
+                        //NOTICE: this piece of code is executed by the server!
+                        //TODO: redefine how the server adds its own operations. (merge with redis, etc)
                         var cbVal = c.remotes[key].apply(c, [l_ret]);
+                        c.addOpToHistory("ObjectServer", ++c.localOP, l_ret, key, beforeVV);
+                        c.addOpToCurrentVersionVector("ObjectServer", c.localOP);
+                        c.objectStore.propagate("ObjectServer", c.localOP);
                         if (c.callback)
-                            c.callback(cbVal);
+                            c.callback(cbVal, {local: true});
                     } else {
                         //Client operation.
-                        c.addOpToHistory(c.objectStore.legion.id, ++c.localOP, l_ret);
+                        c.addOpToHistory(c.objectStore.legion.id, ++c.localOP, l_ret, key, beforeVV);
                         c.addOpToCurrentVersionVector(c.objectStore.legion.id, c.localOP);
-                        c.objectStore.propagate(c.objectStore.legion.id, c.localOP, l_ret, beforeVV);
+                        c.objectStore.propagate(c.objectStore.legion.id, c.localOP);
                         var cbVal = c.remotes[key].apply(c, [l_ret]);
                         if (c.callback)
-                            c.callback(cbVal);
+                            c.callback(cbVal, {local: true});
                     }
                 };
             })();
         }
     } else if (this.crdt.propagation == CRDT.STATE_BASED) {
         for (var i = 0; i < keys.length; i++) {
-            this[keys[i]] = this.crdt.crdt.operations[keys[i]];
+            (function () {
+                const key = keys[i];
+                c[key] = function () {
+                    var ret = c.crdt.crdt.operations[key].apply(c, arguments);
+                    c.objectStore.propagateState(c.objectID, {all: true});
+                    if (c.callback)
+                        c.callback(ret, {local: true});
+                };
+            })();
         }
     } else {
         console.error("I am here: " + JSON.stringify(this.crdt));
@@ -164,6 +174,10 @@ function CRDT(objectID, crdt, objectStore) {
 
     /**
      * Contains a callback for object updates (user defined).
+     * The first argument of the callback will be CRDT defined.
+     * The second argument is a JSObject {local: bool}.
+     * The local value is true when change happened due to local operations.
+     * False when due to a remote operation.
      * @type {Function|null}
      */
     this.callback = null
@@ -201,17 +215,13 @@ CRDT.prototype.addOpToCurrentVersionVector = function (clientID, operationID) {
     this.versionVector.set(clientID, operationID);
 };
 
-CRDT.prototype.getOpFromCurrentVersionVector = function (clientID) {
-    return this.versionVector.get(clientID);
-};
-
-CRDT.prototype.addOpToHistory = function (clientID, operationID, local_ret) {
+CRDT.prototype.addOpToHistory = function (clientID, operationID, local_ret, opName, dependencyVV) {
     var clientMap = this.opHistory.get(clientID);
     if (!clientMap) {
         clientMap = new ALMap();
         this.opHistory.set(clientID, clientMap);
     }
-    clientMap.set(operationID, {operationID: operationID, localRet: local_ret});
+    clientMap.set(operationID, {dependencyVV: dependencyVV, opID: operationID, result: local_ret, opName: opName});
 };
 
 CRDT.prototype.getOpFromHistory = function (clientID, operationID) {
@@ -231,15 +241,6 @@ CRDT.prototype.getState = function () {
 };
 
 /**
- * Called by local operations, the merge function, or the overwrite funciton.
- * Calls callback set by setOnStateChange.
- * @param data
- */
-CRDT.prototype.stateChanged = function (data) {
-    this.callback(data);
-};
-
-/**
  * Sets a callback for updates on CRDT state.
  * @param callback {Function}
  */
@@ -247,14 +248,39 @@ CRDT.prototype.setOnStateChange = function (callback) {
     this.callback = callback;
 };
 
+/**
+ *
+ * @param ids {{}}
+ * @returns {[]}
+ */
 CRDT.prototype.getOperations = function (ids) {
-    console.warn("Not implemented: getOperations");
-    return {};
+    var ops = [];
+    var keys = Object.keys(ids);
+    for (var i = 0; i < keys.length; i++) {
+        var key_i = keys[i];
+        var array_i = ids[key_i];
+        for (var j = 0; j < array_i.length; j++) {
+            var op_i = array_i[j];
+            var thing = this.getOpFromHistory(key_i, op_i);
+            thing.clientID = key_i;
+
+            ops.push(thing);
+        }
+    }
+    return ops;
 };
 
+/**
+ *
+ * @returns {{}}
+ */
 CRDT.prototype.getVersionVector = function () {
-    console.warn("Not implemented: getVersionVector");
-    //TODO
+    var keys = this.versionVector.keys();
+    var vv = {};
+    for (var i = 0; i < keys.length; i++) {
+        vv[keys[i]] = this.versionVector.get(keys[i]);
+    }
+    return vv;
 };
 
 /**
@@ -263,15 +289,111 @@ CRDT.prototype.getVersionVector = function () {
  * @param connection {PeerConnection | ServerConnection}
  */
 CRDT.prototype.stateFromNetwork = function (state, connection) {
-    console.warn("Not implemented: stateFromNetwork");
+    var c = this.compare(this.getState(), state);
+    console.log(this.getState());
+    console.log(state);
+    console.log(c);
+    switch (c) {
+        case CRDT.STATE.COMPARE_RESPONSE.EQUALS:
+            //no op
+            break;
+        case CRDT.STATE.COMPARE_RESPONSE.LOWER:
+            //I win.
+            this.objectStore.propagateState(this.objectID, {onlyTo: connection});
+            break;
+        case CRDT.STATE.COMPARE_RESPONSE.HIGHER:
+            //He wins
+            var args = this.merge(this.getState(), state);
+            this.state = args.mergeResult;
+            if (this.callback)
+                this.callback(args.stateChange, {local: false});
+            this.objectStore.propagateState(this.objectID, {except: connection});
+            break;
+        case CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE:
+
+            var args = this.merge(this.getState(), state);
+            this.state = args.mergeResult;
+            if (this.callback)
+                this.callback(args.stateChange, {local: false});
+            this.objectStore.propagateState(this.objectID, {all: true});
+            break;
+    }
+
 };
 
 /**
  *
- * @param operations {Object}
+ * @param operations {Array.<{clientID,dependencyVV,opID,opName,result}>}
  * @param connection {PeerConnection | ServerConnection}
  */
 CRDT.prototype.operationsFromNetwork = function (operations, connection) {
-    console.warn("Not implemented: operationsFromNetwork");
+    var callbackValues = [];
+    var didntHave = [];
+    var alreadyHad = [];
+    var i = 0;
+    while (operations.length > 0) {
+        while (i < operations.length) {
+            var op = operations[i];
+            if (this.alreadyHadOp(op)) {
+                alreadyHad.push(op);
+                operations.splice(i, 1);
+            } else if (this.depsMatchedFor(op)) {
+                var cbv = this.remotes[op.clientID].apply(this, [op.result]);
+                this.addOpToHistory(op.clientID, op.opID, op.result, op.opName, op.dependencyVV);
+                this.addOpToCurrentVersionVector(op.clientID, op.opID);
+                callbackValues.push(cbv);
+                didntHave.push(op);
+                operations.splice(i, 1);
+            } else {
+                i++;
+            }
+        }
+        i = 0;
+    }
+    if (alreadyHad.length > 0) {
+        console.warn("Already had:", alreadyHad);
+    }
+    if (callbackValues.length > 0) {
+        if (this.callback) {
+            this.callback(callbackValues);
+        }
+    }
+    this.objectStore.propagateAll(didntHave, {except: connection});
+};
 
+/**
+ *
+ * @param op {{clientID,dependencyVV,opID,opName,result}}
+ */
+CRDT.prototype.depsMatchedFor = function (op) {
+    var vv = op.dependencyVV;
+    var keys = Object.keys(vv);
+    for (var i = 0; i < keys.length; i++) {
+        if (!this.alreadyHadOperation(keys[i], vv[keys[i]])) {
+            return false;
+        }
+    }
+    return true;
+};
+
+/**
+ *
+ * @param op {{clientID,dependencyVV,opID,opName,result}}
+ */
+CRDT.prototype.alreadyHadOp = function (op) {
+    return this.alreadyHadOperation(op.clientID, op.opID);
+};
+
+/**
+ *
+ * @param clt {String}
+ * @param opNum {number}
+ * @returns {boolean}
+ */
+CRDT.prototype.alreadyHadOperation = function (clt, opNum) {
+    if (this.versionVector.contains(clt)) {
+        return opNum <= this.versionVector.get(clt);
+    } else {
+        return false;
+    }
 };

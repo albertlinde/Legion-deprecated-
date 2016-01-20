@@ -58,11 +58,11 @@ function objects() {
     counter_state = objectStore.get("objectID1", CRDT_LIB.STATE_Counter.type);
     op_set = objectStore.get("objectID2", CRDT_LIB.OP_ORSet.type);
 
-    counter_state.setOnStateChange(function (state) {
-        console.log("Counter change: " + JSON.stringify(state) + " value: " + JSON.stringify(counter_state.getValue()));
+    counter_state.setOnStateChange(function (state, meta) {
+        console.log("Counter change: " + JSON.stringify(state) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(counter_state.getValue()));
     });
-    op_set.setOnStateChange(function (updates) {
-        console.log("Set change: " + JSON.stringify(updates) + " value: " + JSON.stringify(op_set.getValue()));
+    op_set.setOnStateChange(function (updates, meta) {
+        console.log("Set change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(op_set.getValue()));
     });
 
     setInterval(function () {

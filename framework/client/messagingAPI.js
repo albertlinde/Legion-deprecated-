@@ -7,8 +7,7 @@ function MessagingAPI(legion) {
 
 MessagingAPI.prototype.onMessage = function (connection, message, original) {
     if (message.sender == this.legion.id) {
-        if (debug) console.info("return to creator fault from: " + connection.remoteID);
-        //TODO: the return to sender not being the original sender.
+        console.warn("Return to creator fault", message, connection.remoteID);
         return;
     }
     if (!this.duplicates.contains(message.sender, message.ID)) {

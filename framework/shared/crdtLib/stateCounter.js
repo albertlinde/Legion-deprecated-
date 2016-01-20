@@ -26,24 +26,27 @@ var state_counter = {
                 if (!this.state.inc[id])
                     this.state.inc[id] = 0;
                 this.state.inc[id] += amount;
-                this.stateChanged(amount);
+                return amount;
             },
             decrement: function (id, amount) {
                 if (!this.state.dec[id])
                     this.state.dec[id] = 0;
                 this.state.dec[id] += amount;
-                this.stateChanged(-amount);
+                return -amount;
             }
         },
         merge: function (local, remote) {
             var decKeys = Object.keys(remote.dec);
             var incKeys = Object.keys(remote.inc);
+            var amount = 0;
 
             for (var i = 0; i < decKeys.length; i++) {
                 var countLocal = local.dec[decKeys[i]];
                 if (!countLocal) {
                     local.dec[decKeys[i]] = remote.dec[decKeys[i]];
+                    amount -= remote.dec[decKeys[i]];
                 } else {
+                    amount += local.dec[decKeys[i]] - remote.dec[decKeys[i]];
                     local.dec[decKeys[i]] = Math.max(local.dec[decKeys[i]], remote.dec[decKeys[i]]);
                 }
             }
@@ -52,12 +55,17 @@ var state_counter = {
                 var countLocal = local.inc[incKeys[i]];
                 if (!countLocal) {
                     local.inc[incKeys[i]] = remote.inc[incKeys[i]];
+                    amount += remote.inc[decKeys[i]];
                 } else {
+                    amount -= local.inc[incKeys[i]] - remote.inc[incKeys[i]];
                     local.inc[incKeys[i]] = Math.max(local.inc[incKeys[i]], remote.inc[incKeys[i]]);
                 }
             }
 
-            return local;
+            var ret = {};
+            ret.mergeResult = local;
+            ret.stateChange = amount;
+            return ret;
         },
 
         /**
@@ -67,20 +75,22 @@ var state_counter = {
          * @returns {number}
          */
         compare: function (local, remote) {
+            console.log(local)
+            console.log(remote)
             var first = false;
             var second = false;
 
-            var v1Inc = local.state.inc;
-            var v2Inc = remote.state.inc;
+            var v1Inc = local.inc;
+            var v2Inc = remote.inc;
 
-            var v1Dec = local.state.dec;
-            var v2Dec = remote.state.dec;
+            var v1Dec = local.dec;
+            var v2Dec = remote.dec;
 
-            if (v1Inc.size() > v2Inc.size() || v1Dec.size() > v2Dec.size()) {
+            if (v1Inc.length > v2Inc.length || v1Dec.length > v2Dec.length) {
                 first = true;
             }
 
-            if (v2Inc.size() > v1Inc.size() || v2Dec.size() > v1Dec.size()) {
+            if (v2Inc.length > v1Inc.length || v2Dec.length > v1Dec.length) {
                 second = true;
             }
             if (first && second) {
