@@ -41,7 +41,23 @@ Overlay.prototype.getPeers = function (amount) {
     if (!amount) {
         amount = this.peerCount();
     }
-    var ret = this.peers.values();
-    //TODO: randomize the sample.
+    var ret = this.shuffle(this.peers.values());
     return ret.slice(0, amount);
+};
+
+/**
+ *
+ * Copypasta from http://stackoverflow.com/a/962890
+ * @param array {Array.<Object>}
+ * @returns {Array.<Object>}
+ */
+Overlay.prototype.shuffle = function (array) {
+    var tmp, current, top = array.length;
+    if (top) while (--top) {
+        current = Math.floor(Math.random() * (top + 1));
+        tmp = array[current];
+        array[current] = array[top];
+        array[top] = tmp;
+    }
+    return array;
 };
