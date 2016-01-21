@@ -80,9 +80,9 @@ function initService() {
                             util.log("GetClosestContact: " + parsed.targetID + " - " + parsed.sender);
                             var targetID = parsed.targetID;
                             var ids = nodes.keys();
+                            var closestDistance = null;
+                            var closestIdentifier = null;
                             for (var i = 0; i < ids.length; i++) {
-                                var closestDistance = null;
-                                var closestIdentifier = null;
                                 if (nodes.get(ids[i]) === socket) continue;
                                 if (nodes.get(ids[i]).readyState == 1 && (closestDistance == null || computeDistance(targetID, ids[i].remoteID) < closestDistance)) {
                                     closestDistance = computeDistance(targetID, ids[i].remoteID);
