@@ -88,22 +88,24 @@ function initService() {
                                     closestDistance = computeDistance(targetID, ids[i].remoteID);
                                     closestIdentifier = ids[i];
                                 }
-                                var reply = generateMessage("GetClosestContactReply");
-                                reply.destination = parsed.sender;
-                                if (closestIdentifier != null) {
-                                    util.log("   Sending to " + closestIdentifier);
-                                    nodes.get(closestIdentifier).send(message);
-                                    //Notify the new node that its connection request has been forwarded to someone.
-                                    reply.contactID = closestIdentifier;
-                                    util.log("   Sending to " + socket.remoteID);
-                                    socket.send(JSON.stringify(reply));
-                                } else {
-                                    //Notify the new node that he is the first one arriving.
-                                    reply.contactID = null;
-                                    util.log("   Sending to " + socket.remoteID);
-                                    socket.send(JSON.stringify(reply));
-                                }
                             }
+                            util.log("Value of closestIdentifier: " + closestIdentifier);
+                            var reply = generateMessage("GetClosestContactReply");
+                            reply.destination = parsed.sender;
+                            if (closestIdentifier != null) {
+                                //util.log("   Sending to " + closestIdentifier);
+                                //nodes.get(closestIdentifier).send(message);
+                                //Notify the new node that its connection request has been forwarded to someone.
+                                reply.contactID = closestIdentifier;
+                                util.log("   Sending to " + socket.remoteID);
+                                socket.send(JSON.stringify(reply));
+                            } else {
+                                //Notify the new node that he is the first one arriving.
+                                reply.contactID = null;
+                                util.log("   Sending to " + socket.remoteID);
+                                socket.send(JSON.stringify(reply));
+                            }
+
                         } else if (parsed.howMany) {
                             util.log("Sending howMany " + parsed.type + " - " + parsed.howMany);
                             var sent = 0;
