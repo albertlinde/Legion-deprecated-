@@ -13,7 +13,11 @@ function SimpleOverlay(overlay, legion) {
 }
 
 SimpleOverlay.prototype.onClientConnection = function (peerConnection) {
-    //No op.
+    if (this.legion.id % 5 != 0) {
+        if (this.legion.connectionManager.serverConnection)
+            this.legion.connectionManager.serverConnection.socket.close();
+    }
+    this.floodJoin();
 };
 
 SimpleOverlay.prototype.onClientDisconnect = function (peerConnection) {
@@ -21,7 +25,7 @@ SimpleOverlay.prototype.onClientDisconnect = function (peerConnection) {
 };
 
 SimpleOverlay.prototype.onServerConnection = function (serverConnection) {
-    this.init(serverConnection);
+    this.init();
 };
 
 SimpleOverlay.prototype.onServerDisconnect = function (serverConnection) {
@@ -29,9 +33,7 @@ SimpleOverlay.prototype.onServerDisconnect = function (serverConnection) {
 };
 
 SimpleOverlay.prototype.init = function (contact_node) {
-    this.legion.generateMessage("ConnectToAnyNodesPlease", null, function (result) {
-        contact_node.send(result);
-    });
+    this.floodJoin();
 };
 
 SimpleOverlay.prototype.floodJoin = function () {
@@ -42,15 +44,14 @@ SimpleOverlay.prototype.floodJoin = function () {
 
     if (!serverConnection) {
         //this forces a connection to the server.
-        this.legion.connectionManager.startSignallingConnection();
+        if (this.legion.id % 5 == 0) {
+            this.legion.connectionManager.startSignallingConnection();
+        }
     }
 
+    var so = this;
     this.legion.generateMessage("ConnectToAnyNodesPlease", null, function (result) {
-        if (serverConnection)
-            serverConnection.send(result);
-        for (var i = 0; i < peers.length; i++) {
-            peers[i].send(result);
-        }
+        so.legion.messagingAPI.broadcastMessage(result);
     });
 };
 

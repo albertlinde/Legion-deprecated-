@@ -5,14 +5,14 @@ function ConnectionManager(legion) {
     this.peerConnections = new ALMap();
 
     var cm = this;
-    this.legion.messagingAPI.setHandlerFor("OfferAsAnswer", function (message) {
-        cm.handleSignalling(message)
+    this.legion.messagingAPI.setHandlerFor("OfferAsAnswer", function (message, original) {
+        cm.handleSignalling(message, original)
     });
-    this.legion.messagingAPI.setHandlerFor("OfferReturn", function (message) {
-        cm.handleSignalling(message)
+    this.legion.messagingAPI.setHandlerFor("OfferReturn", function (message, original) {
+        cm.handleSignalling(message, original)
     });
-    this.legion.messagingAPI.setHandlerFor("ICE", function (message) {
-        cm.handleSignalling(message)
+    this.legion.messagingAPI.setHandlerFor("ICE", function (message, original) {
+        cm.handleSignalling(message, original)
     });
 
 }
@@ -54,9 +54,9 @@ ConnectionManager.prototype.connectPeerRemote = function (message) {
     }
 };
 
-ConnectionManager.prototype.handleSignalling = function (message) {
+ConnectionManager.prototype.handleSignalling = function (message, original) {
     if (message.destination != this.legion.id) {
-        this.legion.messagingAPI.broadcastMessage(message);
+        this.legion.messagingAPI.broadcastMessage(original);
     } else {
         switch (message.type) {
             case "OfferAsAnswer":
@@ -66,7 +66,10 @@ ConnectionManager.prototype.handleSignalling = function (message) {
                 this.peerConnections.get(message.sender).returnOffer(message.content);
                 return;
             case "ICE":
-                this.peerConnections.get(message.sender).return_ice(message.content);
+                if (!this.peerConnections.get(message.sender))
+                    console.warn("ICE for no peer", message, this.legion.id);
+                else
+                    this.peerConnections.get(message.sender).return_ice(message.content);
                 return;
         }
     }

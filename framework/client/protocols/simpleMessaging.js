@@ -5,7 +5,12 @@ function FloodMessaging(api, legion) {
 
 FloodMessaging.prototype.onMessage = function (connection, message, original) {
     if (!message.destination || (message.destination && message.destination != this.legion.id)) {
-        this.messagingAPI.messagingProtocol.broadcastMessage(original);
+        if (connection instanceof PeerConnection)
+            this.broadcastMessage(original);
+        else {
+            if (debug)
+                console.log("Not broadcasting: " + message.type, this.legion.id, message.sender)
+        }
     }
 };
 
@@ -29,6 +34,7 @@ FloodMessaging.prototype.broadcastMessage = function (message) {
     }
     var server = this.legion.connectionManager.serverConnection;
     if (server) {
-        server.send(message);
+        if (message.sender == this.legion.id)
+            server.send(message);
     }
 };

@@ -8,7 +8,7 @@ function Legion(options) {
     this.overlay = new Overlay(this, this.legion);
     this.connectionManager = new ConnectionManager(this);
 
-    this.objectStore = new ObjectStore(this);
+    this.objectStore = null;
 }
 /**
  * Joins the overlay.
@@ -29,6 +29,9 @@ Legion.prototype.getMessageAPI = function () {
  * @returns {ObjectStore}
  */
 Legion.prototype.getObjectStore = function () {
+    if (!this.objectStore) {
+        this.objectStore = new ObjectStore(this);
+    }
     return this.objectStore;
 };
 

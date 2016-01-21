@@ -55,8 +55,12 @@ function initService() {
                     if (!duplicates.contains(message.sender, message.ID)) {
                         duplicates.add(message.sender, message.ID);
                         var parsed = JSON.parse(message);
-                        if (!nodes.contains(parsed.sender)) {
-                            //First message from node.
+                        if (!socket.remoteID) {
+                            if (nodes.contains(parsed.sender)) {
+                                util.log("Reconnected with new socket " + parsed.sender);
+                            } else {
+                                util.log("Connected " + parsed.sender);
+                            }
                             socket.remoteID = parsed.sender;
                             nodes.set(parsed.sender, socket);
                             iterableNodes.push(socket);
@@ -66,14 +70,14 @@ function initService() {
                             //Try to send do destination, on failure back to default behaviour.
                             var node = nodes.get(parsed.destination);
                             if (node && node.readyState == 1) {
-                                util.log("Destination message: ", parsed.type);
+                                util.log("Destination message: " + parsed.type);
                                 util.log("   Sending to " + parsed.destination);
                                 nodes.get(parsed.destination).send(message);
                                 return;
                             }
                         }
                         if (parsed.type == "GetClosestContact") {
-                            util.log("GetClosestContact: ", parsed.targetID, parsed.sender);
+                            util.log("GetClosestContact: " + parsed.targetID + " - " + parsed.sender);
                             var targetID = parsed.targetID;
                             var ids = nodes.keys();
                             for (var i = 0; i < ids.length; i++) {
@@ -101,7 +105,7 @@ function initService() {
                                 }
                             }
                         } else if (parsed.howMany) {
-                            util.log("Sending howMany ", parsed.type, parsed.howMany);
+                            util.log("Sending howMany " + parsed.type + " - " + parsed.howMany);
                             var sent = 0;
                             var i = Math.floor(Math.random() * iterableNodes.length);
                             for (var count = 0; sent < parsed.howMany && count < iterableNodes.length; count++) {
@@ -116,7 +120,7 @@ function initService() {
                                 if (i >= iterableNodes.length) i = 0;
                             }
                         } else {
-                            util.log("Broadcast: ", parsed.type);
+                            util.log("Broadcast: " + parsed.type);
                             for (var i = 0; i < iterableNodes.length; i++) {
                                 if (iterableNodes[i] === socket)continue;
                                 if (iterableNodes[i].remoteID == parsed.sender)continue;

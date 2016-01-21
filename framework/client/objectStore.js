@@ -318,6 +318,7 @@ ObjectStore.prototype.propagateAll = function (ops) {
 ObjectStore.prototype.onServerDisconnection = function (serverConnection) {
     console.warn("Not Implemented: onServerDisconnection");
     //TODO: objectsStore in charge of adding objects to objects server.
+    // should sync first.
 };
 
 /**

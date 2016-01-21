@@ -14,10 +14,19 @@ PeerConnection.prototype.setChannelHandlers = function () {
         var m = JSON.parse(event.data);
         var original = JSON.parse(event.data);
         if (m.content) {
-            decompress(m.content, function (result) {
-                m.content = JSON.parse(result);
-                pc.legion.messagingAPI.onMessage(pc, m, original);
-            });
+            try {
+                decompress(m.content, function (result) {
+                    m.content = JSON.parse(result);
+                    pc.legion.messagingAPI.onMessage(pc, m, original);
+                });
+            }
+            catch (e) {
+                console.error(event);
+                console.error(m);
+                console.error(original);
+                console.error(e);
+
+            }
         } else {
             pc.legion.messagingAPI.onMessage(pc, m, original);
         }
@@ -34,11 +43,11 @@ PeerConnection.prototype.setChannelHandlers = function () {
  * This method is called to remove a concurrently created and started PeerConnection.
  */
 PeerConnection.prototype.cancelAll = function () {
+    var pc = this;
     this.channel.onclose = function () {
-        console.log("Forced a channel close for duplicate PeerConnection.");
+        console.log("Forced a channel close for duplicate PeerConnection.", pc.legion.id, pc.remoteID);
     };
     this.channel = null;
-    this.legion = null;
     this.remoteID = null;
     this.peer.close();
     this.peer = null;
@@ -51,12 +60,17 @@ PeerConnection.prototype.returnOffer = function (offer) {
 
 PeerConnection.prototype.return_ice = function (candidate) {
     if (detailedDebug)console.log(candidate);
+    var pc = this;
     this.peer.addIceCandidate(new RTCIceCandidate(candidate),
         function () {
             /*success*/
         },
         function (error) {
-            console.error("onAddIceCandidateError", error);
+            //This occurs when an ICE candidate is received for a previous offer.
+            //This means that concurrently two peers tried to start, and one won.
+            //Messages that were in route can't magically be removed.
+            //i.e., dont worry if connection are still made.
+            console.warn("onAddIceCandidateError", pc.legion.id, pc.remoteID, error, candidate);
         }
     );
 };
