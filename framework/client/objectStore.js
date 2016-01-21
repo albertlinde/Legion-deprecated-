@@ -51,6 +51,14 @@ function PeerSync(legion, objectStore, peerConnection) {
     }, 5 * 1000);
 }
 
+PeerSync.prototype.send = function (message) {
+    if (this.isSynced) {
+        this.peerConnection.send(message);
+    } else {
+        this.queueAfterSync.push(message);
+    }
+};
+
 PeerSync.prototype.finalize = function () {
     this.isSynced = false;
     this.peerConnection = null;
@@ -161,7 +169,7 @@ PeerSync.prototype.sync = function () {
     }
     this.legion.generateMessage(this.objectStore.handlers.peerSync.type, messageContent, function (result) {
         result.destination = ps.peerConnection.remoteID;
-        ps.legion.messagingAPI.broadcastMessage(result);
+        ps.peerConnection.send(result);
     });
 };
 
@@ -205,41 +213,31 @@ function ObjectStore(legion) {
                 }
             }
         },
-        state_propagation: {
-            type: "OS:SP", callback: function () {
-                console.error("Not Implemented: state_propagation");
-                //TODO: state_propagation
-            }
-        },
-        operations_propagation: {
-            type: "OS:OP", callback: function () {
-                console.error("Not Implemented: operations_propagation");
-                //TODO: operations_propagation
+        gotContentFromNetwork: {
+            type: "OS:C", callback: function (message, original, connection) {
+                console.info(message);
+                os.gotContentFromNetwork(message, original, connection);
             }
         },
         version_vector_propagation: {
-            type: "OS:VVP", callback: function () {
-                console.error("Not Implemented: version_vector_propagation");
-                //TODO: version_vector_propagation
+            type: "OS:VVP", callback: function (message, original, connection) {
+                console.info(message);
+                os.gotVVFromNetwork(message, original, connection);
             }
         }
     };
 
-
-    /**
-     * TODO: this queue must have some parsing to eliminate duplicates and merge state propagation of the same object?
-     * TODO: the timer
-     * @type {ALQueue}
-     */
     this.serverQueue = new ALQueue();
 
-    /**
-     * TODO: this queue must have some parsing to eliminate duplicates and merge state propagation of the same object?
-     * TODO: the timer
-     * @type {ALQueue}
-     */
+    this.serverTimer = setInterval(function () {
+        os.clearServerQueue();
+    }, this.legion.options.objectOptions.serverInterval);
+
     this.peersQueue = new ALQueue();
 
+    this.peersTimer = setInterval(function () {
+        os.clearPeersQueue();
+    }, this.legion.options.objectOptions.peerInterval);
 
     var peers = this.legion.overlay.getPeers();
     if (peers.length > 0) {
@@ -254,11 +252,175 @@ function ObjectStore(legion) {
 
     this.legion.messagingAPI.setHandlerFor(this.handlers.peerSync.type, this.handlers.peerSync.callback);
     this.legion.messagingAPI.setHandlerFor(this.handlers.peerSyncAnswer.type, this.handlers.peerSyncAnswer.callback);
-    this.legion.messagingAPI.setHandlerFor(this.handlers.state_propagation.type, this.handlers.state_propagation.callback);
-    this.legion.messagingAPI.setHandlerFor(this.handlers.operations_propagation.type, this.handlers.operations_propagation.callback);
+    this.legion.messagingAPI.setHandlerFor(this.handlers.gotContentFromNetwork.type, this.handlers.gotContentFromNetwork.callback);
+    //this.legion.messagingAPI.setHandlerFor(this.handlers.operations_propagation.type, this.handlers.operations_propagation.callback);
     this.legion.messagingAPI.setHandlerFor(this.handlers.version_vector_propagation.type, this.handlers.version_vector_propagation.callback);
 
 }
+
+/**
+ * VV should ONLY be propagated between two peers.
+ * @param message
+ * @param original
+ */
+ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
+    var objectID = message.content.objectID;
+    var hisVV = message.content.vv;
+
+    var crdt = this.crdts.get(objectID);
+    if (!crdt) {
+        console.warn("Not implemented: vv for CRDT I do not have.")
+    }
+
+    var vvDiff = this.versionVectorDiff(crdt.getVersionVector(), hisVV);
+
+    var os = this;
+    if (vvDiff.vv2.missing.length > 0) {
+        if (objectsDebug) {
+            console.log("Peer is missing ops.");
+        }
+        var operations = crdt.getOperations(vvDiff.vv2.missing);
+        var answer = [];
+        answer.push({
+            objectID: objectID,
+            operations: operations
+        });
+        this.legion.generateMessage(this.handlers.operations_propagation.type, answer, function (result) {
+            if (os.peerSyncs.contains(message.sender)) {
+                result.destination = message.sender;
+                var ps = os.peerSyncs.get(message.sender);
+                ps.send(result);
+            } else {
+                os.legion.messagingAPI.sendTo(message.sender, result);
+            }
+        });
+    }
+    if (vvDiff.vv1.missing.length > 0) {
+        if (objectsDebug) {
+            console.log("I am missing ops.");
+        }
+        var request = {
+            objectID: objectID,
+            vv: crdt.getVersionVector()
+        };
+        this.legion.generateMessage(this.handlers.version_vector_propagation.type, request, function (result) {
+            result.destination = message.sender;
+            if (os.peerSyncs.contains(message.sender)) {
+                result.destination = message.sender;
+                var ps = os.peerSyncs.get(message.sender);
+                ps.send(result);
+            } else {
+                os.legion.messagingAPI.sendTo(message.sender, result);
+            }
+        });
+    }
+};
+
+ObjectStore.prototype.gotContentFromNetwork = function (message, original, connection) {
+    switch (message.content.type) {
+        case "OP":
+            var objectID = message.content.msg.objectID;
+            var crdt = this.crdts.get(objectID);
+            if (crdt) {
+                crdt.operationsFromNetwork([message.content.msg], connection);
+            } else {
+                console.error("Got op for no crdt", message)
+            }
+            break;
+        case "OPLIST":
+            var ops = message.content.ops;
+            var crdt = this.crdts.get(message.content.objectID);
+            crdt.operationsFromNetwork(ops, connection);
+            break;
+        case "STATE":
+            var objectID = message.content.msg.objectID;
+            var crdt = this.crdts.get(objectID);
+            if (crdt) {
+                crdt.stateFromNetwork(crdt.fromJSONString(message.content.msg.state), connection);
+            } else {
+                console.error("Got state for no crdt", message)
+            }
+            break;
+    }
+};
+
+/**
+ * TODO: this queue must have some parsing to eliminate duplicates and merge state propagation of the same object?
+ */
+ObjectStore.prototype.clearServerQueue = function () {
+    if (this.serverQueue.size() > 0) {
+        console.warn("Not implemented: clearServerQueue");
+    }
+};
+
+/**
+ * TODO: this queue must have some parsing to eliminate duplicates and merge state propagation of the same object?
+ * TODO: put them messages in a super message.
+ */
+ObjectStore.prototype.clearPeersQueue = function () {
+    var os = this;
+    if (this.peersQueue.size() > 0) {
+        console.log("Messages in queue: " + this.peersQueue.size());
+        var pop = this.peersQueue.pop();
+        while (pop) {
+            (function () {
+                var options = pop.options;
+
+                const except = options.except;
+                if (options.onlyTo && (typeof options.onlyTo != "string"))
+                    options.onlyTo = options.onlyTo.remoteID;
+                if (options.except && (typeof options.except != "string"))
+                    options.except = options.except.remoteID;
+
+                var msg = {};
+                switch (pop.type) {
+                    case "OP":
+                        var objectID = pop.objectID;
+                        var clientID = pop.clientID;
+                        var operationID = pop.operationID;
+                        var crdt = os.crdts.get(objectID);
+                        var op = crdt.getOpFromHistory(clientID, operationID);
+                        op.clientID = clientID;
+                        op.objectID = objectID;
+                        msg = op;
+                        break;
+                    case "OPLIST":
+                        break;
+                    case "STATE":
+                        var objectID = pop.objectID;
+                        var crdt = os.crdts.get(objectID);
+                        var state = crdt.toJSONString(crdt.getState());
+                        msg = {objectID: objectID, state: state};
+                        break;
+                }
+                pop.msg = msg;
+                if (except)
+                    console.log("Sending a", pop.type, except.remoteID);
+                else
+                    console.log("Sending a", pop.type);
+                os.legion.generateMessage(os.handlers.gotContentFromNetwork.type, pop, function (result) {
+                    const onlyTo = options.onlyTo;
+                    if (onlyTo) {
+                        result.destination = onlyTo;
+                        if (os.peerSyncs.contains(onlyTo)) {
+                            result.destination = onlyTo;
+                            var ps = os.peerSyncs.get(onlyTo);
+                            ps.send(result);
+                        } else {
+                            os.legion.messagingAPI.sendTo(onlyTo, result);
+                        }
+                    } else if (except) {
+                        os.legion.messagingAPI.broadcastMessage(result, [except, os.legion.connectionManager.serverConnection]);
+                    } else {
+                        os.legion.messagingAPI.broadcastMessage(result, [os.legion.connectionManager.serverConnection]);
+                    }
+                });
+            })();
+
+            pop = this.peersQueue.pop();
+        }
+    }
+};
 
 /**
  * Defines a CRDT that can later be instantiated.
@@ -297,18 +459,35 @@ ObjectStore.prototype.get = function (objectID, type) {
  *
  * @param clientID {number}
  * @param operationID {number}
+ * @param options {Object}
  */
-ObjectStore.prototype.propagate = function (clientID, operationID) {
-    console.warn("Not implemented: propagate", clientID, operationID);
+ObjectStore.prototype.propagate = function (objectID, clientID, operationID, options) {
+    var queuedOP = {
+        type: "OP",
+        clientID: clientID,
+        objectID: objectID,
+        operationID: operationID,
+        options: options
+    };
+    this.serverQueue.push(queuedOP);
+    this.peersQueue.push(queuedOP);
 };
 
-ObjectStore.prototype.propagateAll = function (ops) {
-    if (options.except) {
-        //Send to all but c;
-    } else {
-
-    }
-    console.warn("Not implemented: propagateALL", ops);
+/**
+ *
+ * @param objectID
+ * @param ops
+ * @param options {Object}
+ */
+ObjectStore.prototype.propagateAll = function (objectID, ops, options) {
+    var queuedOP = {
+        type: "OPLIST",
+        ops: ops,
+        objectID: objectID,
+        options: options
+    };
+    this.serverQueue.push(queuedOP);
+    this.peersQueue.push(queuedOP);
 };
 
 /**
@@ -390,7 +569,6 @@ ObjectStore.prototype.versionVectorDiff = function (vv1, vv2) {
         }
     }
 
-    console.info(ret);
     return ret;
 };
 
@@ -400,12 +578,11 @@ ObjectStore.prototype.versionVectorDiff = function (vv1, vv2) {
  * @param options {{onlyTo}|{except}|{all}}
  */
 ObjectStore.prototype.propagateState = function (objectID, options) {
-    console.warn("Not implemented: propagateState", objectID, options);
-    if (options.onlyTo) {
-        //Send to c;
-    } else if (options.except) {
-        //Send to all but c;
-    } else if (options.all) {
-        //Send to all;
-    }
+    var queuedOP = {
+        type: "STATE",
+        objectID: objectID,
+        options: options
+    };
+    this.serverQueue.push(queuedOP);
+    this.peersQueue.push(queuedOP);
 };

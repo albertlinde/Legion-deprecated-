@@ -141,14 +141,14 @@ function CRDT(objectID, crdt, objectStore) {
                         var cbVal = c.remotes[key].apply(c, [l_ret]);
                         c.addOpToHistory("ObjectServer", ++c.localOP, l_ret, key, beforeVV);
                         c.addOpToCurrentVersionVector("ObjectServer", c.localOP);
-                        c.objectStore.propagate("ObjectServer", c.localOP);
+                        c.objectStore.propagate(c.objectID, "ObjectServer", c.localOP, {all: true});
                         if (c.callback)
                             c.callback(cbVal, {local: true});
                     } else {
                         //Client operation.
                         c.addOpToHistory(c.objectStore.legion.id, ++c.localOP, l_ret, key, beforeVV);
                         c.addOpToCurrentVersionVector(c.objectStore.legion.id, c.localOP);
-                        c.objectStore.propagate(c.objectStore.legion.id, c.localOP);
+                        c.objectStore.propagate(c.objectID, c.objectStore.legion.id, c.localOP, {all: true});
                         var cbVal = c.remotes[key].apply(c, [l_ret]);
                         if (c.callback)
                             c.callback(cbVal, {local: true});
@@ -290,9 +290,6 @@ CRDT.prototype.getVersionVector = function () {
  */
 CRDT.prototype.stateFromNetwork = function (state, connection) {
     var c = this.compare(this.getState(), state);
-    console.log(this.getState());
-    console.log(state);
-    console.log(c);
     switch (c) {
         case CRDT.STATE.COMPARE_RESPONSE.EQUALS:
             //no op
@@ -332,13 +329,14 @@ CRDT.prototype.operationsFromNetwork = function (operations, connection) {
     var alreadyHad = [];
     var i = 0;
     while (operations.length > 0) {
+        console.log("Operations to go:" + operations.length);
         while (i < operations.length) {
             var op = operations[i];
             if (this.alreadyHadOp(op)) {
                 alreadyHad.push(op);
                 operations.splice(i, 1);
             } else if (this.depsMatchedFor(op)) {
-                var cbv = this.remotes[op.clientID].apply(this, [op.result]);
+                var cbv = this.remotes[op.opName].apply(this, [op.result]);
                 this.addOpToHistory(op.clientID, op.opID, op.result, op.opName, op.dependencyVV);
                 this.addOpToCurrentVersionVector(op.clientID, op.opID);
                 callbackValues.push(cbv);
@@ -358,7 +356,8 @@ CRDT.prototype.operationsFromNetwork = function (operations, connection) {
             this.callback(callbackValues);
         }
     }
-    this.objectStore.propagateAll(didntHave, {except: connection});
+    if (didntHave.length > 0)
+        this.objectStore.propagateAll(this.objectID, didntHave, {except: connection});
 };
 
 /**

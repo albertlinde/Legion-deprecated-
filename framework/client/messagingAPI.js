@@ -23,7 +23,7 @@ MessagingAPI.prototype.onMessage = function (connection, message, original) {
     }
 
     if (!message.destination || (message.destination && message.destination == this.legion.id)) {
-        this.deliver(message, original);
+        this.deliver(message, original, connection);
     }
 
     if (debug)console.log(message.type + " from " + connection.remoteID + " by " + message.sender + " to " + message.destination);
@@ -37,20 +37,33 @@ MessagingAPI.prototype.onMessage = function (connection, message, original) {
  * @param message
  * @param original
  */
-MessagingAPI.prototype.deliver = function (message, original) {
+MessagingAPI.prototype.deliver = function (message, original, connection) {
     if (this.callbacks.contains(message.type)) {
-        this.callbacks.get(message.type)(message, original);
+        this.callbacks.get(message.type)(message, original, connection);
     } else {
-        console.warn("can't deliver: no handler defined", JSON.stringify(message));
+        console.error("can't deliver: no handler defined", JSON.stringify(message));
     }
 };
 
 /**
  * Used by legion to broadcast messages.
  * @param message
+ * @param except
  */
-MessagingAPI.prototype.broadcastMessage = function (message) {
-    this.messagingProtocol.broadcastMessage(message);
+MessagingAPI.prototype.broadcastMessage = function (message, except) {
+    this.messagingProtocol.broadcastMessage(message, except);
+};
+
+/**
+ * Used by legion to unicast messages.
+ * @param peer
+ * @param message
+ */
+MessagingAPI.prototype.sendTo = function (peer, message) {
+    if (message.destination) {
+        console.warn("Notice: message had a pre-defined destination!")
+    }
+    this.messagingProtocol.sendTo(peer, message);
 };
 
 /**

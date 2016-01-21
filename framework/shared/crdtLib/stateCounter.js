@@ -7,58 +7,58 @@ var state_counter = {
     propagation: CRDT.STATE_BASED,
     crdt: {
         base_value: {
-            state: {dec: [], inc: []}
+            state: {dec: ALMap, inc: ALMap}
         },
         getValue: function () {
             var value = 0;
-            var decKeys = Object.keys(this.state.dec);
-            var incKeys = Object.keys(this.state.inc);
+            var decKeys = this.state.dec.keys();
+            var incKeys = this.state.inc.keys();
             for (var decKey = 0; decKey < decKeys.length; decKey++) {
-                value -= this.state.dec[decKeys[decKey]];
+                value -= this.state.dec.get(decKeys[decKey]);
             }
             for (var incKey = 0; incKey < incKeys.length; incKey++) {
-                value += this.state.inc[incKeys[incKey]];
+                value += this.state.inc.get(incKeys[incKey]);
             }
             return value;
         },
         operations: {
             increment: function (id, amount) {
-                if (!this.state.inc[id])
-                    this.state.inc[id] = 0;
-                this.state.inc[id] += amount;
+                if (!this.state.inc.contains(id))
+                    this.state.inc.set(id, 0);
+                this.state.inc.set(id, this.state.inc.get(id) + amount);
                 return amount;
             },
             decrement: function (id, amount) {
-                if (!this.state.dec[id])
-                    this.state.dec[id] = 0;
-                this.state.dec[id] += amount;
+                if (!this.state.dec.contains(id))
+                    this.state.dec.set(id, 0);
+                this.state.dec.set(id, this.state.dec.get(id) + amount);
                 return -amount;
             }
         },
         merge: function (local, remote) {
-            var decKeys = Object.keys(remote.dec);
-            var incKeys = Object.keys(remote.inc);
+            var decKeys = remote.dec.keys();
+            var incKeys = remote.inc.keys();
             var amount = 0;
 
             for (var i = 0; i < decKeys.length; i++) {
-                var countLocal = local.dec[decKeys[i]];
+                var countLocal = local.dec.get(decKeys[i]);
                 if (!countLocal) {
-                    local.dec[decKeys[i]] = remote.dec[decKeys[i]];
-                    amount -= remote.dec[decKeys[i]];
+                    local.dec.set(decKeys[i], remote.dec.get(decKeys[i]));
+                    amount -= remote.dec.get(decKeys[i]);
                 } else {
-                    amount += local.dec[decKeys[i]] - remote.dec[decKeys[i]];
-                    local.dec[decKeys[i]] = Math.max(local.dec[decKeys[i]], remote.dec[decKeys[i]]);
+                    amount += (local.dec.get(decKeys[i]) - remote.dec.get(decKeys[i]));
+                    local.dec.set(decKeys[i], Math.max(local.dec.get(decKeys[i]), remote.dec.get(decKeys[i])));
                 }
             }
 
             for (var i = 0; i < incKeys.length; i++) {
-                var countLocal = local.inc[incKeys[i]];
+                var countLocal = local.inc.get(incKeys[i]);
                 if (!countLocal) {
-                    local.inc[incKeys[i]] = remote.inc[incKeys[i]];
-                    amount += remote.inc[decKeys[i]];
+                    local.inc.set(incKeys[i], remote.inc.get(incKeys[i]));
+                    amount += remote.inc.get(incKeys[i]);
                 } else {
-                    amount -= local.inc[incKeys[i]] - remote.inc[incKeys[i]];
-                    local.inc[incKeys[i]] = Math.max(local.inc[incKeys[i]], remote.inc[incKeys[i]]);
+                    amount -= (local.inc.get(incKeys[i]) - remote.inc.get(incKeys[i]));
+                    local.inc.set(incKeys[i], Math.max(local.inc.get(incKeys[i]), remote.inc.get(incKeys[i])));
                 }
             }
 
@@ -75,8 +75,6 @@ var state_counter = {
          * @returns {number}
          */
         compare: function (local, remote) {
-            console.log(local)
-            console.log(remote)
             var first = false;
             var second = false;
 
@@ -86,11 +84,11 @@ var state_counter = {
             var v1Dec = local.dec;
             var v2Dec = remote.dec;
 
-            if (v1Inc.length > v2Inc.length || v1Dec.length > v2Dec.length) {
+            if (v1Inc.size() > v2Inc.size() || v1Dec.size() > v2Dec.size()) {
                 first = true;
             }
 
-            if (v2Inc.length > v1Inc.length || v2Dec.length > v1Dec.length) {
+            if (v2Inc.size() > v1Inc.size() || v2Dec.size() > v1Dec.size()) {
                 second = true;
             }
             if (first && second) {
@@ -99,7 +97,7 @@ var state_counter = {
 
             if (!first) {
                 var keysInc1 = v1Inc.keys();
-                for (var i = 0; i < keysInc1; i++) {
+                for (var i = 0; i < keysInc1.length; i++) {
                     var currKey = keysInc1[i];
                     if (!v2Inc.contains(currKey)) {
                         return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
@@ -112,7 +110,7 @@ var state_counter = {
                 }
 
                 var keysDec1 = v1Dec.keys();
-                for (var i = 0; i < keysDec1; i++) {
+                for (var i = 0; i < keysDec1.length; i++) {
                     var currKey = keysDec1[i];
                     if (!v2Dec.contains(currKey)) {
                         return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
@@ -126,7 +124,7 @@ var state_counter = {
             }
             if (!second) {
                 var keysInc2 = v2Inc.keys();
-                for (var i = 0; i < keysInc2; i++) {
+                for (var i = 0; i < keysInc2.length; i++) {
                     var currKey = keysInc2[i];
                     if (!v1Inc.contains(currKey)) {
                         return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
@@ -139,7 +137,7 @@ var state_counter = {
                 }
 
                 var keysDec2 = v2Dec.keys();
-                for (var i = 0; i < keysDec2; i++) {
+                for (var i = 0; i < keysDec2.length; i++) {
                     var currKey = keysDec2[i];
                     if (!v1Dec.contains(currKey)) {
                         return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
@@ -165,31 +163,31 @@ var state_counter = {
             return CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE;
         },
         fromJSONString: function (jsObject) {
-            var ret = {dec: [], inc: []};
+            var ret = {dec: new ALMap(), inc: new ALMap()};
 
             var dec = jsObject.dec;
             var inc = jsObject.inc;
 
             for (var i = 0; i < dec.length; i++) {
-                ret.dec[dec[i][0]] = dec[i][1];
+                ret.dec.set(dec[i][0], dec[i][1]);
             }
             for (var i = 0; i < inc.length; i++) {
-                ret.inc[inc[i][0]] = inc[i][1];
+                ret.inc.set(inc[i][0], inc[i][1]);
             }
             return ret;
         },
         toJSONString: function (state) {
-            var decKeys = Object.keys(state.dec);
-            var incKeys = Object.keys(state.inc);
+            var decKeys = state.dec.keys();
+            var incKeys = state.inc.keys();
 
             var dec = [];
             var inc = [];
 
             for (var i = 0; i < decKeys.length; i++) {
-                dec.push([decKeys[i], state.dec[decKeys[i]]]);
+                dec.push([decKeys[i], state.dec.get(decKeys[i])]);
             }
             for (var i = 0; i < incKeys.length; i++) {
-                inc.push([incKeys[i], state.inc[incKeys[i]]]);
+                inc.push([incKeys[i], state.inc.get(incKeys[i])]);
             }
 
             return {dec: dec, inc: inc};

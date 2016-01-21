@@ -3,6 +3,7 @@ var messaging;
 var objectStore;
 
 var debug = false;
+var objectsDebug = false;
 var detailedDebug = false;
 
 console.log("Legion example.");
@@ -16,7 +17,11 @@ function start(clientID) {
         clientID: clientID,
         server: {ip: "localhost", port: 8002},
         overlayProtocol: SimpleOverlay,
-        messagingProtocol: FloodMessaging
+        messagingProtocol: FloodMessaging,
+        objectOptions: {
+            serverInterval: 5000,
+            peerInterval: 2000
+        }
     };
 
     legion = new Legion(options);
@@ -35,10 +40,11 @@ function messages() {
      setTimeout(function () {
      messaging.broadcast("Message", "Hello");
      }, 15 * 1000);
+
+     setInterval(function () {
+     messaging.broadcast("Message", "Hello.");
+     }, 15 * 1000);
      */
-    setInterval(function () {
-        messaging.broadcast("Message", "Hello.");
-    }, 15 * 1000);
 
 }
 
@@ -58,25 +64,49 @@ function objects() {
     counter_state = objectStore.get("objectID1", CRDT_LIB.STATE_Counter.type);
     op_set = objectStore.get("objectID2", CRDT_LIB.OP_ORSet.type);
 
-    counter_state.setOnStateChange(function (state, meta) {
-        console.log("Counter change: " + JSON.stringify(state) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(counter_state.getValue()));
+    counter_state.setOnStateChange(function (updates, meta) {
+        console.log("Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(counter_state.getValue()));
     });
     op_set.setOnStateChange(function (updates, meta) {
         console.log("Set change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(op_set.getValue()));
     });
 
-    setInterval(function () {
-        if (Math.random() > 0.2) {
-            console.log("Adding.");
-            counter_state.increment(legion.id, 1);
-            var rand = newRandomValue();
-            op_set.add(rand);
-        } else {
-            console.log("Removing.");
-            var rem = op_set.getValue()[0];
-            if (rem)
-                op_set.remove(op_set.getValue()[0]);
-            counter_state.decrement(legion.id, 1);
+    /*
+     setInterval(function () {
+     if (Math.random() > 0.2) {
+     add();
+     } else {
+     remove()
+     }
+     }, 5 * 1000);
+     */
+}
+
+function rand_N(amount, timer) {
+    var i = setInterval(function () {
+        if (amount-- <= 0) {
+            clearInterval(i);
+            return;
         }
-    }, 5 * 1000);
+        if (Math.random() > 0.2) {
+            add();
+        } else {
+            remove()
+        }
+    }, timer);
+}
+
+function add() {
+    console.log("Adding.");
+    counter_state.increment(legion.id, 1);
+    var rand = newRandomValue();
+    op_set.add(rand);
+}
+
+function remove() {
+    console.log("Removing.");
+    var rem = op_set.getValue()[0];
+    if (rem)
+        op_set.remove(op_set.getValue()[0]);
+    counter_state.decrement(legion.id, 1);
 }

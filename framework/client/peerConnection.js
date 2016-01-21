@@ -25,7 +25,6 @@ PeerConnection.prototype.setChannelHandlers = function () {
                 console.error(m);
                 console.error(original);
                 console.error(e);
-
             }
         } else {
             pc.legion.messagingAPI.onMessage(pc, m, original);

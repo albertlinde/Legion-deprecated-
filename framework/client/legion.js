@@ -45,6 +45,10 @@ Legion.prototype.getObjectStore = function () {
  * @param callback {Function}
  */
 Legion.prototype.generateMessage = function (type, data, callback) {
+    if (!type) {
+        console.error("No type for message.");
+        return;
+    }
     var message = {
         type: type,
         sender: this.id,

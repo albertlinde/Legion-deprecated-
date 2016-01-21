@@ -26,11 +26,11 @@ ALQueue.prototype.push = function (item) {
  */
 ALQueue.prototype.pop = function () {
     var item = this.queue[0];
-    this.queue.slice(1);
+    this.queue=this.queue.slice(1);
     return item;
 };
 
 
-ALQueue.prototype.clear = function(){
+ALQueue.prototype.clear = function () {
     this.queue = [];
 };
