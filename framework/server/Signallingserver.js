@@ -60,6 +60,7 @@ function initService() {
                             socket.remoteID = parsed.sender;
                             nodes.set(parsed.sender, socket);
                             iterableNodes.push(socket);
+                            util.log("Added a new element to the node set: " + parsed.sender);
                         }
 
                         if (parsed.destination != null) {
