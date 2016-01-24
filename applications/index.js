@@ -15,14 +15,21 @@ function start(clientID) {
 
     var options = {
         clientID: clientID,
-        server: {ip: "localhost", port: 8002},
         overlayProtocol: SimpleOverlay,
         messagingProtocol: FloodMessaging,
         objectOptions: {
             serverInterval: 5000,
             peerInterval: 2000
         },
-        bullyProtocol: SimpleBully
+        bullyProtocol: SimpleBully,
+        signallingConnection: {
+            type: ServerConnection,
+            server: {ip: "localhost", port: 8002}
+        },
+        objectServerConnection: {
+            type: ObjectServerConnection,
+            server: {ip: "localhost", port: 8004}
+        }
     };
 
     legion = new Legion(options);

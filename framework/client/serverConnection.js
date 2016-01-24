@@ -1,6 +1,6 @@
-function ServerConnection(legion) {
+function ServerConnection(server, legion) {
     this.legion = legion;
-    this.server = this.legion.options.server;
+    this.server = server;
     this.remoteID = this.server.ip + ":" + this.server.port;
 
     this.socket = new WebSocket("ws://" + this.server.ip + ":" + this.server.port + "");
