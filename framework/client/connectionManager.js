@@ -81,6 +81,8 @@ ConnectionManager.prototype.onCloseServer = function (serverConnection) {
     this.legion.overlay.onServerDisconnect(serverConnection);
     if (this.legion.objectStore)
         this.legion.objectStore.onServerDisconnection(serverConnection);
+    if (this.legion.bullyProtocol)
+        this.legion.bullyProtocol.onServerDisconnection(serverConnection);
 };
 
 ConnectionManager.prototype.onOpenServer = function (serverConnection) {
@@ -89,6 +91,8 @@ ConnectionManager.prototype.onOpenServer = function (serverConnection) {
     this.legion.overlay.onServerConnection(serverConnection);
     if (this.legion.objectStore)
         this.legion.objectStore.onServerConnection(serverConnection);
+    if (this.legion.bullyProtocol)
+        this.legion.bullyProtocol.onServerConnection(serverConnection);
 };
 
 ConnectionManager.prototype.onOpenClient = function (clientConnection) {
@@ -96,6 +100,8 @@ ConnectionManager.prototype.onOpenClient = function (clientConnection) {
     this.legion.overlay.addPeer(clientConnection);
     if (this.legion.objectStore)
         this.legion.objectStore.onClientConnection(clientConnection);
+    if (this.legion.bullyProtocol)
+        this.legion.bullyProtocol.onClientConnection(clientConnection);
 };
 
 ConnectionManager.prototype.onCloseClient = function (clientConnection) {
@@ -104,6 +110,8 @@ ConnectionManager.prototype.onCloseClient = function (clientConnection) {
     this.legion.overlay.removePeer(clientConnection);
     if (this.legion.objectStore)
         this.legion.objectStore.onClientDisconnection(clientConnection);
+    if (this.legion.bullyProtocol)
+        this.legion.bullyProtocol.onClientDisconnection(clientConnection);
 };
 
 ConnectionManager.prototype.sendStartOffer = function (offer, clientConnection) {

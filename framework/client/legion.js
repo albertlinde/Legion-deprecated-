@@ -8,6 +8,9 @@ function Legion(options) {
     this.overlay = new Overlay(this, this);
     this.connectionManager = new ConnectionManager(this);
 
+    if (this.options.bullyProtocol)
+        this.bullyProtocol = new this.options.bullyProtocol(this);
+
     this.objectStore = null;
 }
 /**

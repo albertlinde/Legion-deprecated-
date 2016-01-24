@@ -21,7 +21,8 @@ function start(clientID) {
         objectOptions: {
             serverInterval: 5000,
             peerInterval: 2000
-        }
+        },
+        bullyProtocol: SimpleBully
     };
 
     legion = new Legion(options);
