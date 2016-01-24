@@ -4,8 +4,8 @@ function Legion(options) {
     this.messageCount = Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
     this.id = this.options.clientID;
 
-    this.messagingAPI = new MessagingAPI(this, this.legion);
-    this.overlay = new Overlay(this, this.legion);
+    this.messagingAPI = new MessagingAPI(this);
+    this.overlay = new Overlay(this, this);
     this.connectionManager = new ConnectionManager(this);
 
     this.objectStore = null;
