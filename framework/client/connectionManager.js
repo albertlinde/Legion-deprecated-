@@ -76,21 +76,34 @@ ConnectionManager.prototype.handleSignalling = function (message, original) {
 };
 
 ConnectionManager.prototype.onCloseServer = function (serverConnection) {
-    console.log(this.legion.getTime() + " Overlay CLOSE " + this.legion.id + " to " + serverConnection.remoteID);
+    console.log(this.legion.getTime() + " Overlay CLOSE " + this.legion.id + " to " + serverConnection.remoteID + " of type " + (serverConnection.constructor.name));
     this.serverConnection = null;
-    this.legion.overlay.onServerDisconnect(serverConnection);
-    if (this.legion.objectStore)
-        this.legion.objectStore.onServerDisconnection(serverConnection);
+    if (serverConnection instanceof this.legion.options.signallingConnection.type) {
+        this.serverConnection = null;
+        this.legion.overlay.onServerDisconnect(serverConnection);
+    }
+    if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
+        if (this.legion.objectStore)
+            this.legion.objectStore.onServerDisconnection(serverConnection);
+        else
+            console.error("Should not disconnect form objects server when not having an objects store!")
+    }
     if (this.legion.bullyProtocol)
         this.legion.bullyProtocol.onServerDisconnection(serverConnection);
 };
 
 ConnectionManager.prototype.onOpenServer = function (serverConnection) {
-    console.log(this.legion.getTime() + " Overlay OPEN " + this.legion.id + " to " + serverConnection.remoteID);
-    this.serverConnection = serverConnection;
-    this.legion.overlay.onServerConnection(serverConnection);
-    if (this.legion.objectStore)
-        this.legion.objectStore.onServerConnection(serverConnection);
+    console.log(this.legion.getTime() + " Overlay OPEN " + this.legion.id + " to " + serverConnection.remoteID + " of type " + (serverConnection.constructor.name));
+    if (serverConnection instanceof this.legion.options.signallingConnection.type) {
+        this.serverConnection = serverConnection;
+        this.legion.overlay.onServerConnection(serverConnection);
+    }
+    if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
+        if (this.legion.objectStore)
+            this.legion.objectStore.onServerConnection(serverConnection);
+        else
+            console.error("Should not connect to objects server when not having an objects store!")
+    }
     if (this.legion.bullyProtocol)
         this.legion.bullyProtocol.onServerConnection(serverConnection);
 };
