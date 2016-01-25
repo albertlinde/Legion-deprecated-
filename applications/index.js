@@ -5,6 +5,7 @@ var objectStore;
 var debug = false;
 var objectsDebug = false;
 var detailedDebug = false;
+var bullyLog = true;
 
 console.log("Legion example.");
 console.log("Step 1 - Open various tabs.");
@@ -36,7 +37,7 @@ function start(clientID) {
     legion.join();
 
     messages();
-    objects();
+    //objects();
 }
 
 function messages() {

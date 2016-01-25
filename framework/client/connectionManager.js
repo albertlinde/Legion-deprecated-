@@ -84,12 +84,12 @@ ConnectionManager.prototype.onCloseServer = function (serverConnection) {
     }
     if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
         if (this.legion.objectStore)
-            this.legion.objectStore.onServerDisconnection(serverConnection);
+            this.legion.objectStore.onServerDisconnect(serverConnection);
         else
             console.error("Should not disconnect form objects server when not having an objects store!")
     }
     if (this.legion.bullyProtocol)
-        this.legion.bullyProtocol.onServerDisconnection(serverConnection);
+        this.legion.bullyProtocol.onServerDisconnect(serverConnection);
 };
 
 ConnectionManager.prototype.onOpenServer = function (serverConnection) {
@@ -122,9 +122,9 @@ ConnectionManager.prototype.onCloseClient = function (clientConnection) {
     this.peerConnections.delete(clientConnection.remoteID);
     this.legion.overlay.removePeer(clientConnection);
     if (this.legion.objectStore)
-        this.legion.objectStore.onClientDisconnection(clientConnection);
+        this.legion.objectStore.onClientDisconnect(clientConnection);
     if (this.legion.bullyProtocol)
-        this.legion.bullyProtocol.onClientDisconnection(clientConnection);
+        this.legion.bullyProtocol.onClientDisconnect(clientConnection);
 };
 
 ConnectionManager.prototype.sendStartOffer = function (offer, clientConnection) {

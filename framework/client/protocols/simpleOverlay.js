@@ -7,13 +7,13 @@ function SimpleOverlay(overlay, legion) {
         so.floodJoin();
     }, 15 * 1000);
 
-    this.legion.messagingAPI.setHandlerFor("ConnectToAnyNodesPlease", function (message) {
-        so.handleJoin(message)
+    this.legion.messagingAPI.setHandlerFor("ConnectToAnyNodesPlease", function (message, original, connection) {
+        so.handleJoin(message, original, connection)
     });
 }
 
 SimpleOverlay.prototype.onClientConnection = function (peerConnection) {
-    if (this.legion.id % 5 != 0) {
+    if (this.legion.bullyProtocol.amBullied()) {
         if (this.legion.connectionManager.serverConnection)
             this.legion.connectionManager.serverConnection.socket.close();
     }
@@ -44,7 +44,7 @@ SimpleOverlay.prototype.floodJoin = function () {
 
     if (!serverConnection) {
         //this forces a connection to the server.
-        if (this.legion.id % 5 == 0) {
+        if (!this.legion.bullyProtocol.amBullied()) {
             this.legion.connectionManager.startSignallingConnection();
         }
     }
@@ -55,8 +55,16 @@ SimpleOverlay.prototype.floodJoin = function () {
     });
 };
 
-SimpleOverlay.prototype.handleJoin = function (message) {
+SimpleOverlay.prototype.handleJoin = function (message, original, connection) {
     if (!this.legion.connectionManager.hasPeer(message.sender)) {
         this.legion.connectionManager.connectPeer(message.sender);
+    }
+
+    this.legion.messagingAPI.broadcastMessage(original, [connection]);
+
+    if (this.legion.bullyProtocol.amBullied()) {
+        if (this.legion.connectionManager.serverConnection) {
+            this.legion.connectionManager.serverConnection.socket.close();
+        }
     }
 };

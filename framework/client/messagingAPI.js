@@ -22,14 +22,14 @@ MessagingAPI.prototype.onMessage = function (connection, message, original) {
         return;
     }
 
-    if (!message.destination || (message.destination && message.destination == this.legion.id)) {
-        this.deliver(message, original, connection);
-    }
-
     if (debug)console.log(message.type + " from " + connection.remoteID + " by " + message.sender + " to " + message.destination);
     if (detailedDebug)console.log(message);
 
-    this.messagingProtocol.onMessage(connection, message, original);
+    if (!message.destination || (message.destination && message.destination == this.legion.id)) {
+        this.deliver(message, original, connection);
+    } else {
+        this.messagingProtocol.onMessage(connection, message, original);
+    }
 };
 
 /**

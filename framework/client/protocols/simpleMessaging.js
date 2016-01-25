@@ -6,7 +6,7 @@ function FloodMessaging(api, legion) {
 FloodMessaging.prototype.onMessage = function (connection, message, original) {
     if (!message.destination || (message.destination && message.destination != this.legion.id)) {
         if (connection instanceof PeerConnection)
-            this.broadcastMessage(original);
+            this.broadcastMessage(original, [connection]);
         else {
             if (debug)
                 console.log("Not broadcasting: " + message.type, this.legion.id, message.sender)
@@ -40,7 +40,7 @@ FloodMessaging.prototype.broadcastMessage = function (message, except) {
         if (peers[i].remoteID == message.sender)
             continue;
         var send = true;
-        for (var j = 0; except && j < except.length; j++)
+        for (var j = 0; !send && except && j < except.length; j++)
             if (except[j] && (peers[i].remoteID == except[j].remoteID))
                 send = false;
         if (send)
