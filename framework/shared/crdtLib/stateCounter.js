@@ -1,7 +1,10 @@
 if (typeof exports != "undefined") {
     CRDT = require('./../crdt.js');
     CRDT = CRDT.CRDT;
+    ALMap = require('./../ALMap.js');
+    ALMap = ALMap.ALMap;
 }
+
 var state_counter = {
     type: "STATE_Counter",
     propagation: CRDT.STATE_BASED,
@@ -61,7 +64,6 @@ var state_counter = {
                     local.inc.set(incKeys[i], Math.max(local.inc.get(incKeys[i]), remote.inc.get(incKeys[i])));
                 }
             }
-
             var ret = {};
             ret.mergeResult = local;
             ret.stateChange = amount;

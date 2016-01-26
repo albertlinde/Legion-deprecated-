@@ -21,9 +21,9 @@ function SimpleBully(legion) {
     this.bully = this.legion.id;
     this.lastBullyMessage = (new Date().getTime());
 
-    this.bullyMustHaveInterval = 15 * 1000;
-    this.bullySendInterval = 7 * 1000;
-    this.bullyStartTime = 2 * 1000;
+    this.bullyMustHaveInterval = this.legion.options.bullyProtocol.options.bullyMustHaveInterval;
+    this.bullySendInterval = this.legion.options.bullyProtocol.options.bullySendInterval;
+    this.bullyStartTime = this.legion.options.bullyProtocol.options.bullyStartTime;
 
     setTimeout(function () {
             sb.interval = setInterval(function () {
@@ -36,7 +36,13 @@ function SimpleBully(legion) {
 }
 
 SimpleBully.prototype.onClientConnection = function (peerConnection) {
-    //No op.
+    if (peerConnection.remoteID > this.legion.id) {
+        var sb = this;
+        this.legion.generateMessage(this.handlers.bully.type, null, function (result) {
+            if (bullyLog)console.log("Being immediate bully to", peerConnection.remoteID);
+            peerConnection.send(result);
+        });
+    }
 };
 
 SimpleBully.prototype.onClientDisconnect = function (peerConnection) {
@@ -45,6 +51,9 @@ SimpleBully.prototype.onClientDisconnect = function (peerConnection) {
 
 SimpleBully.prototype.onServerConnection = function (serverConnection) {
     //No op.
+    if (!this.amBullied()) {
+        this.floodBully()
+    }
 };
 
 SimpleBully.prototype.onServerDisconnect = function (serverConnection) {

@@ -13,7 +13,14 @@ console.log("Step 2 - run 'start(X)' at each tab, with X the tab number.");
 console.log("'messaging.broadcast('Message', 'SomeText') sends a message to (all) other nodes.");
 
 function start(clientID) {
-
+    if (legion) {
+        console.warn("Already started.");
+        return;
+    }
+    if (!clientID) {
+        console.warn("No clientID given.");
+        return;
+    }
     var options = {
         clientID: clientID,
         overlayProtocol: SimpleOverlay,
@@ -22,7 +29,14 @@ function start(clientID) {
             serverInterval: 5000,
             peerInterval: 2000
         },
-        bullyProtocol: SimpleBully,
+        bullyProtocol: {
+            type: SimpleBully,
+            options: {
+                bullyMustHaveInterval: 15 * 1000,
+                bullySendInterval: 7 * 1000,
+                bullyStartTime: 2 * 1000
+            }
+        },
         signallingConnection: {
             type: ServerConnection,
             server: {ip: "localhost", port: 8002}
@@ -37,7 +51,7 @@ function start(clientID) {
     legion.join();
 
     messages();
-    //objects();
+    objects();
 }
 
 function messages() {
@@ -92,6 +106,10 @@ function objects() {
 }
 
 function rand_N(amount, timer) {
+    if (!legion) {
+        console.warn("Use start first.");
+        return;
+    }
     var i = setInterval(function () {
         if (amount-- <= 0) {
             clearInterval(i);
@@ -106,6 +124,10 @@ function rand_N(amount, timer) {
 }
 
 function add() {
+    if (!legion) {
+        console.warn("Use start first.");
+        return;
+    }
     console.log("Adding.");
     counter_state.increment(legion.id, 1);
     var rand = newRandomValue();
@@ -113,9 +135,18 @@ function add() {
 }
 
 function remove() {
+    if (!legion) {
+        console.warn("Use start first.");
+        return;
+    }
     console.log("Removing.");
     var rem = op_set.getValue()[0];
     if (rem)
         op_set.remove(op_set.getValue()[0]);
     counter_state.decrement(legion.id, 1);
+}
+
+function printvalues() {
+    console.log(op_set.getValue());
+    console.log(counter_state.getValue());
 }

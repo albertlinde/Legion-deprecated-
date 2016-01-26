@@ -12,6 +12,7 @@ PeerConnection.prototype.setChannelHandlers = function () {
     var pc = this;
     this.channel.onmessage = function (event) {
         var m = JSON.parse(event.data);
+        console.log("Got " + m.type + " from " + pc.remoteID + " s: " + m.sender);
         var original = JSON.parse(event.data);
         if (m.content) {
             try {
@@ -129,9 +130,10 @@ PeerConnection.prototype.send = function (message) {
     if (typeof message == "object") {
         message = JSON.stringify(message);
     }
-    if (this.channel && this.channel.readyState == "open")
+    if (this.channel && this.channel.readyState == "open") {
         this.channel.send(message);
-    else {
+        console.log("Sent " + JSON.parse(message).type + " to " + this.remoteID + " s: " + JSON.parse(message).sender);
+    } else {
         console.warn("Peer has no open channel.")
     }
 };

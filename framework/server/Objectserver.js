@@ -197,6 +197,8 @@ function initService() {
                                 util.log("Node disconnected.");
                             }
                         }
+                    } else {
+                        console.log("Duplicate: (" + message.sender + "," + message.ID);
                     }
                 });
                 socket.on('disconnect', function () {

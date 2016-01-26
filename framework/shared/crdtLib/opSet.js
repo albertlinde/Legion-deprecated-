@@ -55,9 +55,10 @@ var op_orset = {
                     var e = this.state.adds.get(data.element);
                     for (var i = 0; i < data.removes.length; i++) {
                         this.state.removes.set(data.removes[i], true);
-                        e.delete(data.removes[i]);
+                        if (e)
+                            e.delete(data.removes[i]);
                     }
-                    if (e.size() == 0) {
+                    if (e && e.size() == 0) {
                         this.state.adds.delete(data.element);
                         return {remove: data.element};
                     }

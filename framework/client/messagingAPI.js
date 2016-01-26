@@ -19,6 +19,7 @@ MessagingAPI.prototype.onMessage = function (connection, message, original) {
     if (!this.duplicates.contains(message.sender, message.ID)) {
         this.duplicates.add(message.sender, message.ID)
     } else {
+        console.log("Duplicate: (" + message.sender + "," + message.ID + ")");
         return;
     }
 
@@ -36,6 +37,7 @@ MessagingAPI.prototype.onMessage = function (connection, message, original) {
  * Used by legion to deliver received messages to Legion or the application.
  * @param message
  * @param original
+ * @param connection
  */
 MessagingAPI.prototype.deliver = function (message, original, connection) {
     if (this.callbacks.contains(message.type)) {

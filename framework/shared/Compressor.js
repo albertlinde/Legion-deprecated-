@@ -1,3 +1,9 @@
+if (typeof exports != "undefined") {
+    exports.compress = compress;
+    exports.decompress = decompress;
+    LZMA = require("./../../node_modules/lzma");
+}
+
 var fromDecToHex = function (number) {
     if (number < 0) {
         number = 0xFFFFFFFF + number + 1;
@@ -13,7 +19,7 @@ var fromHexToDec = function (hex) {
     return parseInt(hex, 16);
 };
 
-var compress = function (data, callback) {
+function compress(data, callback) {
     if (typeof(LZMA) != "undefined") {
         LZMA.compress(data, 1, function (result) {
             var ret = "";
@@ -28,7 +34,7 @@ var compress = function (data, callback) {
     }
 };
 
-var decompress = function (data, callback) {
+function decompress(data, callback) {
     var to_deco = [];
     for (var j = 0; j < data.length; j += 2) {
         to_deco.push(fromHexToDec(data[j] + data[j + 1]));

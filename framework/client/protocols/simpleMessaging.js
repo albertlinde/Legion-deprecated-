@@ -16,7 +16,7 @@ FloodMessaging.prototype.onMessage = function (connection, message, original) {
 
 FloodMessaging.prototype.sendTo = function (peer, message) {
     message.destination = peer;
-    this.broadcastMessage(message);
+    this.broadcastMessage(message, [this.legion.connectionManager.serverConnection]);
 };
 
 //assumes message is ready to be send
@@ -40,7 +40,7 @@ FloodMessaging.prototype.broadcastMessage = function (message, except) {
         if (peers[i].remoteID == message.sender)
             continue;
         var send = true;
-        for (var j = 0; !send && except && j < except.length; j++)
+        for (var j = 0; send && except && j < except.length; j++)
             if (except[j] && (peers[i].remoteID == except[j].remoteID))
                 send = false;
         if (send)

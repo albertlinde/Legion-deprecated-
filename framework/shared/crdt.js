@@ -126,8 +126,7 @@ function CRDT(objectID, crdt, objectStore) {
     var c = this;
     if (this.crdt.propagation == CRDT.OP_BASED) {
         for (var i = 0; i < keys.length; i++) {
-            (function () {
-                const key = keys[i];
+            (function (key) {
                 c.locals[key] = c.crdt.crdt.operations[key].local;
                 c.remotes[key] = c.crdt.crdt.operations[key].remote;
                 c[key] = function () {
@@ -154,19 +153,18 @@ function CRDT(objectID, crdt, objectStore) {
                             c.callback(cbVal, {local: true});
                     }
                 };
-            })();
+            })(keys[i]);
         }
     } else if (this.crdt.propagation == CRDT.STATE_BASED) {
         for (var i = 0; i < keys.length; i++) {
-            (function () {
-                const key = keys[i];
+            (function (key) {
                 c[key] = function () {
                     var ret = c.crdt.crdt.operations[key].apply(c, arguments);
                     c.objectStore.propagateState(c.objectID, {all: true});
                     if (c.callback)
                         c.callback(ret, {local: true});
                 };
-            })();
+            })(keys[i]);
         }
     } else {
         console.error("I am here: " + JSON.stringify(this.crdt));
@@ -287,8 +285,9 @@ CRDT.prototype.getVersionVector = function () {
  *
  * @param state {Object}
  * @param connection {PeerConnection | ServerConnection}
+ * @param originalMessage {Object, null}
  */
-CRDT.prototype.stateFromNetwork = function (state, connection) {
+CRDT.prototype.stateFromNetwork = function (state, connection, originalMessage) {
     var c = this.compare(this.getState(), state);
     switch (c) {
         case CRDT.STATE.COMPARE_RESPONSE.EQUALS:
@@ -304,10 +303,14 @@ CRDT.prototype.stateFromNetwork = function (state, connection) {
             this.state = args.mergeResult;
             if (this.callback)
                 this.callback(args.stateChange, {local: false});
-            this.objectStore.propagateState(this.objectID, {except: connection});
+            if (originalMessage) {
+                originalMessage.options = {except: connection.remoteID};
+                this.objectStore.propagateMessage(originalMessage);
+            } else {
+                this.objectStore.propagateState(this.objectID, {except: connection});
+            }
             break;
         case CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE:
-
             var args = this.merge(this.getState(), state);
             this.state = args.mergeResult;
             if (this.callback)
@@ -315,26 +318,29 @@ CRDT.prototype.stateFromNetwork = function (state, connection) {
             this.objectStore.propagateState(this.objectID, {all: true});
             break;
     }
-
 };
 
 /**
  *
  * @param operations {Array.<{clientID,dependencyVV,opID,opName,result}>}
  * @param connection {PeerConnection | ServerConnection}
+ * @param originalMessage {Object, null}
  */
-CRDT.prototype.operationsFromNetwork = function (operations, connection) {
+CRDT.prototype.operationsFromNetwork = function (operations, connection, originalMessage) {
     var callbackValues = [];
     var didntHave = [];
     var alreadyHad = [];
     var i = 0;
+    var startingLength = operations.length;
     while (operations.length > 0) {
+        var did = false;
         console.log("Operations to go:" + operations.length);
         while (i < operations.length) {
             var op = operations[i];
             if (this.alreadyHadOp(op)) {
                 alreadyHad.push(op);
                 operations.splice(i, 1);
+                did = true;
             } else if (this.depsMatchedFor(op)) {
                 var cbv = this.remotes[op.opName].apply(this, [op.result]);
                 this.addOpToHistory(op.clientID, op.opID, op.result, op.opName, op.dependencyVV);
@@ -342,9 +348,17 @@ CRDT.prototype.operationsFromNetwork = function (operations, connection) {
                 callbackValues.push(cbv);
                 didntHave.push(op);
                 operations.splice(i, 1);
+                did = true;
             } else {
                 i++;
             }
+        }
+        if (!did) {
+            console.log(this.getState());
+            console.log(this.getVersionVector());
+            console.log(operations);
+            this.objectStore.sendVVToNode(this.objectID, connection.remoteID);
+            break;
         }
         i = 0;
     }
@@ -353,11 +367,19 @@ CRDT.prototype.operationsFromNetwork = function (operations, connection) {
     }
     if (callbackValues.length > 0) {
         if (this.callback) {
-            this.callback(callbackValues);
+            this.callback(callbackValues, {local: false});
         }
     }
-    if (didntHave.length > 0)
+    if (didntHave.length == startingLength) {
+        if (originalMessage) {
+            originalMessage.options = {except: connection.remoteID};
+            this.objectStore.propagateMessage(originalMessage);
+        } else {
+            this.objectStore.propagateAll(this.objectID, didntHave, {except: connection});
+        }
+    } else if (didntHave.length > 0) {
         this.objectStore.propagateAll(this.objectID, didntHave, {except: connection});
+    }
 };
 
 /**
@@ -366,8 +388,12 @@ CRDT.prototype.operationsFromNetwork = function (operations, connection) {
  */
 CRDT.prototype.depsMatchedFor = function (op) {
     var vv = op.dependencyVV;
+    //console.log("deosMatchedFor: " + JSON.stringify(op))
+    //console.log("deosMatchedFor: " + JSON.stringify(vv))
+
     var keys = Object.keys(vv);
     for (var i = 0; i < keys.length; i++) {
+        //console.log("deosMatchedFor: " + keys[i] + " - " + vv[keys[i]] + " - " + this.alreadyHadOperation(keys[i], vv[keys[i]]))
         if (!this.alreadyHadOperation(keys[i], vv[keys[i]])) {
             return false;
         }

@@ -9,7 +9,7 @@ function Legion(options) {
     this.connectionManager = new ConnectionManager(this);
 
     if (this.options.bullyProtocol)
-        this.bullyProtocol = new this.options.bullyProtocol(this);
+        this.bullyProtocol = new this.options.bullyProtocol.type(this);
 
     this.objectStore = null;
 }

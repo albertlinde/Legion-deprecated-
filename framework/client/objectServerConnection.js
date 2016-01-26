@@ -1,27 +1,31 @@
-function ServerConnection(server, legion) {
-    this.legion = legion;
+function ObjectServerConnection(server, objectStore, legion) {
     this.server = server;
+    this.objectStore = objectStore;
+    this.legion = legion;
     this.remoteID = this.server.ip + ":" + this.server.port;
 
     this.socket = new WebSocket("ws://" + this.server.ip + ":" + this.server.port + "");
 
     var sc = this;
     this.socket.onopen = function open() {
+        sc.legion.generateMessage("CLIENT_ID", null, function (result) {
+            result.clientID = sc.legion.id;
+            sc.send(JSON.stringify(result));
+        });
         sc.legion.connectionManager.onOpenServer(sc);
     };
 
     this.socket.onmessage = function (event) {
-
         var m = JSON.parse(event.data);
         console.log("Got " + m.type + " from " + sc.remoteID + " s: " + m.sender);
         var original = JSON.parse(event.data);
         if (m.content) {
             decompress(m.content, function (result) {
                 m.content = JSON.parse(result);
-                sc.legion.messagingAPI.onMessage(sc, m, original);
+                sc.objectStore.onMessageFromServer(m, original, sc);
             });
         } else {
-            sc.legion.messagingAPI.onMessage(sc, m, original);
+            sc.objectStore.onMessageFromServer(m, original, sc);
         }
     };
 
@@ -35,7 +39,7 @@ function ServerConnection(server, legion) {
 
 }
 
-ServerConnection.prototype.send = function (message) {
+ObjectServerConnection.prototype.send = function (message) {
     if (typeof message == "object") {
         message = JSON.stringify(message);
     }
