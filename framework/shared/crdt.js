@@ -132,7 +132,8 @@ function CRDT(objectID, crdt, objectStore) {
                 c[key] = function () {
                     var l_ret = c.locals[key].apply(c, arguments);
                     var beforeVV = c.getVersionVector();
-
+                    if (!l_ret)
+                        return c.remotes[key].apply(c, arguments);
                     if (typeof CRDT_Database != "undefined") {
                         //Special case for merge from remote-server.
                         //NOTICE: this piece of code is executed by the server!
@@ -151,6 +152,7 @@ function CRDT(objectID, crdt, objectStore) {
                         var cbVal = c.remotes[key].apply(c, [l_ret]);
                         if (c.callback)
                             c.callback(cbVal, {local: true});
+                        return cbVal;
                     }
                 };
             })(keys[i]);
