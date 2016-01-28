@@ -77,7 +77,7 @@ ALMap.prototype.values = function () {
  * @returns {number}
  */
 ALMap.prototype.size = function () {
-    return Object.keys(this.map).length;
+    return this.keys().length;
 };
 
 ALMap.prototype.clear = function () {
