@@ -14,6 +14,7 @@ var CRDT = require('./../shared/crdt.js').CRDT;
 var CRDT_LIB = {};
 CRDT_LIB.STATE_Counter = require('./../shared/crdtLib/stateCounter.js').STATE_Counter;
 CRDT_LIB.OP_ORSet = require('./../shared/crdtLib/opSet.js').OP_ORSet;
+CRDT_LIB.OP_ORMap = require('./../shared/crdtLib/opMap.js').OP_ORMap;
 
 var util = require('util');
 var WebSocket = require('ws');
@@ -42,6 +43,7 @@ function initService() {
 
     db.defineCRDT(CRDT_LIB.STATE_Counter);
     db.defineCRDT(CRDT_LIB.OP_ORSet);
+    db.defineCRDT(CRDT_LIB.OP_ORMap);
 
     { // Client connection handling.
         var duplicates = new D.Duplicates();
