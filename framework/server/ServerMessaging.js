@@ -28,7 +28,11 @@ ServerMessaging.prototype.broadcastMessage = function (message, except) {
                 this.peerSyncs.get(message.destination).send(message);
                 console.log("Sent " + JSON.parse(message).type + " only to " + message.destination);
             } else {
-                console.log("ServerMessaging. should remove dead peer.");
+                var ps = this.peerSyncs.get(message.destination);
+                this.peerSyncs.delete(message.destination);
+                ps.finalize();
+                console.log("ServerMessaging (1). Removed dead peer: " + message.destination);
+                return; //odds of me propagating this and the node receiving it are truly amazing.
             }
         } else {
             return;
@@ -53,7 +57,10 @@ ServerMessaging.prototype.broadcastMessage = function (message, except) {
                 console.log("Sent " + JSON.parse(message).type + " to " + peers[i] + " s: " + JSON.parse(message).sender);
                 this.peerSyncs.get(peers[i]).send(message);
             } else {
-                console.log("ServerMessaging. should remove dead peer.");
+                var ps = this.peerSyncs.get(peers[i]);
+                this.peerSyncs.delete(peers[i]);
+                ps.finalize();
+                console.log("ServerMessaging (2). Removed dead peer: " + peers[i]);
             }
         }
     }
