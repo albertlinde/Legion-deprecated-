@@ -81,7 +81,8 @@ CRDT_Database.prototype.clearPeersQueue = function () {
                             break;
                     }
                     pop.msg = msg;
-                    options.except = options.except.remoteID;
+                    if (options.except)
+                        options.except = options.except.remoteID;
                     os.generateMessage(os.handlers.gotContentFromNetwork.type, pop, function (result) {
                         var onlyTo = options.onlyTo;
                         if (onlyTo) {
