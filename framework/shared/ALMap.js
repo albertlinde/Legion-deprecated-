@@ -15,6 +15,34 @@ ALMap.prototype.set = function (key, value) {
 };
 
 /**
+ * Sets all given keys with a single value or, if value is an array,
+ * each keys with the appropriate (by order in array) value.
+ * @param keys {Array.<Object>}
+ * @param value {Object, Array.<Object>}
+ */
+ALMap.prototype.setAll = function (keys, value) {
+    if (value instanceof Array) {
+        for (var i = 0; i < keys.length; i++) {
+            this.set(keys[i], value[i]);
+        }
+    } else {
+        for (var i = 0; i < keys.length; i++) {
+            this.set(keys[i], value);
+        }
+    }
+};
+
+/**
+ *
+ * @param keys {Array.<Object>}
+ */
+ALMap.prototype.deleteAll = function (keys) {
+    for (var i = 0; i < keys.length; i++) {
+        this.delete(keys[i]);
+    }
+};
+
+/**
  *
  * @param key {Object}
  */
