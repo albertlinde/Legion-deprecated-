@@ -203,7 +203,8 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
  *
  * @param message
  */
-ObjectStore.prototype.propagateMessage = function (message) {
+ObjectStore.prototype.propagateMessage = function (message, extra) {
+    message.extra = extra;
     this.serverQueue.push(message);
     this.peersQueue.push(message);
 };
@@ -284,6 +285,14 @@ ObjectStore.prototype.clearServerQueue = function () {
                         os.objectServer.send(result);
                     });
                 } else {
+                    switch (pop.extra.type) {
+                        case "STATE":
+                            if (done.contains("" + pop.objectID))
+                                return;
+                            else
+                                done.set("" + pop.objectID, true);
+                    }
+                    delete pop.extra;
                     //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
                     os.legion.generateMessage("Fake", {fake: "data"}, function (answer) {
                         os.objectServer.send(pop);
@@ -369,6 +378,14 @@ ObjectStore.prototype.clearPeersQueue = function () {
                         }
                     });
                 } else {
+                    switch (pop.extra.type) {
+                        case "STATE":
+                            if (done.contains("" + pop.objectID))
+                                return;
+                            else
+                                done.set("" + pop.objectID, true);
+                    }
+                    delete pop.extra;
                     //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
                     os.legion.generateMessage("Fake", {fake: "data"}, function (answer) {
                         os.legion.messagingAPI.broadcastMessage(pop, [os.legion.connectionManager.serverConnection]);

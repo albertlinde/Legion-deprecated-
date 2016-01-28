@@ -307,7 +307,7 @@ CRDT.prototype.stateFromNetwork = function (state, connection, originalMessage) 
                 this.callback(args.stateChange, {local: false});
             if (originalMessage) {
                 originalMessage.options = {except: connection.remoteID};
-                this.objectStore.propagateMessage(originalMessage);
+                this.objectStore.propagateMessage(originalMessage, {type: "STATE", objectID: this.objectID});
             } else {
                 this.objectStore.propagateState(this.objectID, {except: connection});
             }

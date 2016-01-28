@@ -103,6 +103,14 @@ CRDT_Database.prototype.clearPeersQueue = function () {
                         }
                     });
                 } else {
+                    switch (pop.extra.type) {
+                        case "STATE":
+                            if (done.contains("" + pop.objectID))
+                                return;
+                            else
+                                done.set("" + pop.objectID, true);
+                    }
+                    delete pop.extra;
                     //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
                     os.generateMessage("Fake", {fake: "data"}, function (answer) {
                         os.messagingAPI.broadcastMessage(pop, [options.except]);
@@ -153,7 +161,8 @@ CRDT_Database.prototype.propagate = function (clientID, operationID, l_ret, depe
     util.error("Not Implemented: propagate");
 };
 
-CRDT_Database.prototype.propagateMessage = function (message) {
+CRDT_Database.prototype.propagateMessage = function (message, extra) {
+    message.extra = extra;
     this.peersQueue.push(message);
 };
 
