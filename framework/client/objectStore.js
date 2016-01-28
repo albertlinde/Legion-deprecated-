@@ -235,6 +235,7 @@ ObjectStore.prototype.clearServerQueue = function () {
     if (this.serverQueue.size() > 0) {
         console.log("Messages in queue: " + this.serverQueue.size());
         var pop = this.serverQueue.pop();
+        var done = new ALMap();
         while (pop) {
             (function (pop) {
                 var options = pop.options;
@@ -257,11 +258,21 @@ ObjectStore.prototype.clearServerQueue = function () {
                             op.clientID = clientID;
                             op.objectID = objectID;
                             msg = op;
+                            var thing = "" + objectID + "" + clientID + "" + operationID;
+                            if (done.contains(thing))
+                                return;
+                            else
+                                done.set(thing, true);
                             break;
                         case "OPLIST":
                             break;
                         case "STATE":
                             var objectID = pop.objectID;
+                            var thing = "" + objectID;
+                            if (done.contains(thing))
+                                return;
+                            else
+                                done.set(thing, true);
                             var crdt = os.crdts.get(objectID);
                             var state = crdt.toJSONString(crdt.getState());
                             msg = {objectID: objectID, state: state};
@@ -293,6 +304,7 @@ ObjectStore.prototype.clearPeersQueue = function () {
     if (this.peersQueue.size() > 0) {
         console.log("Messages in queue: " + this.peersQueue.size());
         var pop = this.peersQueue.pop();
+        var done = new ALMap();
         while (pop) {
             (function (pop) {
                 var options = pop.options;
@@ -308,6 +320,11 @@ ObjectStore.prototype.clearPeersQueue = function () {
                             var objectID = pop.objectID;
                             var clientID = pop.clientID;
                             var operationID = pop.operationID;
+                            var thing = "" + objectID + "" + clientID + "" + operationID;
+                            if (done.contains(thing))
+                                return;
+                            else
+                                done.set(thing, true);
                             var crdt = os.crdts.get(objectID);
                             var op = crdt.getOpFromHistory(clientID, operationID);
                             op.clientID = clientID;
@@ -318,6 +335,11 @@ ObjectStore.prototype.clearPeersQueue = function () {
                             break;
                         case "STATE":
                             var objectID = pop.objectID;
+                            var thing = "" + objectID;
+                            if (done.contains(thing))
+                                return;
+                            else
+                                done.set(thing, true);
                             var crdt = os.crdts.get(objectID);
                             var state = crdt.toJSONString(crdt.getState());
                             msg = {objectID: objectID, state: state};
