@@ -21,7 +21,9 @@ function ServerConnection(server, legion) {
                 sc.legion.messagingAPI.onMessage(sc, m, original);
             });
         } else {
-            sc.legion.messagingAPI.onMessage(sc, m, original);
+            decompress("5d00000100040000000000000000331849b7e4c02e1ffffac8a000", function (result) {
+                sc.legion.messagingAPI.onMessage(sc, m, original);
+            });
         }
     };
 

@@ -28,7 +28,9 @@ PeerConnection.prototype.setChannelHandlers = function () {
                 console.error(e);
             }
         } else {
-            pc.legion.messagingAPI.onMessage(pc, m, original);
+            decompress("5d00000100040000000000000000331849b7e4c02e1ffffac8a000", function (result) {
+                pc.legion.messagingAPI.onMessage(pc, m, original);
+            });
         }
     };
     this.channel.onopen = function (event) {

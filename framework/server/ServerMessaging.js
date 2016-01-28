@@ -49,9 +49,10 @@ ServerMessaging.prototype.broadcastMessage = function (message, except) {
         if (peers[i] == message.sender)
             continue;
         var send = true;
-        for (var j = 0; send && except && j < except.length; j++)
-            if (except[j] && (peers[i] == except[j]))
-                send = false;
+        if (except)
+            for (var j = 0; send && j < except.length; j++)
+                if (peers[i] == except[j])
+                    send = false;
         if (send) {
             if (this.peerSyncs.get(peers[i]).peerConnection.readyState == 1) {
                 console.log("Sent " + JSON.parse(message).type + " to " + peers[i] + " s: " + JSON.parse(message).sender);

@@ -140,7 +140,9 @@ function initService() {
                                 cb(parsed);
                             });
                         } else {
-                            cb(parsed);
+                            Compressor.decompress("5d00000100040000000000000000331849b7e4c02e1ffffac8a000", function (result) {
+                                cb(parsed);
+                            });
                         }
                     } else {
                         util.log("Duplicate.")
