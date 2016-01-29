@@ -287,7 +287,7 @@ CRDT.prototype.getVersionVector = function () {
  *
  * @param state {Object}
  * @param connection {PeerConnection | ServerConnection}
- * @param originalMessage {Object, null}
+ * @param originalMessage .{Object}
  */
 CRDT.prototype.stateFromNetwork = function (state, connection, originalMessage) {
     var c = this.compare(this.getState(), state);
@@ -325,8 +325,8 @@ CRDT.prototype.stateFromNetwork = function (state, connection, originalMessage) 
 /**
  *
  * @param operations {Array.<{clientID,dependencyVV,opID,opName,result}>}
- * @param connection {PeerConnection | ServerConnection}
- * @param originalMessage {Object, null}
+ * @param connection {PeerConnection | ObjectServerConnection | GDriveRTObjectsServerConnection}
+ * @param originalMessage .{Object}
  */
 CRDT.prototype.operationsFromNetwork = function (operations, connection, originalMessage) {
     var callbackValues = [];

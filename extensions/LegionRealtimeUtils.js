@@ -1,5 +1,5 @@
 function LegionRealtimeUtils(realtimeUtils) {
-    this.DriveRealtimeUtils = realtimeUtils;
+    this.realtimeUtils = realtimeUtils;
 
     //TODO: set the id before anything?
     this.id = null;
@@ -86,12 +86,28 @@ LegionRealtimeUtils.prototype.load = function (fileID, onLoad, onInit) {
  * @param onLoad {Function}
  */
 LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
+    var signalling;
+    var signallingServer;
+    if (this.signalling_on_legacy) {
+        signalling = ServerConnection;
+        signallingServer = {ip: "localhost", port: 8002}
+    } else {
+        signalling = GDriveRTSignallingServerConnection;
+        signallingServer = {};
+    }
 
-    //TODO: this.signalling_on_legacy
-    //TODO: this.persitence_on_legacy
+    var persistence;
+    var persistenceServer;
+    if (this.persitence_on_legacy) {
+        persistence = ObjectServerConnection;
+        persistenceServer = {ip: "localhost", port: 8004}
+    } else {
+        persistence = GDriveRTObjectsServerConnection;
+        persistenceServer = {};
+    }
 
     var options = {
-        clientID: clientID,
+        clientID: "TEMP_ID",
         overlayProtocol: SimpleOverlay,
         messagingProtocol: FloodMessaging,
         objectOptions: {
@@ -107,16 +123,17 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
             }
         },
         signallingConnection: {
-            type: ServerConnection,
-            server: {ip: "localhost", port: 8002}
+            type: signalling,
+            server: signallingServer
         },
         objectServerConnection: {
-            type: ObjectServerConnection,
-            server: {ip: "localhost", port: 8004}
+            type: persistence,
+            server: persistenceServer
         }
     };
 
     this.legion = new Legion(options);
+    this.legion.lru = this;
     this.legion.join();
 
 
