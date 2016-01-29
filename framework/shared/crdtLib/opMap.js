@@ -128,6 +128,14 @@ var op_orMap = {
                     return this.state.adds.get(data).keys()
                 }
             },
+            keys: {
+                local: function (key) {
+                    return null;
+                },
+                remote: function (data) {
+                    return this.state.adds.keys()
+                }
+            },
             delete: {
                 local: function (key) {
                     var values = this.state.adds.get(key);

@@ -10,10 +10,13 @@ function MergeUtils(lru) {
  */
 MergeUtils.prototype.initMap = function (callback) {
     var mergeUtils = this;
-    realtimeUtils.load(this.ALRU.FileID_Merge.replace('/', ''),
+    this.lru.realtimeUtils.load(this.lru.FileID_Merge.replace('/', ''),
         function (doc) {
+            console.log("MergeUtils load");
+
             mergeUtils.doc = doc;
             mergeUtils.map = doc.getModel().getRoot().get('b2b_map');
+            console.log("MergeUtils load done");
             callback();
         }, function () {
             console.error("onFileInitialize: should have been done already!");
@@ -191,9 +194,11 @@ MergeUtils.prototype.eQUALS_ARRAY = function (arr1, arr2) {
 };
 
 MergeUtils.prototype.mergeFiles = function () {
+    console.log("MergeFiles start");
     var mergeUtils = this;
     var lru = this.lru;
     getCurrentRevision(lru.FileID_Original, function (revision) {
+        console.log("Got revision: " + revision.revision);
         lru.revisions.set(parseInt(revision.revision), revision);
 
         if (!mergeUtils.doc) {
@@ -219,12 +224,13 @@ MergeUtils.prototype.mergeFiles = function () {
 
             var currB2Bval = mergeUtils.getLocalValue();
 
-            //console.log({Lb2bVal: lastB2BVal});
-            //console.log({Cb2bVal: currB2Bval});
+            console.log({Lb2bVal: lastB2BVal});
+            console.log({Cb2bVal: currB2Bval});
 
-            //console.log({num: lastRevNum, val: lastRevVal});
-            //console.log({num: currKey, val: revision});
+            console.log({num: lastRevNum, val: lastRevVal});
+            console.log({num: currKey, val: revision});
 
+            return;
             var currRootKey;
             var currRootObject;
             var rootKeys = Object.keys(revision.result.data.value);
@@ -381,6 +387,8 @@ MergeUtils.prototype.mergeFiles = function () {
                 var newGapiRev = {num: currKey, val: revision};
                 mergeUtils.map.set("gapi", newGapiRev);
             }
+
+            console.log("MergeFiles end");
         }
     });
 };
@@ -399,14 +407,16 @@ MergeUtils.prototype.getLocalValue = function () {
     } else {
         for (var i = 0; i < keys.length; i++) {
             var crdt = this.lru.objectStore.getCRDT(keys[i]);
+            if (!crdt)continue;
             switch (crdt.crdt.type) {
                 case CRDT_LIB.OP_ORMap.type:
                     val[keys[i]] = crdt.getValue();
-                    break;
+                    continue;
                 case CRDT_LIB.OP_List.type:
                     val[keys[i]] = crdt.getValue();
-                    break;
+                    continue;
             }
+            console.error(keys[i]);
         }
     }
     return val;

@@ -39,6 +39,10 @@ function ObjectServerConnection(server, objectStore, legion) {
 
 }
 
+ObjectServerConnection.prototype.close = function () {
+    this.socket.close();
+};
+
 ObjectServerConnection.prototype.send = function (message) {
     if (typeof message == "object") {
         message = JSON.stringify(message);

@@ -49,6 +49,7 @@ GDriveRTObjectsServerConnection.prototype.send = function (message) {
         console.error(e);
     }
 };
+
 GDriveRTObjectsServerConnection.prototype.doSend = function (message) {
     switch (message.type) {
         case (this.objectStore.handlers.peerSync.type):
@@ -83,7 +84,8 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
 
     for (var i = 0; i < operations.length; i++) {
         if (!this.DriveListHasOP(rootMap, operations[i])) {
-            rootMap.insert(rootMap.size(), operations[i]);//todo: check semantics
+            rootMap.insert(rootMap.size(), operations[i]);
+            //TODO: check semantics
         }
     }
 
@@ -103,7 +105,8 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
 
         for (var i = 0; i < operations.length; i++) {
             if (!this.DriveListHasOP(objectList, operations[i])) {
-                objectList.insert(objectList.size(), operations[i]);//todo: check semantics
+                objectList.insert(objectList.size(), operations[i]);
+                //TODO: check semantics
             }
         }
     }

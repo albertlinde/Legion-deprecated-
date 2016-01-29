@@ -6,6 +6,11 @@ function SimpleOverlay(overlay, legion) {
     this.interval = setInterval(function () {
         so.floodJoin();
     }, 15 * 1000);
+    this.started = false;
+
+    setTimeout(function () {
+        so.floodJoin();
+    }, 2 * 1000);
 
     this.legion.messagingAPI.setHandlerFor("ConnectToAnyNodesPlease", function (message, original, connection) {
         so.handleJoin(message, original, connection)
@@ -40,15 +45,17 @@ SimpleOverlay.prototype.floodJoin = function () {
     //random sample of peers
     var peers = this.overlay.getPeers(this.overlay.peerCount());
 
-    var serverConnection = this.legion.connectionManager.serverConnection;
+    if (!this.started) {
+        var serverConnection = this.legion.connectionManager.serverConnection;
 
-    if (!serverConnection) {
-        //this forces a connection to the server.
-        if (!this.legion.bullyProtocol.amBullied()) {
-            this.legion.connectionManager.startSignallingConnection();
+        if (!serverConnection) {
+            //this forces a connection to the server.
+            if (!this.legion.bullyProtocol.amBullied()) {
+                this.legion.connectionManager.startSignallingConnection();
+            }
         }
+        this.started = true;
     }
-
     var so = this;
     this.legion.generateMessage("ConnectToAnyNodesPlease", null, function (result) {
         so.legion.messagingAPI.broadcastMessage(result);
@@ -56,6 +63,7 @@ SimpleOverlay.prototype.floodJoin = function () {
 };
 
 SimpleOverlay.prototype.handleJoin = function (message, original, connection) {
+    console.log(message)
     if (!this.legion.connectionManager.hasPeer(message.sender)) {
         if (this.overlay.peerCount() <= 1)
             this.legion.connectionManager.connectPeer(message.sender);
@@ -65,7 +73,7 @@ SimpleOverlay.prototype.handleJoin = function (message, original, connection) {
 
     if (this.legion.bullyProtocol.amBullied()) {
         if (this.legion.connectionManager.serverConnection) {
-            this.legion.connectionManager.serverConnection.socket.close();
+            this.legion.connectionManager.serverConnection.close()
         }
     }
 };

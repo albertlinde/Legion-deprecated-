@@ -1,4 +1,4 @@
-var DEFAULT_PEER_INIT_TIMEOUT = 7500;
+var DEFAULT_PEER_INIT_TIMEOUT = 15 * 1000;
 
 function PeerConnection(remoteID, legion) {
     if (detailedDebug) {
@@ -66,15 +66,18 @@ PeerConnection.prototype.cancelAll = function (notDuplicate) {
     this.channel = null;
     this.remoteID = null;
     this.peer.close();
+    clearTimeout(this.init_timeout);
     this.peer = null;
 };
 
 PeerConnection.prototype.returnOffer = function (offer) {
+    clearTimeout(this.init_timeout);
     if (detailedDebug)console.log(offer);
     this.peer.setRemoteDescription(new RTCSessionDescription(offer));
 };
 
 PeerConnection.prototype.return_ice = function (candidate) {
+    clearTimeout(this.init_timeout);
     if (detailedDebug)console.log(candidate);
     var pc = this;
     this.peer.addIceCandidate(new RTCIceCandidate(candidate),

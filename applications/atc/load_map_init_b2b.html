@@ -6,6 +6,49 @@
 
     <script src="https://apis.google.com/js/api.js"></script>
     <script type="application/javascript" src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
+    <script src="./../../node_modules/lzma/src/lzma_worker-min.js"></script>
+
+
+    <script type="application/javascript" src="./../../extensions/LegionRealtimeUtils.js"></script>
+
+    <script type="application/javascript" src="./../../framework/client/adapter.js"></script>
+    <script type="application/javascript" src="./../../framework/client/connectionManager.js"></script>
+    <script type="application/javascript" src="./../../framework/client/legion.js"></script>
+    <script type="application/javascript" src="./../../framework/client/messagingAPI.js"></script>
+    <script type="application/javascript" src="./../../framework/client/overlay.js"></script>
+    <script type="application/javascript" src="./../../framework/client/messagingAPI.js"></script>
+    <script type="application/javascript" src="./../../framework/client/overlay.js"></script>
+    <script type="application/javascript" src="./../../framework/client/peerConnection.js"></script>
+    <script type="application/javascript" src="./../../framework/client/serverConnection.js"></script>
+    <script type="application/javascript" src="./../../framework/client/objectServerConnection.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/simpleMessaging.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/simpleOverlay.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/simpleBully.js"></script>
+
+    <script type="application/javascript" src="./../../framework/client/objectStore.js"></script>
+
+    <script type="application/javascript" src="../../framework/shared/peerSync.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/Duplicates.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/ALMap.js"></script>
+    <script type="application/javascript" src="../../framework/shared/Compressor.js"></script>
+
+    <script type="application/javascript" src="./../../framework/shared/crdt.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/ALQueue.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/crdtLib/opList.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/crdtLib/stateCounter.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/crdtLib/opMap.js"></script>
+
+    <script type="application/javascript" src="./../../extensions/LegionRealtimeUtils.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/MergeUtils.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/MainBullyProtocol.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/DriveUtils.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/driveSignallingConnection.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/driveObjectsConnection.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/DriveApplicationInterface.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/packages/3diff.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/packages/diff_match_patch.js"></script>
+    <script type="application/javascript"
+            src="./../../extensions/GDriveRT/packages/ServerDate-master/lib/ServerDate.js"></script>
 
 </head>
 <body>
@@ -58,7 +101,7 @@
             map6: s,
             map7: s
         });
-        model.getRoot().set('map', map);
+        model.getRoot().set('test_map', map);
 
         console.log("onFileInitialize 2");
     }
@@ -67,7 +110,7 @@
     function onFileLoaded(doc) {
         console.log("onFileLoaded 1");
         g_doc = doc;
-        collaborativeMap = doc.getModel().getRoot().get('map');
+        collaborativeMap = doc.getModel().getRoot().get('test_map');
         wireMap(collaborativeMap);
         console.log("onFileLoaded 2");
     }

@@ -95,22 +95,23 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
 
     var crdt = this.crdts.get(objectID);
     if (!crdt) {
-        console.warn("Not implemented: vv for CRDT I do not have.")
+        console.warn("Not implemented: vv for CRDT I do not have.");
+        return;
     }
 
     var vvDiff = this.versionVectorDiff(crdt.getVersionVector(), hisVV);
 
     var os = this;
-    if (vvDiff.vv2.missing.length > 0) {
+    if (Object.keys(vvDiff.vv2.missing).length > 0) {
         if (objectsDebug) {
             console.log("Peer is missing ops.");
         }
         var operations = crdt.getOperations(vvDiff.vv2.missing);
-        var answer = [];
-        answer.push({
+        var answer = {
+            type: "OPLIST",
             objectID: objectID,
             operations: operations
-        });
+        };
         this.legion.generateMessage(this.handlers.gotContentFromNetwork.type, answer, function (result) {
             if (os.peerSyncs.contains(message.sender)) {
                 result.destination = message.sender;
@@ -121,12 +122,13 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
             }
         });
     }
-    if (vvDiff.vv1.missing.length > 0) {
+    if (Object.keys(vvDiff.vv1.missing).length > 0) {
         if (objectsDebug) {
             console.log("I am missing ops.");
         }
         this.sendVVToNode(objectID, message.sender);
     }
+    console.log("gotVVFromNetwork end");
 };
 
 ObjectStore.prototype.sendVVToNode = function (objectID, receiver) {
@@ -138,11 +140,15 @@ ObjectStore.prototype.sendVVToNode = function (objectID, receiver) {
     var os = this;
     this.legion.generateMessage(this.handlers.version_vector_propagation.type, request, function (result) {
         result.destination = receiver;
-        if (os.peerSyncs.contains(receiver) && os.peerSyncs.get(receiver).peerConnection.socket.readyState == 1) {
+        if (os.peerSyncs.contains(receiver) && ((os.peerSyncs.get(receiver).peerConnection.socket && os.peerSyncs.get(receiver).peerConnection.socket.readyState == 1) || (os.peerSyncs.get(receiver).peerConnection.channel && os.peerSyncs.get(receiver).peerConnection.channel.readyState == "open"))) {
             var ps = os.peerSyncs.get(receiver);
             ps.send(result);
         } else {
-            os.legion.messagingAPI.sendTo(receiver, result);
+            if (os.objectServer && os.objectServer.peerConnection.remoteID == receiver) {
+                os.objectServer.send(result);
+            } else {
+                os.legion.messagingAPI.sendTo(receiver, result);
+            }
         }
     });
 };
@@ -183,7 +189,7 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
             }
             break;
         case "OPLIST":
-            var ops = message.content.ops;
+            var ops = message.content.operations;
             var crdt = this.crdts.get(message.content.objectID);
             crdt.operationsFromNetwork(ops, connection, original);
             break;
@@ -433,6 +439,15 @@ ObjectStore.prototype.get = function (objectID, type) {
             var crdt = this.types.get(type);
             var instance = new CRDT(objectID, crdt, this);
             this.crdts.set(objectID, instance);
+            if (this.legion.bullyProtocol.amBullied()) {
+                console.info("Send vv to " + this.legion.bullyProtocol.bully);
+                this.sendVVToNode(objectID, this.legion.bullyProtocol.bully);
+            } else {
+                if (this.objectServer) {
+                    console.info("Send vv to " + this.objectServer.peerConnection.remoteID);
+                    this.sendVVToNode(objectID, this.objectServer.peerConnection.remoteID);
+                }
+            }
             return instance;
         }
     }
@@ -444,13 +459,14 @@ ObjectStore.prototype.get = function (objectID, type) {
  * @param operationID {number}
  * @param options {Object}
  */
-ObjectStore.prototype.propagate = function (objectID, clientID, operationID, options) {
+ObjectStore.prototype.propagate = function (objectID, clientID, operationID, options, objectType) {
     var queuedOP = {
         type: "OP",
         clientID: clientID,
         objectID: objectID,
         operationID: operationID,
-        options: options
+        options: options,
+        objectType: objectType
     };
 
     this.serverQueue.push(queuedOP);

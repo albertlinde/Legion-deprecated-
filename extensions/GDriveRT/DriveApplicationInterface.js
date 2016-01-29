@@ -12,6 +12,10 @@ GapiInterfaceHandler.prototype.getRoot = function () {
 };
 
 GapiInterfaceHandler.prototype.get = function (id) {
+    if (!this.map.get(id) || !this.objects[this.map.get(id)]) {
+        console.warn("ID doesn't exist: " + id);
+        return;
+    }
     return new GapiObjectHandler(this.objects[this.map.get(id)]);
 };
 
@@ -19,34 +23,37 @@ function GapiObjectHandler(object) {
     this.object = object;
 }
 
-GapiObjectHandler.prototype.items = function () {
-    return this.object.items();
-};
-
+//Map
 GapiObjectHandler.prototype.keys = function () {
     return this.object.keys();
 };
 
+//List
 GapiObjectHandler.prototype.remove = function (pos) {
     this.object.remove(pos);
 };
 
+//List
 GapiObjectHandler.prototype.insert = function (pos, val) {
     this.object.insert(pos, val);
 };
 
+//Map
 GapiObjectHandler.prototype.has = function (key) {
     return this.object.contains(key);
 };
 
+//Map
 GapiObjectHandler.prototype.delete = function (key) {
     this.object.remove(key);
 };
 
+//Map
 GapiObjectHandler.prototype.set = function (key, value) {
     this.object.set(key, value);
 };
 
+//List
 GapiObjectHandler.prototype.asArray = function () {
     return this.object.getData();
 };
@@ -88,4 +95,8 @@ GapiObjectHandler.prototype.addEventListener = function (event, callback) {
             });
             break;
     }
+};
+
+GapiObjectHandler.prototype.getId = function () {
+    return "B2B object.";
 };

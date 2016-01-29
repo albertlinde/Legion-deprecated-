@@ -73,18 +73,7 @@ ALMap.prototype.contains = function (key) {
  * @returns {Object[]}
  */
 ALMap.prototype.keys = function () {
-    var keys = Object.keys(this.map);
-    for (var i = 0; i < keys.length; i++) {
-        try {
-            if (!(isNaN(keys[i]))) {
-                keys[i] = parseInt(keys[i]);
-            }
-        } catch (e) {
-            console.error(e);
-            console.error(keys[i]);
-        }
-    }
-    return keys;
+    return Object.keys(this.map);
 };
 
 /**

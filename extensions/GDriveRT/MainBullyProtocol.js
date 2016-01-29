@@ -47,13 +47,17 @@ MainBullyProtocol.prototype.checkIfMainBully = function (callback) {
             } else {
                 realtimeUtils.load(lru.FileID_MainBully.replace('/', ''),
                     function (doc) {
+                        console.log("MBF load");
                         mbp.MainBullyMap = doc.getModel().getRoot().get('b2b_map');
                         mbp.checkIfMainBully(callback)
+                        console.log("MBF load done");
                     }, function (model) {
+                        console.log("MBF init");
                         var map = model.createMap({
-                            FileID_Original: ALru.FileID_Original
+                            FileID_Original: lru.FileID_Original
                         });
                         model.getRoot().set('b2b_map', map);
+                        console.log("MBF init done");
                     });
             }
         } else {

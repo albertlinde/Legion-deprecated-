@@ -67,7 +67,7 @@ SimpleBully.prototype.onServerDisconnect = function (serverConnection) {
  * @returns {boolean}
  */
 SimpleBully.prototype.amBullied = function () {
-    if (this.bully == this.legion.id)
+    if (this.bully == this.legion.id ||  this.bully == "TEMP_ID")
         return false;
     var time = (Date.now()) - this.lastBullyMessage;
     return time <= this.bullyMustHaveInterval;

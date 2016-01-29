@@ -7,7 +7,7 @@ if (typeof exports != "undefined") {
     ALQueue = ALQueue.ALQueue;
     util = require('util');
     Compressor = require('./../shared/Compressor.js');
-
+    objectsDebug = false;
 }
 
 function CRDT_Database(messaging, peerSyncs) {
@@ -219,7 +219,8 @@ CRDT_Database.prototype.gotContentFromNetwork = function (message, original, con
     switch (message.content.type) {
         case "OP":
             var objectID = message.content.msg.objectID;
-            var crdt = this.getCRDT(objectID);
+            var type = message.content.objectType;
+            var crdt = this.getCRDT(objectID, type);
             crdt.operationsFromNetwork([message.content.msg], connection, original);
             break;
         case "OPLIST":
@@ -240,49 +241,41 @@ CRDT_Database.prototype.gotVVFromNetwork = function (message, original, connecti
     var hisVV = message.content.vv;
 
     var crdt = this.getCRDT(objectID);
+    if (!crdt) {
+        console.warn("Not implemented: vv for CRDT I do not have.");
+        return;
+    }
 
     var vvDiff = this.versionVectorDiff(crdt.getVersionVector(), hisVV);
 
     var os = this;
-    if (vvDiff.vv2.missing.length > 0) {
+    if (Object.keys(vvDiff.vv2.missing).length > 0) {
         if (objectsDebug) {
             console.log("Peer is missing ops.");
         }
-        var operations = crdt.getOperations(vvDiff.vv2.missing);
-        var answer = [];
-        answer.push({
+        var operations = crdt.getOperations(vvDiff.vv2.missing)
+        var answer = {
+            type: "OPLIST",
             objectID: objectID,
             operations: operations
-        });
-        this.legion.generateMessage(this.handlers.operations_propagation.type, answer, function (result) {
+        };
+        this.generateMessage(this.handlers.gotContentFromNetwork.type, answer, function (result) {
             if (os.peerSyncs.contains(message.sender)) {
                 result.destination = message.sender;
                 var ps = os.peerSyncs.get(message.sender);
                 ps.send(result);
             } else {
-                os.legion.messagingAPI.sendTo(message.sender, result);
+                os.messagingAPI.sendTo(message.sender, result);
             }
         });
     }
-    if (vvDiff.vv1.missing.length > 0) {
+    if (Object.keys(vvDiff.vv1.missing).length > 0) {
         if (objectsDebug) {
             console.log("I am missing ops.");
         }
-        var request = {
-            objectID: objectID,
-            vv: crdt.getVersionVector()
-        };
-        this.legion.generateMessage(this.handlers.version_vector_propagation.type, request, function (result) {
-            result.destination = message.sender;
-            if (os.peerSyncs.contains(message.sender)) {
-                result.destination = message.sender;
-                var ps = os.peerSyncs.get(message.sender);
-                ps.send(result);
-            } else {
-                os.legion.messagingAPI.sendTo(message.sender, result);
-            }
-        });
+        this.sendVVToNode(objectID, message.sender);
     }
+    console.log("gotVVFromNetwork end");
 };
 
 CRDT_Database.prototype.generateMessage = function (type, data, callback) {

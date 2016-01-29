@@ -59,6 +59,11 @@ function PeerSync(legion, objectStore, peerConnection) {
     }, 5 * 1000);
 }
 
+PeerSync.prototype.close = function () {
+    this.peerConnection.close();
+    this.finalize();
+};
+
 PeerSync.prototype.send = function (message) {
     if (typeof message == "object") {
         message = JSON.stringify(message);
