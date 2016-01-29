@@ -1,3 +1,5 @@
+var DEFAULT_PEER_INIT_TIMEOUT = 7500;
+
 function PeerConnection(remoteID, legion) {
     if (detailedDebug) {
         console.log("PC from " + legion.id + " to " + remoteID);
@@ -6,7 +8,17 @@ function PeerConnection(remoteID, legion) {
     this.legion = legion;
     this.peer = new RTCPeerConnection(servers, pcConstraint);
     this.channel = null;
+
+    var pc = this;
+    this.init_timeout = setTimeout(function () {
+        pc.onInitTimeout()
+    }, DEFAULT_PEER_INIT_TIMEOUT);
 }
+
+PeerConnection.prototype.onInitTimeout = function () {
+    console.warn("Peer " + this.legion.id + " connection timeout before getting offer from " + this.remoteID + ".");
+    this.cancelAll(true);
+};
 
 PeerConnection.prototype.setChannelHandlers = function () {
     var pc = this;
@@ -43,12 +55,14 @@ PeerConnection.prototype.setChannelHandlers = function () {
 
 /**
  * This method is called to remove a concurrently created and started PeerConnection.
+ * Used by timeout on getting offers with argument true.
  */
-PeerConnection.prototype.cancelAll = function () {
+PeerConnection.prototype.cancelAll = function (notDuplicate) {
     var pc = this;
-    this.channel.onclose = function () {
-        console.log("Forced a channel close for duplicate PeerConnection.", pc.legion.id, pc.remoteID);
-    };
+    if (!notDuplicate)
+        this.channel.onclose = function () {
+            console.log("Forced a channel close for duplicate PeerConnection.", pc.legion.id, pc.remoteID);
+        };
     this.channel = null;
     this.remoteID = null;
     this.peer.close();

@@ -213,10 +213,6 @@ ObjectStore.prototype.connectToObjectServer = function () {
     new this.legion.options.objectServerConnection.type(this.legion.options.objectServerConnection.server, this, this.legion);
 };
 
-
-/**
- * TODO: this queue must have some parsing to eliminate duplicates and merge state propagation of the same object?
- */
 ObjectStore.prototype.clearServerQueue = function () {
     var os = this;
 
@@ -305,9 +301,6 @@ ObjectStore.prototype.clearServerQueue = function () {
     }
 };
 
-/**
- * TODO: this queue must have some parsing to eliminate duplicates and merge state propagation of the same object?
- */
 ObjectStore.prototype.clearPeersQueue = function () {
     var os = this;
     if (this.peersQueue.size() > 0) {
@@ -516,7 +509,6 @@ ObjectStore.prototype.onClientDisconnect = function (peerConnection) {
  * @returns {{vv1: {missing: {}}, vv2: {missing: {}}}}
  */
 ObjectStore.prototype.versionVectorDiff = function (vv1, vv2) {
-    //TODO: am here
     var ret = {vv1: {missing: {}}, vv2: {missing: {}}};
     var keys1 = Object.keys(vv1);
     var keys2 = Object.keys(vv2);

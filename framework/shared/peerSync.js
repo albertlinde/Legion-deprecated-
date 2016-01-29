@@ -43,7 +43,6 @@ function PeerSync(legion, objectStore, peerConnection) {
 
     /**
      * Contains updates to be sent after sync.
-     * TODO: this queue must have some parsing to eliminate duplicates and merge state propagation of the same object?
      * @type {ALQueue}
      */
     this.queueAfterSync = new ALQueue();

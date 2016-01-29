@@ -6,20 +6,21 @@ function SimpleBully(legion) {
             type: "Bully",
             callback: function (message, connection) {
                 var hisID = message.sender;
-                var time = (new Date().getTime());
+                var time = Date.now();
                 if (hisID <= sb.bully) {
                     sb.bully = hisID;
                     sb.lastBullyMessage = time;
                     if (bullyLog)console.log("Be bullied by", hisID);
                 } else {
                     if (bullyLog)console.log("Be bullied by", hisID, "but mine is", sb.bully);
+                    sb.onClientConnection(connection);
                 }
             }
         }
     };
 
     this.bully = this.legion.id;
-    this.lastBullyMessage = (new Date().getTime());
+    this.lastBullyMessage = Date.now();
 
     this.bullyMustHaveInterval = this.legion.options.bullyProtocol.options.bullyMustHaveInterval;
     this.bullySendInterval = this.legion.options.bullyProtocol.options.bullySendInterval;
@@ -37,7 +38,6 @@ function SimpleBully(legion) {
 
 SimpleBully.prototype.onClientConnection = function (peerConnection) {
     if (peerConnection.remoteID > this.legion.id) {
-        var sb = this;
         this.legion.generateMessage(this.handlers.bully.type, null, function (result) {
             if (bullyLog)console.log("Being immediate bully to", peerConnection.remoteID);
             peerConnection.send(result);
@@ -69,16 +69,14 @@ SimpleBully.prototype.onServerDisconnect = function (serverConnection) {
 SimpleBully.prototype.amBullied = function () {
     if (this.bully == this.legion.id)
         return false;
-    var time = (new Date().getTime()) - this.lastBullyMessage;
+    var time = (Date.now()) - this.lastBullyMessage;
     return time <= this.bullyMustHaveInterval;
 };
 
 SimpleBully.prototype.floodBully = function () {
     if (!this.amBullied()) {
-        if (bullyLog)console.log("Being bully.");
-
         this.bully = this.legion.id;
-        this.lastBullyMessage = (new Date().getTime());
+        this.lastBullyMessage = Date.now();
 
         var sb = this;
         this.legion.generateMessage(this.handlers.bully.type, null, function (result) {

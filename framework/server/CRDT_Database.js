@@ -35,10 +35,6 @@ function CRDT_Database(messaging, peerSyncs) {
     }, this.peerSendInterval);
 }
 
-
-/**
- * TODO: queue must be cleaned up as it can contain duplicate stuff!
- */
 CRDT_Database.prototype.clearPeersQueue = function () {
     var os = this;
     if (this.peersQueue.size() > 0) {

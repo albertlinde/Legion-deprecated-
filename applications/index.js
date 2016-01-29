@@ -32,8 +32,8 @@ function start(clientID) {
         bullyProtocol: {
             type: SimpleBully,
             options: {
-                bullyMustHaveInterval: 15 * 1000,
-                bullySendInterval: 7 * 1000,
+                bullyMustHaveInterval: 50 * 1000,
+                bullySendInterval: 15 * 1000,
                 bullyStartTime: 2 * 1000
             }
         },
