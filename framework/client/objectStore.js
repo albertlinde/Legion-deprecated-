@@ -209,8 +209,15 @@ ObjectStore.prototype.propagateMessage = function (message, extra) {
     this.peersQueue.push(message);
 };
 
+ObjectStore.prototype.disconnectFromObjectServer = function () {
+    if (this.objectServer) {
+        this.objectServer.close();
+    }
+};
+
 ObjectStore.prototype.connectToObjectServer = function () {
-    new this.legion.options.objectServerConnection.type(this.legion.options.objectServerConnection.server, this, this.legion);
+    if (this.legion.options.objectServerConnection)
+        new this.legion.options.objectServerConnection.type(this.legion.options.objectServerConnection.server, this, this.legion);
 };
 
 ObjectStore.prototype.clearServerQueue = function () {
@@ -226,6 +233,7 @@ ObjectStore.prototype.clearServerQueue = function () {
         if (this.serverQueue.size() > 0) {
             console.log("Clearing server queue. Am bullied.");
             this.serverQueue.clear();
+            this.disconnectFromObjectServer();
         }
     }
 
