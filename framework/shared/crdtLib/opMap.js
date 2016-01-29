@@ -1,6 +1,6 @@
 if (typeof generateUniqueIdentifier == "undefined") {
     generateUniqueIdentifier = function () {
-        return ("" + Math.random()).substr(2);
+        return ("" + Math.random()).substr(2, 8);
     }
 }
 
@@ -93,13 +93,16 @@ var op_orMap = {
                         var unique_keys = values.get(value_keys[i]).keys();
                         for (var j = 0; j < unique_keys.length; j++) {
                             if (removes.contains(unique_keys[j])) {
-                                values.get(value_keys[i]).delete(unique_keys[j])
+                                values.get(value_keys[i]).delete(unique_keys[j]);
                             }
                         }
                         if (values.get(value_keys[i]).size() == 0) {
                             values.delete(value_keys[i]);
                             ret.removes.push({key: key, value: value_keys[i]});
                         }
+                    }
+                    if (values.size() == 0) {
+                        this.state.adds.delete(key);
                     }
                     if (ret.removes.length == 0)
                         delete ret.removes;
@@ -114,7 +117,7 @@ var op_orMap = {
                     return null;
                 },
                 remote: function (data) {
-                    return this.state.adds.contains(data[0]);
+                    return this.state.adds.contains(data);
                 }
             },
             get: {
@@ -122,7 +125,7 @@ var op_orMap = {
                     return null;
                 },
                 remote: function (data) {
-                    return this.state.adds.get(data[0]).keys()
+                    return this.state.adds.get(data).keys()
                 }
             },
             delete: {
@@ -134,10 +137,8 @@ var op_orMap = {
                         for (var i = 0; i < v_removes.length; i++) {
                             removes = removes.concat(v_removes[i].keys());
                         }
-                        console.log(removes)
                         return {key: key, removes: removes};
                     } else {
-                        console.log("Null;")
                         return null;
                     }
                 },
@@ -164,9 +165,9 @@ var op_orMap = {
                             values.delete(value_keys[i]);
                             ret.removes.push({key: key, value: value_keys[i]});
                         }
-                        if (values.size() == 0) {
-                            this.state.adds.delete(key);
-                        }
+                    }
+                    if (values.size() == 0) {
+                        this.state.adds.delete(key);
                     }
                     if (ret.removes.length == 0)
                         delete ret.removes;

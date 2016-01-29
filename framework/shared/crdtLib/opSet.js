@@ -1,6 +1,6 @@
 if (typeof generateUniqueIdentifier == "undefined") {
     generateUniqueIdentifier = function () {
-        return ("" + Math.random()).substr(2);
+        return ("" + Math.random()).substr(2,8);
     }
 }
 
