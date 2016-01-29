@@ -111,7 +111,7 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
             objectID: objectID,
             operations: operations
         });
-        this.legion.generateMessage(this.handlers.operations_propagation.type, answer, function (result) {
+        this.legion.generateMessage(this.handlers.gotContentFromNetwork.type, answer, function (result) {
             if (os.peerSyncs.contains(message.sender)) {
                 result.destination = message.sender;
                 var ps = os.peerSyncs.get(message.sender);
