@@ -4,6 +4,7 @@ var detailedDebug = false;
 var bullyLog = true;
 
 function LegionRealtimeUtils(realtimeUtils) {
+    //NOTICE: current implementation does not allow for objects in objects.
     this.realtimeUtils = realtimeUtils;
 
     this.legion = null;

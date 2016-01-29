@@ -72,7 +72,7 @@ GDriveRTObjectsServerConnection.prototype.doSend = function (message) {
  * @param message
  */
 GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
-
+    var dc = this;
     var rootMap = this.document.getModel().getRoot().get('RootMap');
     var rootMapOps = rootMap.asArray();
     var localRootMap = this.objectStore.get("RootMap", CRDT_LIB.OP_ORMap.type);
@@ -83,9 +83,8 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
     var operations = localRootMap.getOperations(vvDiff.vv2.missing);
 
     for (var i = 0; i < operations.length; i++) {
-        if (!this.DriveListHasOP(rootMap, operations[i])) {
+        if (!this.driveListHasOP(rootMap, operations[i])) {
             rootMap.insert(rootMap.size(), operations[i]);
-            //TODO: check semantics
         }
     }
 
@@ -94,7 +93,13 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
         var objectKey = objectKeys[i];
         var objectList = this.document.getModel().getRoot().get(objectKey);
 
-        //TODO: init listeners <- need semantics (they do operationsFromNetwork())
+        objectList.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, function (evt) {
+            var m_list = [];
+            for (var i = 0; i < evt.values.length; i++) {
+                m_list.push(evt.values[i]);
+            }
+            dc.operations(objectKey, m_list)
+        });
 
         var objectListAsArray = objectList.asArray();
         var localObject = this.objectStore.getCRDT(objectKey);
@@ -104,9 +109,8 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
         var operations = localObject.getOperations(vvDiff.vv2.missing);
 
         for (var i = 0; i < operations.length; i++) {
-            if (!this.DriveListHasOP(objectList, operations[i])) {
+            if (!this.driveListHasOP(objectList, operations[i])) {
                 objectList.insert(objectList.size(), operations[i]);
-                //TODO: check semantics
             }
         }
     }
@@ -119,8 +123,18 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
     });
 };
 
-GDriveRTObjectsServerConnection.prototype.DriveListHasOP = function (list, op) {
-    //TODO: loop the list.
+GDriveRTObjectsServerConnection.prototype.operations = function (objectKey, operations) {
+    var crdt = this.objectStore.crdts.get(objectKey);
+    crdt.operationsFromNetwork(operations, this, null);
+};
+
+GDriveRTObjectsServerConnection.prototype.driveListHasOP = function (list, op) {
+    for (var i = 0; i < list.length; i++) {
+        if (list.get(i) == op) {
+            return true;
+        }
+    }
+    return false;
 };
 
 GDriveRTObjectsServerConnection.prototype.onSendPeerSyncAnswer = function (message) {
@@ -131,7 +145,7 @@ GDriveRTObjectsServerConnection.prototype.onServerContentFromNetwork = function 
     var objectID = message.content.msg.objectID;
 
     var objectList = this.document.getModel().getRoot().get(objectID);
-    if (!this.DriveListHasOP()) {
-        objectList.insert(objectList.size(), message.content.msg);//todo: check semantics
+    if (!this.driveListHasOP()) {
+        objectList.insert(objectList.size(), message.content.msg);
     }
 };
