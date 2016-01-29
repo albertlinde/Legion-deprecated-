@@ -79,6 +79,8 @@ CRDT_Database.prototype.clearPeersQueue = function () {
                     pop.msg = msg;
                     if (options.except)
                         options.except = options.except.remoteID;
+                    if (options.onlyTo)
+                        options.onlyTo = options.onlyTo.remoteID;
                     os.generateMessage(os.handlers.gotContentFromNetwork.type, pop, function (result) {
                         var onlyTo = options.onlyTo;
                         if (onlyTo) {
@@ -100,14 +102,16 @@ CRDT_Database.prototype.clearPeersQueue = function () {
                         }
                     });
                 } else {
-                    switch (pop.extra.type) {
-                        case "STATE":
-                            if (done.contains("" + pop.objectID))
-                                return;
-                            else
-                                done.set("" + pop.objectID, true);
+                    if (pop.extra) {
+                        switch (pop.extra.type) {
+                            case "STATE":
+                                if (done.contains("" + pop.objectID))
+                                    return;
+                                else
+                                    done.set("" + pop.objectID, true);
+                        }
+                        delete pop.extra;
                     }
-                    delete pop.extra;
                     //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
                     os.generateMessage("Fake", {fake: "data"}, function (answer) {
                         os.messagingAPI.broadcastMessage(pop, [options.except]);
@@ -294,13 +298,20 @@ CRDT_Database.prototype.generateMessage = function (type, data, callback) {
     if (!data) {
         callback(message);
     } else {
-        Compressor.compress(JSON.stringify(data), function (response) {
-            message.content = response;
-            callback(message);
-        }, function (error) {
-            util.error("Compress failed!", error);
-            callback(null);
-        });
+        try {
+
+            Compressor.compress(JSON.stringify(data), function (response) {
+                message.content = response;
+                callback(message);
+            }, function (error) {
+                util.error("Compress failed!", error);
+                callback(null);
+            });
+        }
+        catch (e) {
+            console.error(e);
+            console.error(data);
+        }
     }
 };
 
