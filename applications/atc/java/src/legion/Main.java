@@ -1,8 +1,11 @@
 package legion;
 
+import edu.uci.ics.jung.algorithms.layout.CircleLayout;
+import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.SparseGraph;
 import edu.uci.ics.jung.graph.SparseMultigraph;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
@@ -31,12 +34,45 @@ public class Main {
         System.out.println(f.getAbsoluteFile());
 
         Scanner s = new Scanner(f);
-        final Graph<String, String> g = new SparseMultigraph<String, String>();
+        final Graph<String, String> g = new SparseGraph<String, String>();
 
+
+
+        long last = 0;
+        while (s.hasNextLine()) {
+            try {
+                String s2 = s.nextLine();
+                if (s2.contains(".js")) s2 = s2.substring(s2.indexOf(" ")).trim();
+                if (!(s2.contains("OPEN") || s2.contains("CLOSE"))) continue;
+                if (s2.length() == 0) continue;
+
+                String s1 = s2.split(" ")[0];
+                Long time = Long.valueOf(s1);
+                if (last == 0)
+                    last = time;
+                else {
+                    System.out.println("SLEEP: " + (time - last));
+                    while (time - last > 5000) {
+                        System.out.println("Skipping some time.");
+                        last += 5000;
+                    }
+                    //Thread.sleep((time - last));
+                    last = time;
+                }
+
+
+                System.out.println(s1);
+                parse(s2, g);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         //Layout<String, String> layout = new FRLayout<String, String>(g);
-        Layout<String, String> layout = new KKLayout<String, String>(g);
+        //Layout<String, String> layout = new KKLayout<String, String>(g);
+        Layout<String, String> layout = new CircleLayout<String, String>(g);
         //Layout<String, String> layout = new ISOMLayout<String, String>(g);
-        //Layout<String, String> layout = new CircleLayout<String, String>(g);
+
+
         System.out.println(g.toString());
 
         layout.setSize(new Dimension(800, 800));
@@ -98,42 +134,12 @@ public class Main {
         frame.setContentPane(contentPanel);
 
 
+        layout.setGraph(g);
+        vv.updateUI();
+
         frame.getContentPane().add(vv);
         frame.pack();
         frame.setVisible(true);
-
-        long last = 0;
-        while (s.hasNextLine()) {
-            try {
-                String s2 = s.nextLine();
-                if (s2.contains(".js")) s2 = s2.substring(s2.indexOf(" ")).trim();
-                if (!(s2.contains("OPEN") || s2.contains("CLOSE"))) continue;
-                if (s2.length() == 0) continue;
-
-                String s1 = s2.split(" ")[0];
-                Long time = Long.valueOf(s1);
-                if (last == 0)
-                    last = time;
-                else {
-                    System.out.println("SLEEP: " + (time - last));
-                    while (time - last > 5000) {
-                        System.out.println("Skipping some time.");
-                        last += 5000;
-                    }
-                    Thread.sleep((time - last));
-                    last = time;
-                }
-
-
-                System.out.println(s1);
-                parse(s2, g);
-                layout.setGraph(g);
-                vv.updateUI();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
 
         Map<Integer, Integer> degreeCounter = new HashMap<Integer, Integer>();
         for (String vertex : g.getVertices()) {

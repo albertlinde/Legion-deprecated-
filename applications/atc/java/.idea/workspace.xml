@@ -23,7 +23,7 @@
     <disable_hints />
   </component>
   <component name="DebuggerManager">
-    <breakpoint_any>
+    <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true">
       <breakpoint>
         <option name="NOTIFY_CAUGHT" value="true" />
         <option name="NOTIFY_UNCAUGHT" value="true" />
@@ -59,6 +59,7 @@
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
     </breakpoint_any>
+    <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_rules />
     <ui_properties />
   </component>
@@ -71,15 +72,22 @@
       <file leaf-file-name="Main.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="14" column="0" selection-start="685" selection-end="685" vertical-scroll-proportion="0.4085603" vertical-offset="0" max-vertical-offset="4425">
+            <state line="70" column="10" selection-start="2477" selection-end="2477" vertical-scroll-proportion="0.35797665" vertical-offset="866" max-vertical-offset="4515">
               <folding>
-                <element signature="e#1916#2947#0" expanded="true" />
-                <element signature="e#2936#2937#0" expanded="true" />
-                <element signature="e#6432#6440#0" expanded="true" />
-                <element signature="e#6490#6498#0" expanded="true" />
-                <element signature="e#7700#7708#0" expanded="true" />
-                <element signature="e#7800#7808#0" expanded="true" />
-                <element signature="e#7854#7862#0" expanded="true" />
+                <element signature="imports" expanded="true" />
+                <element signature="e#1349#1365#0" expanded="true" />
+                <element signature="e#2598#2614#0" expanded="true" />
+                <element signature="e#2864#2880#0" expanded="true" />
+                <element signature="e#3088#4119#0" expanded="true" />
+                <element signature="e#3307#3315#0" expanded="true" />
+                <element signature="e#4108#4109#0" expanded="true" />
+                <element signature="e#5134#5152#0" expanded="true" />
+                <element signature="e#6501#6509#0" expanded="true" />
+                <element signature="e#6569#6577#0" expanded="true" />
+                <element signature="e#6627#6635#0" expanded="true" />
+                <element signature="e#7837#7845#0" expanded="true" />
+                <element signature="e#7937#7945#0" expanded="true" />
+                <element signature="e#7991#7999#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -95,8 +103,8 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/legion/Main.java" />
         <option value="$PROJECT_DIR$/files/overlay.txt" />
+        <option value="$PROJECT_DIR$/src/legion/Main.java" />
       </list>
     </option>
   </component>
@@ -133,7 +141,6 @@
     </navigator>
     <panes>
       <pane id="PackagesPane" />
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -214,6 +221,7 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -387,24 +395,24 @@
     <frame x="75" y="23" width="1365" height="877" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32920793" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32920793" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24981685" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32920793" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32920793" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -433,24 +441,51 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="0" selection-start="685" selection-end="685" vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="4425">
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1349#1365#0" expanded="true" />
+            <element signature="e#2598#2614#0" expanded="true" />
+            <element signature="e#2864#2880#0" expanded="true" />
+            <element signature="e#3088#4119#0" expanded="true" />
+            <element signature="e#3307#3315#0" expanded="true" />
+            <element signature="e#4108#4109#0" expanded="true" />
+            <element signature="e#5134#5152#0" expanded="true" />
+            <element signature="e#6501#6509#0" expanded="true" />
+            <element signature="e#6569#6577#0" expanded="true" />
+            <element signature="e#6627#6635#0" expanded="true" />
+            <element signature="e#7837#7845#0" expanded="true" />
+            <element signature="e#7937#7945#0" expanded="true" />
+            <element signature="e#7991#7999#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/files/overlay.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="160" column="51" selection-start="7438" selection-end="7438" vertical-scroll-proportion="-5.185185" vertical-offset="2120" max-vertical-offset="2580">
-          <folding />
-        </state>
+        <state line="160" column="51" selection-start="7438" selection-end="7438" vertical-scroll-proportion="-5.185185" vertical-offset="2120" max-vertical-offset="2580" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="0" selection-start="685" selection-end="685" vertical-scroll-proportion="0.4085603" vertical-offset="0" max-vertical-offset="4425">
+        <state line="70" column="10" selection-start="2477" selection-end="2477" vertical-scroll-proportion="0.35797665" vertical-offset="866" max-vertical-offset="4515">
           <folding>
-            <element signature="e#1916#2947#0" expanded="true" />
-            <element signature="e#2936#2937#0" expanded="true" />
-            <element signature="e#6432#6440#0" expanded="true" />
-            <element signature="e#6490#6498#0" expanded="true" />
-            <element signature="e#7700#7708#0" expanded="true" />
-            <element signature="e#7800#7808#0" expanded="true" />
-            <element signature="e#7854#7862#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+            <element signature="e#1349#1365#0" expanded="true" />
+            <element signature="e#2598#2614#0" expanded="true" />
+            <element signature="e#2864#2880#0" expanded="true" />
+            <element signature="e#3088#4119#0" expanded="true" />
+            <element signature="e#3307#3315#0" expanded="true" />
+            <element signature="e#4108#4109#0" expanded="true" />
+            <element signature="e#5134#5152#0" expanded="true" />
+            <element signature="e#6501#6509#0" expanded="true" />
+            <element signature="e#6569#6577#0" expanded="true" />
+            <element signature="e#6627#6635#0" expanded="true" />
+            <element signature="e#7837#7845#0" expanded="true" />
+            <element signature="e#7937#7945#0" expanded="true" />
+            <element signature="e#7991#7999#0" expanded="true" />
           </folding>
         </state>
       </provider>
