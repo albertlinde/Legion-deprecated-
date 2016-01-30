@@ -12,15 +12,32 @@ function GDriveRTObjectsServerConnection(argument, objectStore, legion) {
     this.document = null;
     this.model = null;
     var sc = this;
-    this.lru.realtimeUtils.load(this.lru.FileID_Objects.replace('/', ''), function (doc) {
-        sc.document = doc;
-        sc.model = doc.getModel();
-        sc.legion.connectionManager.onOpenServer(sc);
-
-    }, function () {
-        console.error("File init should have been done!");
-    });
+    if (this.lru.ready)
+        this.startup();
+    else {
+        setTimeout(function () {
+            sc.startup()
+        }, 200);
+    }
 }
+
+GDriveRTObjectsServerConnection.prototype.startup = function () {
+    var sc = this;
+    if (this.lru.ready) {
+        this.lru.realtimeUtils.load(this.lru.FileID_Objects.replace('/', ''), function (doc) {
+            sc.document = doc;
+            sc.model = doc.getModel();
+            sc.legion.connectionManager.onOpenServer(sc);
+
+        }, function () {
+            console.error("File init should have been done!");
+        });
+    } else {
+        setTimeout(function () {
+            sc.startup()
+        }, 200);
+    }
+};
 
 GDriveRTObjectsServerConnection.prototype.close = function () {
     this.document.close();
@@ -59,7 +76,7 @@ GDriveRTObjectsServerConnection.prototype.doSend = function (message) {
             this.onSendPeerSyncAnswer();
             return;
         case (this.objectStore.handlers.gotContentFromNetwork.type):
-            this.onServerContentFromNetwork();
+            this.onServerContentFromNetwork(message);
             return;
         case (this.objectStore.handlers.version_vector_propagation.type):
             console.error("This should never be called.");
@@ -75,7 +92,7 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
     var dc = this;
     var rootMap = this.document.getModel().getRoot().get('RootMap');
     var rootMapOps = rootMap.asArray();
-    var localRootMap = this.objectStore.get("RootMap", CRDT_LIB.OP_ORMap.type);
+    var localRootMap = this.objectStore.get("RootMap", CRDT_LIB.OP_ORMap.type, true);
 
     localRootMap.operationsFromNetwork(rootMapOps, this);
 
@@ -84,7 +101,7 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
 
     for (var i = 0; i < operations.length; i++) {
         if (!this.driveListHasOP(rootMap, operations[i])) {
-            rootMap.insert(rootMap.size(), operations[i]);
+            rootMap.insert(rootMap.length, operations[i]);
         }
     }
 
@@ -92,6 +109,9 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
     for (var i = 0; i < objectKeys.length; i++) {
         var objectKey = objectKeys[i];
         var objectList = this.document.getModel().getRoot().get(objectKey);
+        console.log("Object: ", objectKey);
+        console.log("ObjectList: ", objectList.asArray());
+        console.log("Object Type: ", localRootMap.get(objectKey)[0]);
 
         objectList.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, function (evt) {
             var m_list = [];
@@ -102,7 +122,17 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
         });
 
         var objectListAsArray = objectList.asArray();
-        var localObject = this.objectStore.getCRDT(objectKey);
+        var localObject;
+        switch (localRootMap.get(objectKey)[0]) {
+            case "Map":
+                console.log("Create map.");
+                localObject = this.objectStore.get(objectKey, CRDT_LIB.OP_ORMap.type, true);
+                break;
+            case "List":
+                console.log("Create list.");
+                localObject = this.objectStore.get(objectKey, CRDT_LIB.OP_List.type, true);
+                break;
+        }
         localObject.operationsFromNetwork(objectListAsArray, this);
 
         var vvDiff = this.objectStore.versionVectorDiff(localObject.getVersionVector(), []);
@@ -110,7 +140,7 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
 
         for (var i = 0; i < operations.length; i++) {
             if (!this.driveListHasOP(objectList, operations[i])) {
-                objectList.insert(objectList.size(), operations[i]);
+                objectList.insert(objectList.length, operations[i]);
             }
         }
     }
@@ -119,8 +149,9 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
     var os = this;
     this.legion.generateMessage(this.objectStore.handlers.peerSyncAnswer.type, messageContent, function (result) {
         result.content = messageContent;
-        os.onMessageFromServer(result, result, this);
+        os.objectStore.onMessageFromServer(result, result, this);
     });
+    this.objectStore.objectServer.isSynced = true;
 };
 
 GDriveRTObjectsServerConnection.prototype.operations = function (objectKey, operations) {
@@ -130,8 +161,10 @@ GDriveRTObjectsServerConnection.prototype.operations = function (objectKey, oper
 
 GDriveRTObjectsServerConnection.prototype.driveListHasOP = function (list, op) {
     for (var i = 0; i < list.length; i++) {
-        if (list.get(i) == op) {
-            return true;
+        if (op.opID == list.get(i).opID) {
+            if (op.clientID == list.get(i).clientID) {
+                return true;
+            }
         }
     }
     return false;
@@ -143,9 +176,10 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSyncAnswer = function (messa
 
 GDriveRTObjectsServerConnection.prototype.onServerContentFromNetwork = function (message) {
     var objectID = message.content.msg.objectID;
-
+    if (!objectID)
+        console.error(message)
     var objectList = this.document.getModel().getRoot().get(objectID);
-    if (!this.driveListHasOP()) {
-        objectList.insert(objectList.size(), message.content.msg);
+    if (!this.driveListHasOP(objectList, message.content.msg)) {
+        objectList.insert(objectList.length, message.content.msg);
     }
 };

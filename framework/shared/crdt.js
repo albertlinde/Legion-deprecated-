@@ -141,7 +141,7 @@ function CRDT(objectID, crdt, objectStore) {
                         var cbVal = c.remotes[key].apply(c, [l_ret]);
                         c.addOpToHistory("ObjectServer", ++c.localOP, l_ret, key, beforeVV);
                         c.addOpToCurrentVersionVector("ObjectServer", c.localOP);
-                        c.objectStore.propagate(c.objectID, "ObjectServer", c.localOP, {all: true},c.crdt.type);
+                        c.objectStore.propagate(c.objectID, "ObjectServer", c.localOP, {all: true}, c.crdt.type);
                         if (c.callback)
                             c.callback(cbVal, {local: true});
                     } else {
@@ -149,7 +149,7 @@ function CRDT(objectID, crdt, objectStore) {
                         var cbVal = c.remotes[key].apply(c, [l_ret]);
                         c.addOpToHistory(c.objectStore.legion.id, ++c.localOP, l_ret, key, beforeVV);
                         c.addOpToCurrentVersionVector(c.objectStore.legion.id, c.localOP);
-                        c.objectStore.propagate(c.objectID, c.objectStore.legion.id, c.localOP, {all: true},c.crdt.type);
+                        c.objectStore.propagate(c.objectID, c.objectStore.legion.id, c.localOP, {all: true}, c.crdt.type);
                         if (c.callback)
                             c.callback(cbVal, {local: true});
                         return cbVal;
@@ -356,9 +356,9 @@ CRDT.prototype.operationsFromNetwork = function (operations, connection, origina
             }
         }
         if (!did) {
-            console.log(this.getState());
-            console.log(this.getVersionVector());
-            console.log(operations);
+            console.warn(this.getState());
+            console.warn(this.getVersionVector());
+            console.warn(operations);
             this.objectStore.sendVVToNode(this.objectID, connection.remoteID);
             break;
         }

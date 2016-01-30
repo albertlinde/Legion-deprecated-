@@ -9,10 +9,11 @@ function LegionRealtimeUtils(realtimeUtils) {
 
     this.legion = null;
     this.objectStore = null;
+    this.ready = false;
 
-    this.merge_to_legacy = true;
+    this.merge_to_legacy = false;
     this.signalling_on_legacy = false;
-    this.persitence_on_legacy = false;
+    this.persitence_on_legacy = true;
 
     /**
      * Used by all to obtains other files.
@@ -203,6 +204,7 @@ LegionRealtimeUtils.prototype.startObjectsProtocol = function (onLoad) {
     if (keys.length == 0) {
         console.log("Got an empty RootMap.");
         if (this.FileID_Objects) {
+            this.ready = true;
             setTimeout(function () {
                 lru.startObjectsProtocol(onLoad);
             }, lru.constants.WAIT_ON_MAP_INIT);
@@ -228,6 +230,7 @@ LegionRealtimeUtils.prototype.startObjectsProtocol = function (onLoad) {
             });
         }
     } else {
+        this.ready = true;
         console.log("Got a filled RootMap.");
         this.gotMap(onLoad);
         if (lru.merge_to_legacy) {

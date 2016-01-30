@@ -222,7 +222,7 @@ ObjectStore.prototype.disconnectFromObjectServer = function () {
 };
 
 ObjectStore.prototype.connectToObjectServer = function () {
-    if (this.legion.options.objectServerConnection)
+    if (!this.objectServer && this.legion.options.objectServerConnection)
         new this.legion.options.objectServerConnection.type(this.legion.options.objectServerConnection.server, this, this.legion);
 };
 
@@ -429,7 +429,7 @@ ObjectStore.prototype.defineCRDT = function (crdt) {
  * @param type
  * @returns {Object}
  */
-ObjectStore.prototype.get = function (objectID, type) {
+ObjectStore.prototype.get = function (objectID, type, dontSendVV) {
     if (!this.types.contains(type)) {
         console.error("No typedef found for CRDT.", type);
     } else {
@@ -439,11 +439,11 @@ ObjectStore.prototype.get = function (objectID, type) {
             var crdt = this.types.get(type);
             var instance = new CRDT(objectID, crdt, this);
             this.crdts.set(objectID, instance);
-            if (this.legion.bullyProtocol.amBullied()) {
+            if (this.legion.bullyProtocol.amBullied() && !dontSendVV) {
                 console.info("Send vv to " + this.legion.bullyProtocol.bully);
                 this.sendVVToNode(objectID, this.legion.bullyProtocol.bully);
             } else {
-                if (this.objectServer) {
+                if (this.objectServer && !dontSendVV) {
                     console.info("Send vv to " + this.objectServer.peerConnection.remoteID);
                     this.sendVVToNode(objectID, this.objectServer.peerConnection.remoteID);
                 }

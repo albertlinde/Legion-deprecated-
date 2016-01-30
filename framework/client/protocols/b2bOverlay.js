@@ -38,7 +38,6 @@ function B2BOverlay(overlay, legion) {
         bo.checkIfMustHaveServer();
         var did_reconnect = false;
         if (bo.overlay.peerCount() < bo.min) {
-            console.log("Overlay " + "Need more peers :" + bo.legion.id);
             bo.legion.generateMessage("JoinRequest", null, function (result) {
                 result.N = bo.max - bo.overlay.peerCount();
                 result.TTL = bo.initial_ttl;
@@ -48,7 +47,6 @@ function B2BOverlay(overlay, legion) {
             did_reconnect = true;
         }
         if (bo.overlay.peerCount() > bo.max) {
-            console.log("Overlay " + "RemoveBestPeer :" + bo.legion.id);
             bo.removeBestPeer();
         }
         if (did_reconnect) {

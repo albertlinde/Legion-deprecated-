@@ -94,7 +94,7 @@ MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
         }
     }
     if (!this.legion.bullyProtocol.amBullied()) {
-        if (this.legion.connectionManager.serverConnection.isAlive()) {
+        if (this.legion.connectionManager.serverConnection && this.legion.connectionManager.serverConnection.isAlive()) {
             var m3 = JSON.parse(JSON.stringify(message));
             m3.N = 1 + missing;
             this.legion.connectionManager.serverConnection.send(m3);
