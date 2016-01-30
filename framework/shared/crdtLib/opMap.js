@@ -18,10 +18,10 @@ var op_orMap = {
             state: {adds: ALMap, removes: ALMap}
         },
         getValue: function () {
-            var ret = [];
+            var ret = {};
             var keys = this.state.adds.keys();
             for (var i = 0; i < keys.length; i++) {
-                ret.push(keys[i], this.state.adds.get(keys[i]).keys());
+                ret[keys[i]]= this.state.adds.get(keys[i]).keys();
             }
             return ret;
         },

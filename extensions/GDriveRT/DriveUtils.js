@@ -48,7 +48,7 @@ function getCurrentRevision(FileID, callback) {
         'fileId': FileID
     });
     request.execute(function (resp) {
-        callback(resp);
+        callback(JSON.parse(JSON.stringify((resp))));
     });
 }
 

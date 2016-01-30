@@ -45,7 +45,7 @@ GapiObjectHandler.prototype.has = function (key) {
 
 //Map
 GapiObjectHandler.prototype.delete = function (key) {
-    this.object.remove(key);
+    this.object.delete(key);
 };
 
 //Map

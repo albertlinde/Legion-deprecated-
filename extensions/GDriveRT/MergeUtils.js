@@ -168,11 +168,9 @@ MergeUtils.prototype.getObjectFromRev = function (rev, oid) {
 MergeUtils.prototype.mergeMapDiffsToRev = function (object, newVs, delVs) {
     var newKeys = Object.keys(newVs);
     var delKeys = Object.keys(delVs);
-    //console.log(newKeys);
-    //console.log(delKeys);
 
     for (var i = 0; i < newKeys.length; i++) {
-        object.value[newKeys[i]] = {json: newVs[newKeys[i]]};
+        object.value[newKeys[i]] = {json: newVs[newKeys[i]][0]};
     }
 
     for (var j = 0; j < delKeys.length; j++) {
@@ -234,12 +232,12 @@ MergeUtils.prototype.mergeFiles = function () {
             });
         } else {
             //console.log("mergeUtils: mergeFiles");
-            var lastRev = mergeUtils.map.get("gapi");
+            var lastRev = JSON.parse(JSON.stringify(mergeUtils.map.get("gapi")));
             var lastB2b = mergeUtils.map.get("b2b");
             var lastRevNum = lastRev.num;
 
             var lastRevVal = lastRev.val;
-            var lastB2BVal = lastB2b.val;
+            var lastB2BVal = JSON.parse(lastB2b.val);
 
             var keys = lru.revisions.keys().sort();
             var currKey = keys[keys.length - 1];
@@ -248,7 +246,7 @@ MergeUtils.prototype.mergeFiles = function () {
                 revision = lastRevVal;
             }
 
-            var currB2Bval = mergeUtils.getLocalValue();
+            var currB2Bval = JSON.parse(mergeUtils.getLocalValue());
 
             console.log({Lb2bVal: lastB2BVal});
             console.log({Cb2bVal: currB2Bval});
@@ -271,24 +269,27 @@ MergeUtils.prototype.mergeFiles = function () {
                             var B2BNew = mergeUtils.newMapValuesFrom(lastB2BVal, currB2Bval, "B2B", currRootObject.id);
                             var B2BDel = mergeUtils.delMapValuesFrom(lastB2BVal, currB2Bval, "B2B", currRootObject.id);
 
-                            //console.info(B2BNew);
-                            //console.info(B2BDel);
 
                             var gapiNew = mergeUtils.newMapValuesFrom(lastRevVal, revision, "gapi", currRootObject.id);
                             var gapiDel = mergeUtils.delMapValuesFrom(lastRevVal, revision, "gapi", currRootObject.id);
+
 
                             gapiDel = mergeUtils.exceptMapValuesFrom(gapiDel, B2BNew);
                             B2BNew = mergeUtils.exceptMapValuesFrom(B2BNew, gapiNew);
                             B2BDel = mergeUtils.exceptMapValuesFrom(B2BDel, gapiNew);
 
-                            if (Object.keys(B2BNew).length > 0)
+                            if (Object.keys(B2BNew).length > 0) {
                                 update = true;
-                            if (Object.keys(B2BDel).length > 0)
+                            }
+                            if (Object.keys(B2BDel).length > 0) {
                                 update = true;
-                            if (Object.keys(gapiNew).length > 0)
+                            }
+                            if (Object.keys(gapiNew).length > 0) {
                                 update = true;
-                            if (Object.keys(gapiDel).length > 0)
+                            }
+                            if (Object.keys(gapiDel).length > 0) {
                                 update = true;
+                            }
 
                             mergeUtils.mergeMapDiffsToRev(currRootObject, B2BNew, B2BDel);
                             mergeUtils.mergeMapDiffsToB2B(currRootObject.id, gapiNew, gapiDel);
@@ -420,7 +421,7 @@ MergeUtils.prototype.mergeFiles = function () {
 /**
  * Returns a JSON representation of the local objects.
  * (self contained function)
- * @returns {Object}
+ * @returns {string}
  */
 MergeUtils.prototype.getLocalValue = function () {
     var val = {};
@@ -443,5 +444,5 @@ MergeUtils.prototype.getLocalValue = function () {
             console.error(keys[i]);
         }
     }
-    return val;
+    return JSON.stringify(val);
 };
