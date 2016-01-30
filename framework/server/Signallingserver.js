@@ -123,7 +123,12 @@ function initService() {
                             }
                         } else {
                             util.log("Broadcast: " + parsed.type);
-                            for (var i = 0; i < iterableNodes.length; i++) {
+                            var end = iterableNodes.length;
+                            if (parsed.N) {
+                                end = Math.min(parsed.N, end);
+                            }
+
+                            for (var i = 0; i < end; i++) {
                                 if (iterableNodes[i] === socket)continue;
                                 if (iterableNodes[i].remoteID == parsed.sender)continue;
                                 if (iterableNodes[i].readyState == 1) {

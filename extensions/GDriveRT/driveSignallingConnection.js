@@ -109,14 +109,15 @@ GDriveRTSignallingServerConnection.prototype.isAlive = function () {
 GDriveRTSignallingServerConnection.prototype.send = function (message) {
     var sc = this;
     if (this.isAlive()) {
+        if (message.N)message.N = 1;
         compress(JSON.stringify(message), function (result) {
-            sc.collabBC(result, message.destination, message.sender);
+            sc.collabBC(result, message.destination, message.sender, message.N);
         });
     }
 };
 
 
-GDriveRTSignallingServerConnection.prototype.collabBC = function (message, receiver, sender) {
+GDriveRTSignallingServerConnection.prototype.collabBC = function (message, receiver, sender, N) {
     function idfrom(collab) {
         return collab.sessionId;
     }
@@ -138,7 +139,14 @@ GDriveRTSignallingServerConnection.prototype.collabBC = function (message, recei
         }
     }
     //failed, node somewhere in the network, send to all.
-    for (var i = 0; i < collaborators.length; i++) {
+    var end = collaborators.length;
+    if (N) {
+        if (end > N) {
+            end = N + 1; //1 because contains self.
+        }
+    }
+
+    for (var i = 0; i < end; i++) {
         if (collaborators[i].isMe || collaborators[i] == sender)continue;
         if (this.legion.overlay.peers.contains(receiver))continue;
         console.log("Drive S Sending to: " + idfrom(collaborators[i]));

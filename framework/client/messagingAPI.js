@@ -74,14 +74,30 @@ MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
         return;
     }
     var peers = this.legion.overlay.getPeers(message.N);
+    var missing = 0;
+    if (peers.length == message.N) {
+        message.N = 1;
+    } else {
+        missing = message.N - peers.length;
+    }
     for (var i = 0; i < peers.length; i++) {
-        if (peers[i].remoteID != message.sender) {
-            peers[i].send(message);
+        if (i == 0 && !this.legion.bullyProtocol.amBullied()) {
+            var m2 = JSON.parse(JSON.stringify(message));
+            m2.N = 1 + missing;
+            if (peers[i].remoteID != message.sender) {
+                peers[i].send(m2);
+            }
+        } else {
+            if (peers[i].remoteID != message.sender) {
+                peers[i].send(message);
+            }
         }
     }
-    if(!this.legion.bullyProtocol.amBullied()){
-        if(this.legion.connectionManager.serverConnection.isAlive()){
-            this.legion.connectionManager.serverConnection.send(message);
+    if (!this.legion.bullyProtocol.amBullied()) {
+        if (this.legion.connectionManager.serverConnection.isAlive()) {
+            var m3 = JSON.parse(JSON.stringify(message));
+            m3.N = 1 + missing;
+            this.legion.connectionManager.serverConnection.send(m3);
         }
     }
 };

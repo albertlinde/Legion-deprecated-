@@ -45,6 +45,9 @@ ServerConnection.prototype.isAlive = function () {
 };
 
 ServerConnection.prototype.send = function (message) {
+    if(message.N){
+        //No op. Server will handle it.
+    }
     if (typeof message == "object") {
         message = JSON.stringify(message);
     }
