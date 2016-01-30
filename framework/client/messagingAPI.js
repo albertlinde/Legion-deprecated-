@@ -68,6 +68,24 @@ MessagingAPI.prototype.sendTo = function (peer, message) {
     this.messagingProtocol.sendTo(peer, message);
 };
 
+MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
+    if (!message.N) {
+        console.error("NO N!");
+        return;
+    }
+    var peers = this.legion.overlay.getPeers(message.N);
+    for (var i = 0; i < peers.length; i++) {
+        if (peers[i].remoteID != message.sender) {
+            peers[i].send(message);
+        }
+    }
+    if(!this.legion.bullyProtocol.amBullied()){
+        if(this.legion.connectionManager.serverConnection.isAlive()){
+            this.legion.connectionManager.serverConnection.send(message);
+        }
+    }
+};
+
 /**
  * Calls the current protocol broadcastMessage.
  * @param type {String}

@@ -47,6 +47,7 @@ ALMap.prototype.deleteAll = function (keys) {
  * @param key {Object}
  */
 ALMap.prototype.delete = function (key) {
+    this.map[key]=null;
     delete this.map[key];
 };
 

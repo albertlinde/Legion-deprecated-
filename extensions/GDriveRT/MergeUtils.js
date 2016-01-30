@@ -142,6 +142,12 @@ MergeUtils.prototype.delMapValuesFrom = function (oldV, newV, dataType, oid) {
     }
 };
 
+/**
+ *
+ * @param rev
+ * @param oid
+ * @returns {*}
+ */
 MergeUtils.prototype.getObjectFromRev = function (rev, oid) {
     var val = rev.result.data.value;
     var keys = Object.keys(val);
@@ -153,6 +159,12 @@ MergeUtils.prototype.getObjectFromRev = function (rev, oid) {
     console.error("No object.")
 };
 
+/**
+ *
+ * @param object
+ * @param newVs
+ * @param delVs
+ */
 MergeUtils.prototype.mergeMapDiffsToRev = function (object, newVs, delVs) {
     var newKeys = Object.keys(newVs);
     var delKeys = Object.keys(delVs);
@@ -168,8 +180,14 @@ MergeUtils.prototype.mergeMapDiffsToRev = function (object, newVs, delVs) {
     }
 };
 
+/**
+ *
+ * @param oid
+ * @param newVs
+ * @param delVs
+ */
 MergeUtils.prototype.mergeMapDiffsToB2B = function (oid, newVs, delVs) {
-    var m = new ORMap(oid, ALru.objectStore, "dontchangecallbacks");
+    var m = this.lru.legion.objectStore.getCRDT(oid);
     var newKeys = Object.keys(newVs);
     var delKeys = Object.keys(delVs);
     //console.log(newKeys);
@@ -180,10 +198,16 @@ MergeUtils.prototype.mergeMapDiffsToB2B = function (oid, newVs, delVs) {
     }
 
     for (var j = 0; j < delKeys.length; j++) {
-        m.remove(delKeys[i]);
+        m.delete(delKeys[i]);
     }
 };
 
+/**
+ *
+ * @param arr1
+ * @param arr2
+ * @returns {boolean}
+ */
 MergeUtils.prototype.eQUALS_ARRAY = function (arr1, arr2) {
     if (arr1.length != arr2.length)
         return false;
@@ -193,6 +217,9 @@ MergeUtils.prototype.eQUALS_ARRAY = function (arr1, arr2) {
     return true;
 };
 
+/**
+ *
+ */
 MergeUtils.prototype.mergeFiles = function () {
     console.log("MergeFiles start");
     var mergeUtils = this;
@@ -206,7 +233,6 @@ MergeUtils.prototype.mergeFiles = function () {
                 mergeUtils.mergeFiles();
             });
         } else {
-            //TODO: am in here
             //console.log("mergeUtils: mergeFiles");
             var lastRev = mergeUtils.map.get("gapi");
             var lastB2b = mergeUtils.map.get("b2b");
@@ -230,7 +256,6 @@ MergeUtils.prototype.mergeFiles = function () {
             console.log({num: lastRevNum, val: lastRevVal});
             console.log({num: currKey, val: revision});
 
-            return;
             var currRootKey;
             var currRootObject;
             var rootKeys = Object.keys(revision.result.data.value);
@@ -337,8 +362,7 @@ MergeUtils.prototype.mergeFiles = function () {
                                 currRootObject.value[ni] = {json: finalList[ni]};
                             }
                             console.log("BBBB - E");
-
-                            var b2bL = new OP_Treedoc(currRootObject.id, ALru.objectStore, "dontchangecallbacks");
+                            var b2bL = lru.legion.objectStore.getCRDT(currRootObject.id);
                             var b2bC = Diff.diff_comm(b2bList, finalList);
                             var b2bPos = 0;
                             for (var b2bi = 0; b2bi < b2bC.length; b2bi++) {
@@ -369,21 +393,21 @@ MergeUtils.prototype.mergeFiles = function () {
             }
 
             if (update) {
-                //console.log("Updating GAPI file. Past rev:" + lastRevNum);
+                console.log("Updating GAPI file. Past rev:" + lastRevNum);
                 //console.log(revision.result.data);
-                drive_realtime_file_put(mergeUtils.ALRU.FileID_Original, revision.result.data, currKey, function () {
-                    //console.log("Updated GAPI file.");
+                drive_realtime_file_put(mergeUtils.lru.FileID_Original, revision.result.data, currKey, function () {
+                    console.log("Updated GAPI file.");
                 });
             }
 
             if (update) {
-                //console.log("Change merge file state: b2b");
+                console.log("Change merge file state: b2b");
                 var newB2BRev = {val: mergeUtils.getLocalValue()};
                 mergeUtils.map.set("b2b", newB2BRev);
             }
 
             if (update) {
-                //console.log("Change merge file state: gapi");
+                console.log("Change merge file state: gapi");
                 var newGapiRev = {num: currKey, val: revision};
                 mergeUtils.map.set("gapi", newGapiRev);
             }

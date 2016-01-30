@@ -19,6 +19,7 @@ Overlay.prototype.addPeer = function (peerConnection) {
 };
 
 Overlay.prototype.removePeer = function (peerConnection) {
+    console.log("Overlay " + peerConnection.remoteID);
     this.peers.delete(peerConnection.remoteID);
     this.overlayProtocol.onClientDisconnect(peerConnection);
 };
@@ -40,6 +41,10 @@ Overlay.prototype.onServerConnection = function (serverConnection) {
 Overlay.prototype.getPeers = function (amount) {
     if (!amount) {
         amount = this.peerCount();
+    }
+    amount = parseInt(amount);
+    if (amount == this.peerCount) {
+        return this.peers.values();
     }
     var ret = this.shuffle(this.peers.values());
     return ret.slice(0, amount);

@@ -148,3 +148,6 @@ GDriveRTSignallingServerConnection.prototype.collabBC = function (message, recei
     }
 };
 
+GDriveRTSignallingServerConnection.prototype.isAlive = function () {
+    return typeof this.document != "undefined";
+};

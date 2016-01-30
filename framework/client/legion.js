@@ -5,11 +5,11 @@ function Legion(options) {
     this.id = this.options.clientID;
 
     this.messagingAPI = new MessagingAPI(this);
+    if (this.options.bullyProtocol)
+        this.bullyProtocol = new this.options.bullyProtocol.type(this);
     this.overlay = new Overlay(this, this);
     this.connectionManager = new ConnectionManager(this);
 
-    if (this.options.bullyProtocol)
-        this.bullyProtocol = new this.options.bullyProtocol.type(this);
 
     this.objectStore = null;
 }

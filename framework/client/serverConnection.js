@@ -37,6 +37,13 @@ function ServerConnection(server, legion) {
 
 }
 
+ServerConnection.prototype.close = function () {
+    this.socket.close();
+};
+ServerConnection.prototype.isAlive = function () {
+    return this.socket && this.socket.readyState == WebSocket.OPEN;
+};
+
 ServerConnection.prototype.send = function (message) {
     if (typeof message == "object") {
         message = JSON.stringify(message);

@@ -8,23 +8,45 @@ console.log("Legion overlay test.");
 console.log("Step 1 - run 'run(A,B,C)', A=startingID, B=clients, C=interval(ms)");
 
 function run(start, count, interval) {
-    currentClient = start - 1;
-    var clientCount = 0;
+    currentClient = 0;
     var int = setInterval(function () {
-        if (clientCount == count) {
+        if (currentClient++ == count) {
             clearInterval(int)
         } else {
             var options = {
-                clientID: ++currentClient,
-                server: {ip: "localhost", port: 8002},
-                overlayProtocol: SimpleOverlay,
-                messagingProtocol: FloodMessaging
+                clientID: start++,
+                overlayProtocol: B2BOverlay,
+                messagingProtocol: FloodMessaging,
+                objectOptions: {
+                    serverInterval: 5000,
+                    peerInterval: 2000
+                },
+                bullyProtocol: {
+                    type: SimpleBully,
+                    options: {
+                        bullyMustHaveInterval: 50 * 1000,
+                        bullySendInterval: 15 * 1000,
+                        bullyStartTime: 2 * 1000
+                    }
+                },
+                signallingConnection: {
+                    type: ServerConnection,
+                    server: {ip: "localhost", port: 8002}
+                },
+                objectServerConnection: {
+                    type: ObjectServerConnection,
+                    server: {ip: "localhost", port: 8004}
+                }
             };
-
-            legions[currentClient] = new Legion(options);
-            legions[currentClient].join();
-            clientCount++;
+            var l = new Legion(options);
+            l.join();
+            legions.push(l);
         }
-
     }, interval);
+}
+
+function counts() {
+    for (var i = 0; i < legions.length; i++)
+        console.log(i + " - overlay - " + legions[i].overlay.peerCount());
+
 }

@@ -63,10 +63,13 @@ ConnectionManager.prototype.handleSignalling = function (message, original) {
                 this.connectPeerRemote(message);
                 return;
             case "OfferReturn":
-                this.peerConnections.get(message.sender).returnOffer(message.content);
+                if (this.peerConnections.contains(message.sender))
+                    this.peerConnections.get(message.sender).returnOffer(message.content);
+                else
+                    console.warn("OfferReturn for no peer", message, this.legion.id);
                 return;
             case "ICE":
-                if (!this.peerConnections.get(message.sender))
+                if (!this.peerConnections.contains(message.sender))
                     console.warn("ICE for no peer", message, this.legion.id);
                 else
                     this.peerConnections.get(message.sender).return_ice(message.content);

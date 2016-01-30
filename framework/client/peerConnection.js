@@ -60,11 +60,11 @@ PeerConnection.prototype.setChannelHandlers = function () {
 PeerConnection.prototype.cancelAll = function (notDuplicate) {
     var pc = this;
     if (!notDuplicate)
-        this.channel.onclose = function () {
-            console.log("Forced a channel close for duplicate PeerConnection.", pc.legion.id, pc.remoteID);
-        };
+        if (this.channel)
+            this.channel.onclose = function () {
+                console.log("Forced a channel close for duplicate PeerConnection.", pc.legion.id, pc.remoteID);
+            };
     this.channel = null;
-    this.remoteID = null;
     this.peer.close();
     clearTimeout(this.init_timeout);
     this.peer = null;
@@ -98,6 +98,13 @@ PeerConnection.prototype.onicecandidate = function (event) {
     if (event.candidate) {
         this.legion.connectionManager.sendICE(event.candidate, this);
     }
+};
+
+/**
+ *
+ */
+PeerConnection.prototype.close = function () {
+    this.cancelAll(true);
 };
 
 PeerConnection.prototype.startLocal = function () {
@@ -143,6 +150,18 @@ PeerConnection.prototype.startRemote = function (offer) {
         console.error("onCreateSessionDescriptionError", error);
         pc.onclose()
     });
+};
+
+PeerConnection.prototype.isAlive = function () {
+    return this.channel && this.channel.readyState == "open";
+};
+
+PeerConnection.prototype.setMeta = function (m) {
+    this.meta = m;
+};
+
+PeerConnection.prototype.getMeta = function () {
+    return this.meta;
 };
 
 PeerConnection.prototype.send = function (message) {

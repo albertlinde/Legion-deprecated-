@@ -10,9 +10,10 @@ function SimpleBully(legion) {
                 if (hisID <= sb.bully) {
                     sb.bully = hisID;
                     sb.lastBullyMessage = time;
-                    if (bullyLog)console.log("Be bullied by", hisID);
+                    sb.bullied();
+                    if (typeof bullyLog != "undefined" && bullyLog)console.log("Be bullied by", hisID);
                 } else {
-                    if (bullyLog)console.log("Be bullied by", hisID, "but mine is", sb.bully);
+                    if (typeof bullyLog != "undefined" && bullyLog)console.log("Be bullied by", hisID, "but mine is", sb.bully);
                     sb.onClientConnection(connection);
                 }
             }
@@ -34,12 +35,24 @@ function SimpleBully(legion) {
         sb.bullyStartTime);
 
     this.legion.messagingAPI.setHandlerFor(this.handlers.bully.type, this.handlers.bully.callback);
+    this.callbacks = [];
 }
+
+SimpleBully.prototype.setOnBullyCallback = function (cb) {
+    this.callbacks.push(cb);
+};
+
+SimpleBully.prototype.bullied = function () {
+    var arg = this.amBullied();
+    for (var i = 0; i < this.callbacks.length; i++) {
+        this.callbacks[i](arg);
+    }
+};
 
 SimpleBully.prototype.onClientConnection = function (peerConnection) {
     if (peerConnection.remoteID > this.legion.id) {
         this.legion.generateMessage(this.handlers.bully.type, null, function (result) {
-            if (bullyLog)console.log("Being immediate bully to", peerConnection.remoteID);
+            if (typeof bullyLog != "undefined" && bullyLog)console.log("Being immediate bully to", peerConnection.remoteID);
             peerConnection.send(result);
         });
     }
@@ -67,7 +80,7 @@ SimpleBully.prototype.onServerDisconnect = function (serverConnection) {
  * @returns {boolean}
  */
 SimpleBully.prototype.amBullied = function () {
-    if (this.bully == this.legion.id ||  this.bully == "TEMP_ID")
+    if (this.bully == this.legion.id || this.bully == "TEMP_ID")
         return false;
     var time = (Date.now()) - this.lastBullyMessage;
     return time <= this.bullyMustHaveInterval;
@@ -75,6 +88,7 @@ SimpleBully.prototype.amBullied = function () {
 
 SimpleBully.prototype.floodBully = function () {
     if (!this.amBullied()) {
+        this.bullied();
         this.bully = this.legion.id;
         this.lastBullyMessage = Date.now();
 
@@ -83,11 +97,11 @@ SimpleBully.prototype.floodBully = function () {
             var peers = sb.legion.overlay.getPeers(sb.legion.overlay.peerCount());
 
             for (var i = 0; i < peers.length; i++) {
-                if (bullyLog)console.log("Being bully to", peers[i].remoteID);
+                if (typeof bullyLog != "undefined" && bullyLog)console.log("Being bully to", peers[i].remoteID);
                 peers[i].send(result);
             }
         });
     } else {
-        if (bullyLog)console.log("My bully", this.bully, this.lastBullyMessage);
+        if (typeof bullyLog != "undefined" && bullyLog)console.log("My bully", this.bully, this.lastBullyMessage);
     }
 };
