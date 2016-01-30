@@ -127,6 +127,9 @@ function initService() {
                             if (parsed.N) {
                                 end = Math.min(parsed.N, end);
                             }
+                            if (parsed.ttl) {
+                                parsed.ttl--;
+                            }
 
                             for (var i = 0; i < end; i++) {
                                 if (iterableNodes[i] === socket)continue;

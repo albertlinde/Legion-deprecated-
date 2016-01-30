@@ -6,8 +6,8 @@ function B2BOverlay(overlay, legion) {
 
     this.initial_ttl = 3;
     this.initial_n = 5;
-    this.min = 2;
-    this.max = 4;
+    this.min = 4;
+    this.max = 6;
 
     this.conn_check_timeout = 8 * 1000;
     this.conn_check_timeout_startup = 13 * 1000;
