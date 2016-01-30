@@ -75,7 +75,7 @@ B2BOverlay.prototype.onClientConnection = function (peerConnection) {
         peerConnection.send(result);
     });
     setTimeout(function () {
-        bo.checkIfMustHaveServer
+        bo.checkIfMustHaveServer()
     }, 300);
 };
 

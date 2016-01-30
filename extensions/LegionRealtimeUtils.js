@@ -117,7 +117,7 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
 
     var options = {
         clientID: clientID,
-        overlayProtocol: SimpleOverlay,
+        overlayProtocol: B2BOverlay,
         messagingProtocol: FloodMessaging,
         objectOptions: {
             serverInterval: 5000,
