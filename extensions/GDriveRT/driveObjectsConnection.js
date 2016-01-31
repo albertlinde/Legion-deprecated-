@@ -5,6 +5,9 @@ function GDriveRTObjectsServerConnection(argument, objectStore, legion) {
     this.lru = legion.lru;
     this.remoteID = this.lru.FileID_Objects;
 
+    if (!this.lru.ready)
+        return;
+
     this.onclose = function () {
         sc.legion.connectionManager.onCloseServer(sc);
     };
@@ -12,31 +15,19 @@ function GDriveRTObjectsServerConnection(argument, objectStore, legion) {
     this.document = null;
     this.model = null;
     var sc = this;
-    if (this.lru.ready)
-        this.startup();
-    else {
-        setTimeout(function () {
-            sc.startup()
-        }, 200);
-    }
+    this.startup();
 }
 
 GDriveRTObjectsServerConnection.prototype.startup = function () {
     var sc = this;
-    if (this.lru.ready) {
-        this.lru.realtimeUtils.load(this.lru.FileID_Objects.replace('/', ''), function (doc) {
-            sc.document = doc;
-            sc.model = doc.getModel();
-            sc.legion.connectionManager.onOpenServer(sc);
+    this.lru.realtimeUtils.load(this.lru.FileID_Objects.replace('/', ''), function (doc) {
+        sc.document = doc;
+        sc.model = doc.getModel();
+        sc.legion.connectionManager.onOpenServer(sc);
+    }, function () {
+        console.error("File init should have been done!");
+    });
 
-        }, function () {
-            console.error("File init should have been done!");
-        });
-    } else {
-        setTimeout(function () {
-            sc.startup()
-        }, 200);
-    }
 };
 
 GDriveRTObjectsServerConnection.prototype.close = function () {
@@ -160,10 +151,22 @@ GDriveRTObjectsServerConnection.prototype.operations = function (objectKey, oper
 };
 
 GDriveRTObjectsServerConnection.prototype.driveListHasOP = function (list, op) {
-    for (var i = 0; i < list.length; i++) {
-        if (op.opID == list.get(i).opID) {
-            if (op.clientID == list.get(i).clientID) {
+    var prevSize = list.length;
+    for (var i = list.length; i > 0; i--) {
+        if (op.opID == list.get(i - 1).opID) {
+            if (op.clientID == list.get(i - 1).clientID) {
                 return true;
+            }
+        }
+    }
+    if (list.length > prevSize) {
+        console.warn("This shouldn't happen.");
+        //Solve it anyway.
+        for (var i = list.length; i > prevSize; i--) {
+            if (op.opID == list.get(i - 1).opID) {
+                if (op.clientID == list.get(i - 1).clientID) {
+                    return true;
+                }
             }
         }
     }
