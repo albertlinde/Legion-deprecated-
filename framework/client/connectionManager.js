@@ -29,8 +29,13 @@ ConnectionManager.prototype.hasPeer = function (peerID) {
 
 //assumes peer does not exist
 ConnectionManager.prototype.connectPeer = function (peerID) {
-    this.peerConnections.set(peerID, new PeerConnection(peerID, this.legion));
-    this.peerConnections.get(peerID).startLocal();
+    if (this.hasPeer(peerID)) {
+        console.warn("Trying to connect to existing peer:" + peerID);
+        console.warn("Had peer:", this.peerConnections.get(peerID));
+    } else {
+        this.peerConnections.set(peerID, new PeerConnection(peerID, this.legion));
+        this.peerConnections.get(peerID).startLocal();
+    }
 };
 
 //no longer assumes peer does not exist
