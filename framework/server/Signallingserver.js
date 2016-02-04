@@ -52,9 +52,9 @@ function initService() {
             util.log("Connection.");
             socket.on('message', function incoming(message) {
                     util.log(message);
-                    if (!duplicates.contains(message.sender, message.ID)) {
-                        duplicates.add(message.sender, message.ID);
-                        var parsed = JSON.parse(message);
+                    var parsed = JSON.parse(message);
+                    if (!duplicates.contains(parsed.sender, parsed.ID)) {
+                        duplicates.add(parsed.sender, parsed.ID);
                         if (!socket.remoteID) {
                             if (nodes.contains(parsed.sender)) {
                                 util.log("Reconnected with new socket " + parsed.sender);
@@ -115,7 +115,7 @@ function initService() {
                                     if (iterableNodes[i].remoteID == parsed.sender)continue;
                                     util.log("   Sending to " + iterableNodes[i].remoteID);
                                     sent++;
-                                    parsed.destination = nodes[i].remoteID;
+                                    parsed.destination = iterableNodes[i].remoteID;
                                     iterableNodes[i].send(JSON.stringify(parsed));
                                 }
                                 i++;
