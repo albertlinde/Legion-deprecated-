@@ -82,7 +82,18 @@ function ObjectStore(legion) {
     //this.legion.messagingAPI.setHandlerFor(this.handlers.operations_propagation.type, this.handlers.operations_propagation.callback);
     this.legion.messagingAPI.setHandlerFor(this.handlers.version_vector_propagation.type, this.handlers.version_vector_propagation.callback);
 
+
+    this.legion.bullyProtocol.setOnBullyCallback(function (b) {
+        os.checkIfMustHaveServer();
+    });
+
 }
+
+ObjectStore.prototype.checkIfMustHaveServer = function () {
+    if (this.legion.bullyProtocol.amBullied()) {
+        this.disconnectFromObjectServer();
+    }
+};
 
 /**
  * VV should ONLY be propagated between two peers.
@@ -190,6 +201,9 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
             break;
         case "OPLIST":
             var ops = message.content.operations;
+            if (!ops) {
+                ops = message.content.ops;
+            }
             var crdt = this.crdts.get(message.content.objectID);
             crdt.operationsFromNetwork(ops, connection, original);
             break;

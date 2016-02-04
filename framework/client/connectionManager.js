@@ -18,7 +18,8 @@ function ConnectionManager(legion) {
 }
 
 ConnectionManager.prototype.startSignallingConnection = function () {
-    new this.legion.options.signallingConnection.type(this.legion.options.signallingConnection.server, this.legion);
+    if (!this.serverConnection)
+        new this.legion.options.signallingConnection.type(this.legion.options.signallingConnection.server, this.legion);
 };
 
 

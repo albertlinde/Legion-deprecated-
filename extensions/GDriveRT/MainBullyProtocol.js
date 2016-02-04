@@ -1,5 +1,6 @@
 function MainBullyProtocol(lru) {
     this.lru = lru;
+    this.id = lru.legion.id;
 
     this.bossTime = 45 * 1000;
     this.renewTime = 20 * 1000;
