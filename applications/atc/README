@@ -1,7 +1,0 @@
-NOTICE: in LegionRealtimeUtils.js the parameters have to be correctly set.
-
-     merge_to_legacy;
-     signalling_on_legacy;
-     persitence_on_legacy;
-        signallingServer
-        persistenceServer
