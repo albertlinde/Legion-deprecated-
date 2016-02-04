@@ -68,32 +68,7 @@
     <favorites_list name="java" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="Main.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="70" column="10" selection-start="2477" selection-end="2477" vertical-scroll-proportion="0.35797665" vertical-offset="866" max-vertical-offset="4515">
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#1349#1365#0" expanded="true" />
-                <element signature="e#2598#2614#0" expanded="true" />
-                <element signature="e#2864#2880#0" expanded="true" />
-                <element signature="e#3088#4119#0" expanded="true" />
-                <element signature="e#3307#3315#0" expanded="true" />
-                <element signature="e#4108#4109#0" expanded="true" />
-                <element signature="e#5134#5152#0" expanded="true" />
-                <element signature="e#6501#6509#0" expanded="true" />
-                <element signature="e#6569#6577#0" expanded="true" />
-                <element signature="e#6627#6635#0" expanded="true" />
-                <element signature="e#7837#7845#0" expanded="true" />
-                <element signature="e#7937#7945#0" expanded="true" />
-                <element signature="e#7991#7999#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FindManager">
     <FindUsagesManager>
@@ -104,14 +79,16 @@
     <option name="changedFiles">
       <list>
         <option value="$PROJECT_DIR$/files/overlay.txt" />
+        <option value="$PROJECT_DIR$/src/legion/Disconnect.java" />
         <option value="$PROJECT_DIR$/src/legion/Main.java" />
+        <option value="$PROJECT_DIR$/src/legion/Load.java" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="75" />
     <option name="y" value="23" />
-    <option name="width" value="1365" />
+    <option name="width" value="1298" />
     <option name="height" value="877" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
@@ -140,7 +117,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -201,26 +177,13 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="jung2-2_0_1" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
               <option name="myItemId" value="files" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -238,18 +201,19 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="options.lastSelected" value="project.propVCSSupport.Mappings" />
+    <property name="options.lastSelected" value="editor.preferences.appearance" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.searchVisible" value="true" />
     <property name="FullScreen" value="false" />
+    <property name="SearchEverywhereHistory" value="&#10;_" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Main">
+  <component name="RunManager" selected="Application.Disconnect">
     <configuration default="false" name="Main" type="Application" factoryName="Application" temporary="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <option name="MAIN_CLASS_NAME" value="legion.Main" />
@@ -258,6 +222,40 @@
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="java" />
+      <envs />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Load" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="legion.Load" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="java" />
+      <envs />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Disconnect" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <option name="MAIN_CLASS_NAME" value="legion.Disconnect" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
       <option name="ENABLE_SWING_INSPECTOR" value="false" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
@@ -368,12 +366,16 @@
       <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
       <method />
     </configuration>
-    <list size="1">
+    <list size="3">
       <item index="0" class="java.lang.String" itemvalue="Application.Main" />
+      <item index="1" class="java.lang.String" itemvalue="Application.Load" />
+      <item index="2" class="java.lang.String" itemvalue="Application.Disconnect" />
     </list>
     <recent_temporary>
-      <list size="1">
+      <list size="3">
         <item index="0" class="java.lang.String" itemvalue="Application.Main" />
+        <item index="1" class="java.lang.String" itemvalue="Application.Load" />
+        <item index="2" class="java.lang.String" itemvalue="Application.Disconnect" />
       </list>
     </recent_temporary>
   </component>
@@ -382,6 +384,23 @@
     <option name="analysisUIOptions">
       <AnalysisUIOptions />
     </option>
+  </component>
+  <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false" SSL_PROTOCOLS="sslv3">
+    <option name="USER" value="" />
+    <option name="PASSWORD" value="" />
+    <option name="mySSHConnectionTimeout" value="30000" />
+    <option name="mySSHReadTimeout" value="30000" />
+    <option name="LAST_MERGED_REVISION" />
+    <option name="MERGE_DRY_RUN" value="false" />
+    <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
+    <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
+    <option name="IGNORE_SPACES_IN_MERGE" value="false" />
+    <option name="CHECK_NESTED_FOR_QUICK_MERGE" value="false" />
+    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
+    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
+    <option name="FORCE_UPDATE" value="false" />
+    <option name="IGNORE_EXTERNALS" value="false" />
+    <myIsUseDefaultProxy>false</myIsUseDefaultProxy>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -392,8 +411,8 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="75" y="23" width="1365" height="877" extended-state="6" />
-    <editor active="true" />
+    <frame x="75" y="23" width="1298" height="877" extended-state="0" />
+    <editor active="false" />
     <layout>
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -411,13 +430,13 @@
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24981685" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32920793" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18798152" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3069307" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24981685" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -441,51 +460,78 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
+    <entry file="file://$PROJECT_DIR$/src/legion/Load.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="0" selection-start="685" selection-end="685" vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="4425">
+        <state line="14" column="25" selection-start="412" selection-end="424" vertical-scroll-proportion="0.0" vertical-offset="89" max-vertical-offset="3750">
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#1349#1365#0" expanded="true" />
-            <element signature="e#2598#2614#0" expanded="true" />
-            <element signature="e#2864#2880#0" expanded="true" />
-            <element signature="e#3088#4119#0" expanded="true" />
-            <element signature="e#3307#3315#0" expanded="true" />
-            <element signature="e#4108#4109#0" expanded="true" />
-            <element signature="e#5134#5152#0" expanded="true" />
-            <element signature="e#6501#6509#0" expanded="true" />
-            <element signature="e#6569#6577#0" expanded="true" />
-            <element signature="e#6627#6635#0" expanded="true" />
-            <element signature="e#7837#7845#0" expanded="true" />
-            <element signature="e#7937#7945#0" expanded="true" />
-            <element signature="e#7991#7999#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/files/overlay.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="160" column="51" selection-start="7438" selection-end="7438" vertical-scroll-proportion="-5.185185" vertical-offset="2120" max-vertical-offset="2580" />
+        <state line="86" column="6" selection-start="4926" selection-end="4926" vertical-scroll-proportion="0.0" vertical-offset="1290" max-vertical-offset="4185">
+          <folding />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="70" column="10" selection-start="2477" selection-end="2477" vertical-scroll-proportion="0.35797665" vertical-offset="866" max-vertical-offset="4515">
+        <state line="94" column="44" selection-start="3593" selection-end="3593" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4365">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/files/overlay.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="13" column="25" selection-start="697" selection-end="697" vertical-scroll-proportion="0.0" vertical-offset="195" max-vertical-offset="4530">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="74" column="0" selection-start="2697" selection-end="2697" vertical-scroll-proportion="0.0" vertical-offset="866" max-vertical-offset="4515">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="0" selection-start="685" selection-end="685" vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="4425">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/legion/Disconnect.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="28" column="20" selection-start="1151" selection-end="1151" vertical-scroll-proportion="0.7894737" vertical-offset="0" max-vertical-offset="1560">
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#1349#1365#0" expanded="true" />
-            <element signature="e#2598#2614#0" expanded="true" />
-            <element signature="e#2864#2880#0" expanded="true" />
-            <element signature="e#3088#4119#0" expanded="true" />
-            <element signature="e#3307#3315#0" expanded="true" />
-            <element signature="e#4108#4109#0" expanded="true" />
-            <element signature="e#5134#5152#0" expanded="true" />
-            <element signature="e#6501#6509#0" expanded="true" />
-            <element signature="e#6569#6577#0" expanded="true" />
-            <element signature="e#6627#6635#0" expanded="true" />
-            <element signature="e#7837#7845#0" expanded="true" />
-            <element signature="e#7937#7945#0" expanded="true" />
-            <element signature="e#7991#7999#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/files/overlay.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="86" column="6" selection-start="4201" selection-end="4201" vertical-scroll-proportion="0.0" vertical-offset="1290" max-vertical-offset="2580">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/legion/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="37" column="0" selection-start="1369" selection-end="1369" vertical-scroll-proportion="0.42293233" vertical-offset="0" max-vertical-offset="4020">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/legion/Load.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="212" column="5" selection-start="7466" selection-end="7514" vertical-scroll-proportion="5.9774437" vertical-offset="0" max-vertical-offset="3300">
+          <folding>
+            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>

@@ -84,29 +84,20 @@ public class Main {
 
         Transformer<String, Paint> vertexPaint = new Transformer<String, Paint>() {
             public Paint transform(String i) {
-                if (i.startsWith("overlay"))
-                    return Color.GREEN;
                 Set<String> neighbours = new TreeSet<String>();
 
                 neighbours.addAll(g.getPredecessors(i));
                 neighbours.addAll(g.getSuccessors(i));
-                if (g.getPredecessors(i).contains("localhost:8002")) {
-                    return Color.BLUE;
-                }
-                if (g.getSuccessors(i).contains("localhost:8002")) {
-                    return Color.BLUE;
-                }
-                if (g.getInEdges(i).contains("localhost:8002")) {
-                    return Color.BLUE;
-                }
-                if (g.getOutEdges(i).contains("localhost:8002")) {
-                    return Color.BLUE;
-                }
                 for (String s : neighbours) {
-                    if (s.compareTo(i) < 0) return Color.CYAN;
-                }
+                    if (s.contains("8002")) {
+                        return Color.BLUE;
+                    }
+                    if (s.contains("8004")) {
+                        return Color.orange;
+                    }
 
-                return Color.BLUE;
+                }
+                return Color.green;
             }
         };
 
