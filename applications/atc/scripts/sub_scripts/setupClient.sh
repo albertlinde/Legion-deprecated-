@@ -7,11 +7,11 @@ cd
 
 git clone https://github.com/CodeYellowBV/run-headless-chromium.git
 cd run-headless-chromium
-npm install xvfb
+npm install
 
 cd
 
-git clone git clone https://username:password@github.com/albertlinde/Legion.git .
+git clone https://albertlinde:123qweasd@github.com/albertlinde/Legion.git
 cd Legion
 npm install
 

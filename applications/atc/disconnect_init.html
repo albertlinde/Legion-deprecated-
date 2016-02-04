@@ -45,10 +45,10 @@
         console.log("onFileInitialize 1");
         m = model;
 
-        var map = model.createMap({
-            map: "map"
+        var test_map = model.createMap({
+            test_map: "test_map"
         });
-        model.getRoot().set('map', map);
+        model.getRoot().set('test_map', test_map);
 
         console.log("onFileInitialize 2");
     }
@@ -58,7 +58,7 @@
     function onFileLoaded(doc) {
         console.log("onFileLoaded 1");
         g_doc = doc;
-        collaborativeMap = doc.getModel().getRoot().get('map');
+        collaborativeMap = doc.getModel().getRoot().get('test_map');
         wireMap(collaborativeMap);
         console.log("onFileLoaded 2");
     }

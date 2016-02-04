@@ -32,7 +32,7 @@
     function start() {
         var id = realtimeUtils.getParam('id');
         if (id) {
-            lru.load(id.replace('/', ''), onFileLoaded, onFileInitialize);
+            realtimeUtils.load(id.replace('/', ''), onFileLoaded, onFileInitialize);
         } else {
             console.error("File: " + id + " doesn't exist.");
         }
@@ -61,7 +61,7 @@
                     doMapUpdate();
                 }
             }, 1000);
-        }, 10 * 1000);
+        }, 60 * 1000);
     }
 
     function theEnd() {
@@ -74,8 +74,9 @@
             update = ("" + Math.random()).substring(2);
         }
         collaborativeMap.set(update, 1);
-        console.log("update " + Date.now());
-        console.log("gotten " + Date.now() + " " + collaborativeMap.keys().length);
+        var d = Date.now();
+        console.log("update " + d);
+        console.log("gotten " + d + " " + collaborativeMap.keys().length);
     }
 
 </script>

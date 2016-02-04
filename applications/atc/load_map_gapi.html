@@ -52,7 +52,7 @@
 
         setTimeout(function () {
             console.log("start " + Date.now());
-            var times = 300;
+            var times = 250;
             var int = setInterval(function () {
                 if (--times < 0) {
                     clearInterval(int);
@@ -61,11 +61,12 @@
                     doMapUpdate();
                 }
             }, 1000);
-        }, 110 * 1000);
+        }, 190 * 1000);
     }
 
     function theEnd() {
         console.log("end " + Date.now());
+        console.log(collaborativeMap.keys());
     }
     function doMapUpdate() {
         if (Math.random() > 0.2) {

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 #TODO: change run_load_do.sh
+#TODO: change LegionRealtimeUtils
 #TODO: change folder name at the end of script
-#TODO: sync with master
+#TODO: sync with master (recursive sync)
 #TODO: run at master
 
 if [ -d "logs" ]; then
@@ -26,11 +27,25 @@ sleep 15
     do
         echo Running at ip: "${ip}".
         ssh -o "StrictHostKeyChecking no" -x -i ./../llcproto.pem ubuntu@${ip} 'bash -s' < ./sub_scripts/run_load_do.sh &
-        sleep 5
+        sleep 10
     done
 
+    #next only applies on disconnect tests.
+    #sleep 120
+    #for ip in "${Ips[@]}"
+    #do
+    #    echo Stopping "${ip}".
+    #    ssh -o "StrictHostKeyChecking no" -x -i ./../llcproto.pem ubuntu@${ip} 'bash -s' < ./sub_scripts/firewall_block.sh &
+    #done
+    #sleep 60
+    #for ip in "${Ips[@]}"
+    #do
+    #    echo Stopping "${ip}".
+    #    ssh -o "StrictHostKeyChecking no" -x -i ./../llcproto.pem ubuntu@${ip} 'bash -s' < ./sub_scripts/firewall_un_block.sh &
+    #done
+
     echo Sleep  # 16 * 5 + 110 + 300
-    sleep 540
+    sleep 700
     echo Done sleeping
 
     for ip in "${Ips[@]}"
@@ -40,13 +55,13 @@ sleep 15
         sleep 0.25
     done
 
+    sleep 20
     #logs
     mkdir logs
     for ip in "${Ips[@]}"
     do
         echo Getting logs from "${ip}"
-        scp -o "StrictHostKeyChecking no" -i ./../llcproto.pem ubuntu@${ip}:~/run.log logs/run_${ip}.log
-        scp -o "StrictHostKeyChecking no" -i ./../llcproto.pem ubuntu@${ip}:~/network_client.log logs/network_client_${ip}.log
+        scp -o "StrictHostKeyChecking no" -i ./../llcproto.pem ubuntu@${ip}:~/log.tar.gz logs/log_${ip}.tar.gz
     done
 
     for ip in "${Ips[@]}"
