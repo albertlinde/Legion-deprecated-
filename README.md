@@ -34,5 +34,8 @@ Open localhost:8000/indexDebug.html in your browser to obtain per file error han
 
 ---
 
+### Sub projects
+[**LegionOverlayVis**](https://github.com/albertlinde/LegionOverlayVis) - A peer-to-peer overlay network visualisation tool.
+
 #### License
 Apache-2.0
