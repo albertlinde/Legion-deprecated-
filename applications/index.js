@@ -23,17 +23,17 @@ function start(clientID) {
     }
     var options = {
         clientID: clientID,
-        overlayProtocol: SimpleOverlay,
+        overlayProtocol: B2BOverlay,
         messagingProtocol: FloodMessaging,
         objectOptions: {
-            serverInterval: 5000,
-            peerInterval: 2000
+            serverInterval: 4000,
+            peerInterval: 200
         },
         bullyProtocol: {
             type: SimpleBully,
             options: {
-                bullyMustHaveInterval: 50 * 1000,
-                bullySendInterval: 15 * 1000,
+                bullyMustHaveInterval: 30 * 1000,
+                bullySendInterval: 7 * 1000,
                 bullyStartTime: 2 * 1000
             }
         },

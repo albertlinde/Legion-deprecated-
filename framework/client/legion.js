@@ -126,3 +126,11 @@ Legion.prototype.reGenerateMessage = function (oldMessage, newData, callback) {
 Legion.prototype.getTime = function () {
     return Date.now();
 };
+
+/**
+ * Returns a random integer.
+ * @returns {number}
+ */
+Legion.prototype.randInt = function () {
+    return Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
+};

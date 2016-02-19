@@ -1,4 +1,4 @@
-var DEFAULT_PEER_INIT_TIMEOUT = 15 * 1000;
+var DEFAULT_PEER_INIT_TIMEOUT = 7 * 1000;
 
 function PeerConnection(remoteID, legion) {
     if (detailedDebug) {
@@ -13,6 +13,8 @@ function PeerConnection(remoteID, legion) {
     this.init_timeout = setTimeout(function () {
         pc.onInitTimeout()
     }, DEFAULT_PEER_INIT_TIMEOUT);
+
+    this.unique = null;
 }
 
 PeerConnection.prototype.onInitTimeout = function () {
@@ -68,6 +70,7 @@ PeerConnection.prototype.cancelAll = function (notDuplicate) {
     this.peer.close();
     clearTimeout(this.init_timeout);
     this.peer = null;
+    this.legion.connectionManager.onCloseClient(this);
 };
 
 PeerConnection.prototype.returnOffer = function (offer) {
@@ -96,7 +99,7 @@ PeerConnection.prototype.return_ice = function (candidate) {
 
 PeerConnection.prototype.onicecandidate = function (event) {
     if (event.candidate) {
-        this.legion.connectionManager.sendICE(event.candidate, this);
+        this.legion.connectionManager.sendICE(event.candidate, this.unique, this);
     }
 };
 
@@ -112,6 +115,8 @@ PeerConnection.prototype.startLocal = function () {
     var pc = this;
     this.channel = this.peer.createDataChannel('sendDataChannel', dataConstraint);
 
+
+    this.unique = this.legion.randInt();
     this.setChannelHandlers();
 
     this.peer.onicecandidate = function (event) {
@@ -120,7 +125,7 @@ PeerConnection.prototype.startLocal = function () {
 
     this.peer.createOffer(function (offer) {
             pc.peer.setLocalDescription(offer);
-            pc.legion.connectionManager.sendStartOffer(offer, pc);
+            pc.legion.connectionManager.sendStartOffer(offer, pc.unique, pc);
         }, function (error) {
             console.error("onCreateSessionDescriptionError", error);
             pc.onclose()
@@ -128,7 +133,8 @@ PeerConnection.prototype.startLocal = function () {
     );
 };
 
-PeerConnection.prototype.startRemote = function (offer) {
+PeerConnection.prototype.startRemote = function (offer, unique) {
+    this.unique = unique;
     if (detailedDebug)console.log(offer);
     if (debug)console.log("start remote: " + this.remoteID);
     this.peer.setRemoteDescription(new RTCSessionDescription(offer));
@@ -145,7 +151,7 @@ PeerConnection.prototype.startRemote = function (offer) {
 
     this.peer.createAnswer(function (offer) {
         pc.peer.setLocalDescription(offer);
-        pc.legion.connectionManager.sendReturnOffer(offer, pc);
+        pc.legion.connectionManager.sendReturnOffer(offer, pc.unique, pc);
     }, function (error) {
         console.error("onCreateSessionDescriptionError", error);
         pc.onclose()

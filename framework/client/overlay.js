@@ -19,7 +19,6 @@ Overlay.prototype.addPeer = function (peerConnection) {
 };
 
 Overlay.prototype.removePeer = function (peerConnection) {
-    console.log("Overlay " + peerConnection.remoteID);
     this.peers.delete(peerConnection.remoteID);
     this.overlayProtocol.onClientDisconnect(peerConnection);
 };

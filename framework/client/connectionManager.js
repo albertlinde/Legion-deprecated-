@@ -30,11 +30,11 @@ ConnectionManager.prototype.hasPeer = function (peerID) {
 //assumes peer does not exist
 ConnectionManager.prototype.connectPeer = function (peerID) {
     if (this.hasPeer(peerID)) {
-        console.warn("Trying to connect to existing peer:" + peerID);
-        console.warn("Had peer:", this.peerConnections.get(peerID));
+        return false;
     } else {
         this.peerConnections.set(peerID, new PeerConnection(peerID, this.legion));
         this.peerConnections.get(peerID).startLocal();
+        return true;
     }
 };
 
@@ -48,15 +48,14 @@ ConnectionManager.prototype.connectPeerRemote = function (message) {
         if (peerID < this.legion.id) {
             //He wins.
             this.peerConnections.get(peerID).cancelAll();
-            this.peerConnections.delete(peerID);
             this.peerConnections.set(peerID, new PeerConnection(peerID, this.legion));
-            this.peerConnections.get(peerID).startRemote(offer);
+            this.peerConnections.get(peerID).startRemote(offer, message.unique);
         } else {
             //I win.
         }
     } else {
         this.peerConnections.set(peerID, new PeerConnection(peerID, this.legion));
-        this.peerConnections.get(peerID).startRemote(offer);
+        this.peerConnections.get(peerID).startRemote(offer, message.unique);
     }
 };
 
@@ -64,22 +63,27 @@ ConnectionManager.prototype.handleSignalling = function (message, original) {
     if (message.destination != this.legion.id) {
         this.legion.messagingAPI.broadcastMessage(original);
     } else {
-        switch (message.type) {
-            case "OfferAsAnswer":
-                this.connectPeerRemote(message);
-                return;
-            case "OfferReturn":
-                if (this.peerConnections.contains(message.sender))
-                    this.peerConnections.get(message.sender).returnOffer(message.content);
-                else
-                    console.warn("OfferReturn for no peer", message, this.legion.id);
-                return;
-            case "ICE":
-                if (!this.peerConnections.contains(message.sender))
-                    console.warn("ICE for no peer", message, this.legion.id);
-                else
-                    this.peerConnections.get(message.sender).return_ice(message.content);
-                return;
+        if (message.type == "OfferAsAnswer") {
+            this.connectPeerRemote(message);
+        } else {
+            var unique = message.unique;
+            if (this.peerConnections.contains(message.sender)) {
+                var pc = this.peerConnections.get(message.sender);
+                if (pc.unique != unique) {
+                    console.warn("Got as unique", unique, "when expecting", pc.unique);
+                } else {
+                    switch (message.type) {
+                        case "OfferReturn":
+                            pc.returnOffer(message.content);
+                            return;
+                        case "ICE":
+                            pc.return_ice(message.content);
+                            return;
+                    }
+                }
+            } else {
+                console.warn("Got", message.type, "for no peer", message.sender, this.legion.id);
+            }
         }
     }
 };
@@ -136,26 +140,29 @@ ConnectionManager.prototype.onCloseClient = function (clientConnection) {
         this.legion.bullyProtocol.onClientDisconnect(clientConnection);
 };
 
-ConnectionManager.prototype.sendStartOffer = function (offer, clientConnection) {
+ConnectionManager.prototype.sendStartOffer = function (offer, unique, clientConnection) {
     var cm = this;
     this.legion.generateMessage("OfferAsAnswer", offer, function (result) {
         result.destination = clientConnection.remoteID;
+        result.unique = unique;
         cm.legion.messagingAPI.broadcastMessage(result);
     });
 };
 
-ConnectionManager.prototype.sendReturnOffer = function (offer, clientConnection) {
+ConnectionManager.prototype.sendReturnOffer = function (offer, unique, clientConnection) {
     var cm = this;
     this.legion.generateMessage("OfferReturn", offer, function (result) {
         result.destination = clientConnection.remoteID;
+        result.unique = unique;
         cm.legion.messagingAPI.broadcastMessage(result);
     });
 };
 
-ConnectionManager.prototype.sendICE = function (candidate, clientConnection) {
+ConnectionManager.prototype.sendICE = function (candidate, unique, clientConnection) {
     var cm = this;
     this.legion.generateMessage("ICE", candidate, function (result) {
         result.destination = clientConnection.remoteID;
+        result.unique = unique;
         cm.legion.messagingAPI.broadcastMessage(result);
     });
 };
