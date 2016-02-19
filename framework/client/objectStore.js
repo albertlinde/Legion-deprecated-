@@ -240,9 +240,72 @@ ObjectStore.prototype.connectToObjectServer = function () {
         new this.legion.options.objectServerConnection.type(this.legion.options.objectServerConnection.server, this, this.legion);
 };
 
-ObjectStore.prototype.clearServerQueue = function () {
+ObjectStore.prototype.useServerMessage = function (done, pop) {
     var os = this;
+    var options = pop.options;
+    if (options.onlyTo && (typeof options.onlyTo != "string"))
+        options.onlyTo = options.onlyTo.remoteID;
+    if (options.except && (typeof options.except != "string"))
+        options.except = options.except.remoteID;
 
+    if (options.except && options.except == this.objectServer.peerConnection)return;
+    if (options.except && options.except == this.objectServer.peerConnection.remoteID)return;
+    if (!pop.sender) {
+        var msg = {};
+        switch (pop.type) {
+            case "OP":
+                var objectID = pop.objectID;
+                var clientID = pop.clientID;
+                var operationID = pop.operationID;
+                var crdt = this.crdts.get(objectID);
+                var op = crdt.getOpFromHistory(clientID, operationID);
+                op.clientID = clientID;
+                op.objectID = objectID;
+                msg = op;
+                var thing = "" + objectID + "" + clientID + "" + operationID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                break;
+            case "OPLIST":
+                break;
+            case "STATE":
+                var objectID = pop.objectID;
+                var thing = "" + objectID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                var crdt = this.crdts.get(objectID);
+                var state = crdt.toJSONString(crdt.getState());
+                msg = {objectID: objectID, state: state};
+                break;
+        }
+
+        pop.msg = msg;
+        this.legion.generateMessage(this.handlers.gotContentFromNetwork.type, pop, function (result) {
+            os.objectServer.send(result);
+        });
+    } else {
+        if (pop.extra) {
+            switch (pop.extra.type) {
+                case "STATE":
+                    if (done.contains("" + pop.objectID))
+                        return;
+                    else
+                        done.set("" + pop.objectID, true);
+            }
+            delete pop.extra;
+        }
+        //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
+        this.legion.generateMessage("Fake", {fake: "data"}, function (answer) {
+            os.objectServer.send(pop);
+        });
+    }
+};
+
+ObjectStore.prototype.clearServerQueue = function () {
     if (!this.legion.bullyProtocol.amBullied()) {
         if (!this.objectServer) {
             console.log("Don't have a connection to objects server. Will try again soon.");
@@ -253,177 +316,114 @@ ObjectStore.prototype.clearServerQueue = function () {
         if (this.serverQueue.size() > 0) {
             console.log("Clearing server queue. Am bullied.");
             this.serverQueue.clear();
-            this.disconnectFromObjectServer();
         }
+        this.disconnectFromObjectServer();
+        return;
     }
 
     if (this.serverQueue.size() > 0) {
-        console.log("Messages in queue: " + this.serverQueue.size());
+        console.log("Messages in server queue: " + this.serverQueue.size());
         var pop = this.serverQueue.pop();
         var done = new ALMap();
         while (pop) {
-            (function (pop) {
-                var options = pop.options;
-                if (options.onlyTo && (typeof options.onlyTo != "string"))
-                    options.onlyTo = options.onlyTo.remoteID;
-                if (options.except && (typeof options.except != "string"))
-                    options.except = options.except.remoteID;
-
-                if (options.except && options.except == os.objectServer.peerConnection)return;
-                if (options.except && options.except == os.objectServer.peerConnection.remoteID)return;
-                if (!pop.sender) {
-                    var msg = {};
-                    switch (pop.type) {
-                        case "OP":
-                            var objectID = pop.objectID;
-                            var clientID = pop.clientID;
-                            var operationID = pop.operationID;
-                            var crdt = os.crdts.get(objectID);
-                            var op = crdt.getOpFromHistory(clientID, operationID);
-                            op.clientID = clientID;
-                            op.objectID = objectID;
-                            msg = op;
-                            var thing = "" + objectID + "" + clientID + "" + operationID;
-                            if (done.contains(thing))
-                                return;
-                            else
-                                done.set(thing, true);
-                            break;
-                        case "OPLIST":
-                            break;
-                        case "STATE":
-                            var objectID = pop.objectID;
-                            var thing = "" + objectID;
-                            if (done.contains(thing))
-                                return;
-                            else
-                                done.set(thing, true);
-                            var crdt = os.crdts.get(objectID);
-                            var state = crdt.toJSONString(crdt.getState());
-                            msg = {objectID: objectID, state: state};
-                            break;
-                    }
-
-                    pop.msg = msg;
-                    os.legion.generateMessage(os.handlers.gotContentFromNetwork.type, pop, function (result) {
-                        os.objectServer.send(result);
-                    });
-                } else {
-                    if (pop.extra) {
-                        switch (pop.extra.type) {
-                            case "STATE":
-                                if (done.contains("" + pop.objectID))
-                                    return;
-                                else
-                                    done.set("" + pop.objectID, true);
-                        }
-                        delete pop.extra;
-                    }
-                    //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
-                    os.legion.generateMessage("Fake", {fake: "data"}, function (answer) {
-                        os.objectServer.send(pop);
-                    });
-                }
-            })(pop);
-
+            this.useServerMessage(done, pop);
             pop = this.serverQueue.pop();
         }
     }
 };
 
-ObjectStore.prototype.clearPeersQueue = function () {
+ObjectStore.prototype.usePeersMessage = function (done, pop) {
     var os = this;
+    var options = pop.options;
+    const except = options.except;
+    if (options.onlyTo && (typeof options.onlyTo != "string"))
+        options.onlyTo = options.onlyTo.remoteID;
+    if (options.except && (typeof options.except != "string"))
+        options.except = options.except.remoteID;
+    if (!pop.sender) {
+        var msg = {};
+        switch (pop.type) {
+            case "OP":
+                var objectID = pop.objectID;
+                var clientID = pop.clientID;
+                var operationID = pop.operationID;
+                var thing = "" + objectID + "" + clientID + "" + operationID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                var crdt = this.crdts.get(objectID);
+                var op = crdt.getOpFromHistory(clientID, operationID);
+                op.clientID = clientID;
+                op.objectID = objectID;
+                msg = op;
+                break;
+            case "OPLIST":
+                break;
+            case "STATE":
+                var objectID = pop.objectID;
+                var thing = "" + objectID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                var crdt = this.crdts.get(objectID);
+                var state = crdt.toJSONString(crdt.getState());
+                msg = {objectID: objectID, state: state};
+                break;
+        }
+        pop.msg = msg;
+        this.legion.generateMessage(this.handlers.gotContentFromNetwork.type, pop, function (result) {
+            const onlyTo = options.onlyTo;
+            if (onlyTo) {
+                result.destination = onlyTo;
+                if (os.peerSyncs.contains(onlyTo)) {
+                    if (os.objectServer && onlyTo == os.objectServer.remoteID)
+                        return;
+                    result.destination = onlyTo;
+                    var ps = os.peerSyncs.get(onlyTo);
+                    ps.send(result);
+                    console.log("Sent", result.type, "to", onlyTo);
+                } else {
+                    os.legion.messagingAPI.sendTo(onlyTo, result);
+                }
+            } else if (except) {
+                //console.log("Sending a", result.type, "except", except.remoteID);
+                os.legion.messagingAPI.broadcastMessage(result, [except, os.legion.connectionManager.serverConnection]);
+            } else {
+                //console.log("Sending a", result.type, "to all.");
+                os.legion.messagingAPI.broadcastMessage(result, [os.legion.connectionManager.serverConnection]);
+            }
+        });
+    } else {
+        if (pop.extra) {
+            switch (pop.extra.type) {
+                case "STATE":
+                    if (done.contains("" + pop.objectID))
+                        return;
+                    else
+                        done.set("" + pop.objectID, true);
+            }
+            delete pop.extra;
+        }
+        //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
+        this.legion.generateMessage("Fake", {fake: "data"}, function (answer) {
+            os.legion.messagingAPI.broadcastMessage(pop, [os.legion.connectionManager.serverConnection]);
+        });
+    }
+};
+
+ObjectStore.prototype.clearPeersQueue = function () {
     if (this.peersQueue.size() > 0) {
-        console.log("Messages in queue: " + this.peersQueue.size());
+        console.log("Messages in peers queue: " + this.peersQueue.size());
         var pop = this.peersQueue.pop();
         var done = new ALMap();
         while (pop) {
-            (function (pop) {
-                var options = pop.options;
-                const except = options.except;
-                if (options.onlyTo && (typeof options.onlyTo != "string"))
-                    options.onlyTo = options.onlyTo.remoteID;
-                if (options.except && (typeof options.except != "string"))
-                    options.except = options.except.remoteID;
-                if (!pop.sender) {
-                    var msg = {};
-                    switch (pop.type) {
-                        case "OP":
-                            var objectID = pop.objectID;
-                            var clientID = pop.clientID;
-                            var operationID = pop.operationID;
-                            var thing = "" + objectID + "" + clientID + "" + operationID;
-                            if (done.contains(thing))
-                                return;
-                            else
-                                done.set(thing, true);
-                            var crdt = os.crdts.get(objectID);
-                            var op = crdt.getOpFromHistory(clientID, operationID);
-                            op.clientID = clientID;
-                            op.objectID = objectID;
-                            msg = op;
-                            break;
-                        case "OPLIST":
-                            break;
-                        case "STATE":
-                            var objectID = pop.objectID;
-                            var thing = "" + objectID;
-                            if (done.contains(thing))
-                                return;
-                            else
-                                done.set(thing, true);
-                            var crdt = os.crdts.get(objectID);
-                            var state = crdt.toJSONString(crdt.getState());
-                            msg = {objectID: objectID, state: state};
-                            break;
-                    }
-                    pop.msg = msg;
-                    os.legion.generateMessage(os.handlers.gotContentFromNetwork.type, pop, function (result) {
-                        const onlyTo = options.onlyTo;
-                        if (onlyTo) {
-                            result.destination = onlyTo;
-                            if (os.peerSyncs.contains(onlyTo)) {
-                                if (os.objectServer && onlyTo == os.objectServer.remoteID)
-                                    return;
-                                result.destination = onlyTo;
-                                var ps = os.peerSyncs.get(onlyTo);
-                                ps.send(result);
-                                console.log("Sent", result.type, "to", onlyTo);
-                            } else {
-                                os.legion.messagingAPI.sendTo(onlyTo, result);
-                            }
-                        } else if (except) {
-                            //console.log("Sending a", result.type, "except", except.remoteID);
-                            os.legion.messagingAPI.broadcastMessage(result, [except, os.legion.connectionManager.serverConnection]);
-                        } else {
-                            //console.log("Sending a", result.type, "to all.");
-                            os.legion.messagingAPI.broadcastMessage(result, [os.legion.connectionManager.serverConnection]);
-                        }
-                    });
-                } else {
-                    if (pop.extra) {
-                        switch (pop.extra.type) {
-                            case "STATE":
-                                if (done.contains("" + pop.objectID))
-                                    return;
-                                else
-                                    done.set("" + pop.objectID, true);
-                        }
-                        delete pop.extra;
-                    }
-                    //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
-                    os.legion.generateMessage("Fake", {fake: "data"}, function (answer) {
-                        os.legion.messagingAPI.broadcastMessage(pop, [os.legion.connectionManager.serverConnection]);
-                    });
-                }
-            })
-            (pop);
-
+            this.usePeersMessage(done, pop);
             pop = this.peersQueue.pop();
         }
     }
-}
-;
+};
 
 /**
  * Defines a CRDT that can later be instantiated.

@@ -191,11 +191,18 @@ function CRDT(objectID, crdt, objectStore) {
 CRDT.STATE_BASED = 1;
 
 /**
- * Operaiton based CRDT propagation.
+ * Operation based CRDT propagation.
  * @constant
  * @type {number}
  */
 CRDT.OP_BASED = 2;
+
+/**
+ * Delta based CRDT propagation.
+ * @constant
+ * @type {number}
+ */
+CRDT.DELTA_BASED = 3;
 
 /**
  * State based CRDT constants.
