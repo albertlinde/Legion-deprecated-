@@ -27,7 +27,7 @@ function start(clientID) {
         messagingProtocol: FloodMessaging,
         objectOptions: {
             serverInterval: 4000,
-            peerInterval: 200
+            peerInterval: 2000
         },
         bullyProtocol: {
             type: SimpleBully,

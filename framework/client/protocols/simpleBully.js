@@ -5,7 +5,7 @@ function SimpleBully(legion) {
         bully: {
             type: "Bully",
             callback: function (message, connection) {
-                var hisID = message.sender;
+                var hisID = (message.sender).toString();
                 var time = Date.now();
                 if (hisID <= sb.bully) {
                     sb.bully = hisID;
@@ -20,7 +20,7 @@ function SimpleBully(legion) {
         }
     };
 
-    this.bully = this.legion.id;
+    this.bully = (this.legion.id).toString();
     this.lastBullyMessage = Date.now();
 
     this.bullyMustHaveInterval = this.legion.options.bullyProtocol.options.bullyMustHaveInterval;
@@ -80,7 +80,7 @@ SimpleBully.prototype.onServerDisconnect = function (serverConnection) {
  * @returns {boolean}
  */
 SimpleBully.prototype.amBullied = function () {
-    if (this.bully == this.legion.id || this.bully == "TEMP_ID")
+    if (this.bully == (this.legion.id).toString() || this.bully == "TEMP_ID")
         return false;
     var time = (Date.now()) - this.lastBullyMessage;
     return time <= this.bullyMustHaveInterval;
@@ -89,7 +89,7 @@ SimpleBully.prototype.amBullied = function () {
 SimpleBully.prototype.floodBully = function () {
     if (!this.amBullied()) {
         this.bullied();
-        this.bully = this.legion.id;
+        this.bully = (this.legion.id).toString();
         this.lastBullyMessage = Date.now();
 
         var sb = this;
