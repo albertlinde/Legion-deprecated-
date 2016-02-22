@@ -24,7 +24,7 @@ function CRDT_Database(messaging, peerSyncs) {
     this.saveTime = 5000;
 
     this.messageCount = Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
-    this.id = "OS";
+    this.id = "localhost:8004";
 
     setInterval(function () {
         cb.saveToDisk()
@@ -218,18 +218,21 @@ CRDT_Database.prototype.gotContentFromNetwork = function (message, original, con
     original.options.except = connection;
     switch (message.content.type) {
         case "OP":
-            var objectID = message.content.msg.objectID;
+            var objectID = message.content.objectID;
             var type = message.content.objectType;
             var crdt = this.getCRDT(objectID, type);
             crdt.operationsFromNetwork([message.content.msg], connection, original);
             break;
         case "OPLIST":
-            var ops = message.content.ops;
+            var ops = message.content.operations;
+            if (!ops) {
+                ops = message.content.ops;
+            }
             var crdt = this.getCRDT(message.content.objectID);
             crdt.operationsFromNetwork(ops, connection, original);
             break;
         case "STATE":
-            var objectID = message.content.msg.objectID;
+            var objectID = message.content.objectID;
             var crdt = this.getCRDT(objectID);
             crdt.stateFromNetwork(crdt.fromJSONString(message.content.msg.state), connection, original);
             break;

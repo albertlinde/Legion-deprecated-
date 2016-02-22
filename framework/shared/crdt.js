@@ -169,7 +169,8 @@ function CRDT(objectID, crdt, objectStore) {
             })(keys[i]);
         }
     } else {
-        console.error("I am here: " + JSON.stringify(this.crdt));
+        console.error("No def for propagation type", this.crdt.propagation);
+        console.error(JSON.stringify(this.crdt), objectID);
     }
 
     /**

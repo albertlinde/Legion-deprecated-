@@ -124,8 +124,10 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
             operations: operations
         };
         this.legion.generateMessage(this.handlers.gotContentFromNetwork.type, answer, function (result) {
-            if (os.peerSyncs.contains(message.sender)) {
-                result.destination = message.sender;
+            result.destination = message.sender;
+            if (os.objectServer && result.destination == os.objectServer.peerConnection.remoteID) {
+                os.objectServer.send(result);
+            } else if (os.peerSyncs.contains(message.sender)) {
                 var ps = os.peerSyncs.get(message.sender);
                 ps.send(result);
             } else {
@@ -191,7 +193,7 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
 
     switch (message.content.type) {
         case "OP":
-            var objectID = message.content.msg.objectID;
+            var objectID = message.content.objectID;
             var crdt = this.crdts.get(objectID);
             if (crdt) {
                 crdt.operationsFromNetwork([message.content.msg], connection, original);
@@ -208,7 +210,7 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
             crdt.operationsFromNetwork(ops, connection, original);
             break;
         case "STATE":
-            var objectID = message.content.msg.objectID;
+            var objectID = message.content.objectID;
             var crdt = this.crdts.get(objectID);
             if (crdt) {
                 crdt.stateFromNetwork(crdt.fromJSONString(message.content.msg.state), connection, original);
@@ -259,7 +261,6 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
                 var operationID = pop.operationID;
                 var crdt = this.crdts.get(objectID);
                 var op = crdt.getOpFromHistory(clientID, operationID);
-                op.clientID = clientID;
                 op.objectID = objectID;
                 msg = op;
                 var thing = "" + objectID + "" + clientID + "" + operationID;
@@ -355,7 +356,6 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
                 var crdt = this.crdts.get(objectID);
                 var op = crdt.getOpFromHistory(clientID, operationID);
                 op.clientID = clientID;
-                op.objectID = objectID;
                 msg = op;
                 break;
             case "OPLIST":
