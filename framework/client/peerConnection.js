@@ -1,5 +1,9 @@
 var DEFAULT_PEER_INIT_TIMEOUT = 7 * 1000;
 
+var KEEP_ALIVE_INTERVAL = 3000;
+var KEEP_ALIVE_MESSAGE = {type: "ka"};
+var KEEP_ALIVE_MUST_HAVE = 10000;
+
 function PeerConnection(remoteID, legion) {
     if (detailedDebug) {
         console.log("PC from " + legion.id + " to " + remoteID);
@@ -15,7 +19,23 @@ function PeerConnection(remoteID, legion) {
     }, DEFAULT_PEER_INIT_TIMEOUT);
 
     this.unique = null;
+
+    this.lastKeepAlive = Date.now();
+    this.keepAliveInterval = setInterval(function () {
+        pc.keepAlive()
+    }, KEEP_ALIVE_INTERVAL);
 }
+
+PeerConnection.prototype.keepAlive = function () {
+    if (this.lastKeepAlive + KEEP_ALIVE_MUST_HAVE < Date.now()) {
+        console.warn("Peer " + this.legion.id + " keepAlive timeout from " + this.remoteID + ".");
+        if (this.isAlive())
+            this.channel.close();
+        clearInterval(this.keepAliveInterval);
+    } else {
+        this.send(KEEP_ALIVE_MESSAGE);
+    }
+};
 
 PeerConnection.prototype.onInitTimeout = function () {
     console.warn("Peer " + this.legion.id + " connection timeout before getting offer from " + this.remoteID + ".");
@@ -26,6 +46,10 @@ PeerConnection.prototype.setChannelHandlers = function () {
     var pc = this;
     this.channel.onmessage = function (event) {
         var m = JSON.parse(event.data);
+        if (m.type == KEEP_ALIVE_MESSAGE.type) {
+            pc.lastKeepAlive = Date.now();
+            return;
+        }
         console.log("Got " + m.type + " from " + pc.remoteID + " s: " + m.sender);
         var original = JSON.parse(event.data);
         if (m.content) {
@@ -48,10 +72,12 @@ PeerConnection.prototype.setChannelHandlers = function () {
         }
     };
     this.channel.onopen = function (event) {
+        clearTimeout(pc.init_timeout);
         pc.legion.connectionManager.onOpenClient(pc);
     };
     this.channel.onclose = function (event) {
         pc.legion.connectionManager.onCloseClient(pc);
+        clearInterval(this.keepAliveInterval);
     };
 };
 
@@ -69,18 +95,17 @@ PeerConnection.prototype.cancelAll = function (notDuplicate) {
     this.channel = null;
     this.peer.close();
     clearTimeout(this.init_timeout);
+    clearInterval(this.keepAliveInterval);
     this.peer = null;
     this.legion.connectionManager.onCloseClient(this);
 };
 
 PeerConnection.prototype.returnOffer = function (offer) {
-    clearTimeout(this.init_timeout);
     if (detailedDebug)console.log(offer);
     this.peer.setRemoteDescription(new RTCSessionDescription(offer));
 };
 
 PeerConnection.prototype.return_ice = function (candidate) {
-    clearTimeout(this.init_timeout);
     if (detailedDebug)console.log(candidate);
     var pc = this;
     this.peer.addIceCandidate(new RTCIceCandidate(candidate),

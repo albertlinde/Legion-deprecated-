@@ -10,7 +10,7 @@ function B2BOverlay(overlay, legion) {
     this.max = 6;
 
     this.conn_check_timeout = 8 * 1000;
-    this.conn_check_timeout_startup = 13 * 1000;
+    this.conn_check_timeout_startup = 4 * 1000;
     this.conn_check_timeout_multiplier = 1.5;
 
     this.RAND_VAL = 0.3;
@@ -30,7 +30,7 @@ function B2BOverlay(overlay, legion) {
     var meta_timeout = function () {
         bo.sendP2PMeta();
         bo.meta_interval = Math.min(bo.meta_interval + 2500, 45 * 1000);
-        setTimeout(timeout_check, bo.meta_interval);
+        setTimeout(meta_timeout, bo.meta_interval);
     };
     setTimeout(meta_timeout, bo.meta_interval);
 
@@ -155,6 +155,7 @@ B2BOverlay.prototype.onJoinRequest = function (message, original, connection) {
         if (connected)message.N--;
         message.TTL--;
         if (message.N > 0 && message.TTL > 0) {
+            if(connection instanceof PeerConnection)
             this.legion.messagingAPI.propagateToN(message);
         }
     }
