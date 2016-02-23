@@ -2,7 +2,7 @@ if (typeof exports != "undefined")
     exports.ALMap = ALMap;
 
 function ALMap() {
-    this.map = [];
+    this.map = {};
 }
 
 /**

@@ -2,7 +2,7 @@ if (typeof exports != "undefined")
     exports.ALSet = ALSet;
 
 function ALSet() {
-    this.set = [];
+    this.set = {};
 }
 
 ALSet.prototype.add = function (element) {
@@ -30,7 +30,7 @@ ALSet.prototype.toJSONString = function () {
 };
 
 ALSet.prototype.fromJSONString = function (string) {
-    this.set = [];
+    this.set = {};
     if (string) {
         for (var i = 0; i < string.length; i++) {
             this.set[string[i]] = true;
