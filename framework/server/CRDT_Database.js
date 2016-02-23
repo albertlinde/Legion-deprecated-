@@ -295,7 +295,6 @@ CRDT_Database.prototype.generateMessage = function (type, data, callback) {
         callback(message);
     } else {
         try {
-
             Compressor.compress(JSON.stringify(data), function (response) {
                 message.content = response;
                 callback(message);
@@ -305,6 +304,7 @@ CRDT_Database.prototype.generateMessage = function (type, data, callback) {
             });
         }
         catch (e) {
+            console.error("Died on compress.");
             console.error(e);
             console.error(data);
         }

@@ -262,6 +262,7 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
                 var crdt = this.crdts.get(objectID);
                 var op = crdt.getOpFromHistory(clientID, operationID);
                 op.objectID = objectID;
+                op.clientID = clientID;
                 msg = op;
                 var thing = "" + objectID + "" + clientID + "" + operationID;
                 if (done.contains(thing))
@@ -355,6 +356,7 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
                     done.set(thing, true);
                 var crdt = this.crdts.get(objectID);
                 var op = crdt.getOpFromHistory(clientID, operationID);
+                op.objectID = objectID;
                 op.clientID = clientID;
                 msg = op;
                 break;

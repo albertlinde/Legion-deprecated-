@@ -299,6 +299,7 @@ CRDT.prototype.getVersionVector = function () {
  */
 CRDT.prototype.stateFromNetwork = function (state, connection, originalMessage) {
     var c = this.compare(this.getState(), state);
+    console.log("From network: " + c);
     switch (c) {
         case CRDT.STATE.COMPARE_RESPONSE.EQUALS:
             //no op
