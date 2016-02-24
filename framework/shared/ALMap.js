@@ -11,6 +11,8 @@ function ALMap() {
  * @param value {Object}
  */
 ALMap.prototype.set = function (key, value) {
+    if (typeof key == "object")
+        key = JSON.stringify(key);
     this.map[key] = value;
 };
 
@@ -23,11 +25,17 @@ ALMap.prototype.set = function (key, value) {
 ALMap.prototype.setAll = function (keys, value) {
     if (value instanceof Array) {
         for (var i = 0; i < keys.length; i++) {
-            this.set(keys[i], value[i]);
+            if (typeof keys[i] == "object")
+                this.set(JSON.stringify(keys[i]), value[i]);
+            else
+                this.set(keys[i], value[i]);
         }
     } else {
         for (var i = 0; i < keys.length; i++) {
-            this.set(keys[i], value);
+            if (typeof keys[i] == "object")
+                this.set(JSON.stringify(keys[i]), value);
+            else
+                this.set(keys[i], value);
         }
     }
 };
@@ -47,7 +55,7 @@ ALMap.prototype.deleteAll = function (keys) {
  * @param key {Object}
  */
 ALMap.prototype.delete = function (key) {
-    this.map[key]=null;
+    this.map[key] = null;
     delete this.map[key];
 };
 
@@ -57,7 +65,10 @@ ALMap.prototype.delete = function (key) {
  * @returns {Object}
  */
 ALMap.prototype.get = function (key) {
-    return this.map[key];
+    if (typeof key == "object")
+        return this.map[JSON.stringify(key)];
+    else
+        return this.map[key];
 };
 
 /**
@@ -66,7 +77,11 @@ ALMap.prototype.get = function (key) {
  * @returns {boolean}
  */
 ALMap.prototype.contains = function (key) {
-    return typeof(this.map[key]) != "undefined";
+    if (typeof key == "object") {
+        return typeof(this.map[JSON.stringify(key)]) != "undefined";
+    } else {
+        return typeof(this.map[key]) != "undefined";
+    }
 };
 
 /**
