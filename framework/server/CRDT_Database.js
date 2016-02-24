@@ -75,6 +75,18 @@ CRDT_Database.prototype.clearPeersQueue = function () {
                             var state = crdt.toJSONString(crdt.getState());
                             msg = {objectID: objectID, state: state};
                             break;
+                        case "DELTA":
+                            var objectID = pop.objectID;
+                            var thing = "" + objectID;
+                            if (done.contains(thing))
+                                return;
+                            else
+                                done.set(thing, true);
+                            var crdt = os.crdts.get(objectID);
+                            var vv = crdt.getVersionVector();
+                            var gcvv = crdt.getGCVV();
+                            msg = {objectID: objectID, vv: vv, gcvv:gcvv};
+                            break;
                     }
                     pop.msg = msg;
                     if (options.except)
@@ -167,6 +179,16 @@ CRDT_Database.prototype.propagateMessage = function (message, extra) {
     this.peersQueue.push(message);
 };
 
+
+CRDT_Database.prototype.propagateDelta = function (objectID, options) {
+    var queuedOP = {
+        type: "DELTA",
+        objectID: objectID,
+        options: options
+    };
+    this.peersQueue.push(queuedOP);
+};
+
 CRDT_Database.prototype.propagateAll = function (objectID, ops, options) {
     var queuedOP = {
         type: "OPLIST",
@@ -235,6 +257,24 @@ CRDT_Database.prototype.gotContentFromNetwork = function (message, original, con
             var objectID = message.content.objectID;
             var crdt = this.getCRDT(objectID);
             crdt.stateFromNetwork(crdt.fromJSONString(message.content.msg.state), connection, original);
+            break;
+        case "DELTA":
+            var objectID = message.content.objectID;
+            var crdt = this.crdts.get(objectID);
+            if (crdt) {
+                crdt.deltaFromNetwork(message.content.msg, connection, original);
+            } else {
+                console.error("Got delta for no crdt", message)
+            }
+            break;
+        case "DELTAOPS":
+            var objectID = message.content.objectID;
+            var crdt = this.crdts.get(objectID);
+            if (crdt) {
+                crdt.deltaOPSFromNetwork(message.content.msg, connection, original);
+            } else {
+                console.error("Got deltaOps for no crdt", message)
+            }
             break;
     }
 };

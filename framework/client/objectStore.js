@@ -218,6 +218,24 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
                 console.error("Got state for no crdt", message)
             }
             break;
+        case "DELTA":
+            var objectID = message.content.objectID;
+            var crdt = this.crdts.get(objectID);
+            if (crdt) {
+                crdt.deltaFromNetwork(message.content.msg, connection, original);
+            } else {
+                console.error("Got delta for no crdt", message)
+            }
+            break;
+        case "DELTAOPS":
+            var objectID = message.content.objectID;
+            var crdt = this.crdts.get(objectID);
+            if (crdt) {
+                crdt.deltaOPSFromNetwork(message.content, connection, original);
+            } else {
+                console.error("Got deltaOps for no crdt", message)
+            }
+            break;
     }
 };
 
@@ -282,6 +300,18 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
                 var crdt = this.crdts.get(objectID);
                 var state = crdt.toJSONString(crdt.getState());
                 msg = {objectID: objectID, state: state};
+                break;
+            case "DELTA":
+                var objectID = pop.objectID;
+                var thing = "" + objectID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                var crdt = this.crdts.get(objectID);
+                var vv = crdt.getVersionVector();
+                var gcvv = crdt.getGCVV();
+                msg = {objectID: objectID, vv: vv, gcvv:gcvv};
                 break;
         }
 
@@ -372,6 +402,18 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
                 var crdt = this.crdts.get(objectID);
                 var state = crdt.toJSONString(crdt.getState());
                 msg = {objectID: objectID, state: state};
+                break;
+            case "DELTA":
+                var objectID = pop.objectID;
+                var thing = "" + objectID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                var crdt = this.crdts.get(objectID);
+                var vv = crdt.getVersionVector();
+                var gcvv = crdt.getGCVV();
+                msg = {objectID: objectID, vv: vv, gcvv:gcvv};
                 break;
         }
         pop.msg = msg;
@@ -608,4 +650,33 @@ ObjectStore.prototype.propagateState = function (objectID, options) {
 
 ObjectStore.prototype.getCRDT = function (objectID) {
     return this.crdts.get(objectID);
+};
+
+ObjectStore.prototype.propagateDelta = function (objectID, options) {
+    var queuedOP = {
+        type: "DELTA",
+        objectID: objectID,
+        options: options
+    };
+    this.serverQueue.push(queuedOP);
+    this.peersQueue.push(queuedOP);
+};
+
+ObjectStore.prototype.sendDeltaOPSTo = function (connection, delta_ops, crdt) {
+    var pop = {
+        delta_ops: delta_ops,
+        objectID: crdt.objectID,
+        type: "DELTAOPS",
+        vv: crdt.getVersionVector(),
+        gcvv: crdt.getGCVV()
+    };
+    var os = this;
+    this.legion.generateMessage(this.handlers.gotContentFromNetwork.type, pop, function (result) {
+        if (os.objectServer && connection.remoteID == os.objectServer.remoteID) {
+            os.objectServer.send(result);
+        } else {
+            var ps = os.peerSyncs.get(connection.remoteID);
+            ps.send(result);
+        }
+    });
 };

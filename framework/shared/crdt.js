@@ -34,10 +34,15 @@ var crtd_type = {
         },
 
         toJSONString: function (state) {
+        },
+        garbageCollect: function (gcvv) {
+        },
+        getDelta: function (fromVV) {
+        },
+        applyDelta: function (statePart, vv, gcvv) {
         }
     }
 };
-
 
 /**
  * CRDT instance as encapsulation.
@@ -91,6 +96,16 @@ function CRDT(objectID, crdt, objectStore) {
      * @type {Function}
      */
     this.toJSONString = crdt.crdt.toJSONString;
+
+    this.garbageCollect = crdt.crdt.garbageCollect;
+    this.getDelta = crdt.crdt.getDelta;
+    this.applyDelta = crdt.crdt.applyDelta;
+
+    /**
+     * State of garbace collection.
+     * @type {{number: number}}
+     */
+    this.gcvv = {};
 
     /**
      * Creates a default value (empty object).
@@ -163,6 +178,24 @@ function CRDT(objectID, crdt, objectStore) {
                 c[key] = function () {
                     var ret = c.crdt.crdt.operations[key].apply(c, arguments);
                     c.objectStore.propagateState(c.objectID, {all: true});
+                    if (c.callback)
+                        c.callback(ret, {local: true});
+                };
+            })(keys[i]);
+        }
+    } else if (this.crdt.propagation == CRDT.DELTA_BASED) {
+        for (var i = 0; i < keys.length; i++) {
+            (function (key) {
+                c[key] = function () {
+                    var newOP = {id: c.objectStore.legion.id, opNum: ++c.localOP};
+                    var args = [];
+                    for (var arg_i = 0; arg_i < arguments.length; arg_i++) {
+                        args.push(arguments[arg_i]);
+                    }
+                    args.push(newOP);
+                    var ret = c.crdt.crdt.operations[key].apply(c, args);
+                    c.addOpToCurrentVersionVector(newOP.id, newOP.opNum);
+                    c.objectStore.propagateDelta(c.objectID, {all: true});
                     if (c.callback)
                         c.callback(ret, {local: true});
                 };
@@ -291,6 +324,10 @@ CRDT.prototype.getVersionVector = function () {
     return vv;
 };
 
+CRDT.prototype.getGCVV = function () {
+    return this.gcvv;
+};
+
 /**
  *
  * @param state {Object}
@@ -329,6 +366,55 @@ CRDT.prototype.stateFromNetwork = function (state, connection, originalMessage) 
             this.objectStore.propagateState(this.objectID, {all: true});
             break;
     }
+};
+
+/**
+ *
+ * @param deltaVV
+ * @param connection
+ * @param originalMessage
+ */
+CRDT.prototype.deltaFromNetwork = function (deltaVV, connection, originalMessage) {
+    console.error("deltaFromNetwork");
+
+    var vv = deltaVV.vv;
+    var vv_keys = Object.keys(vv);
+    this.garbageCollect(deltaVV.gcvv);
+    var delta_ops = this.getDelta(vv);
+    if (delta_ops.has) {
+        console.info(delta_ops);
+        this.objectStore.sendDeltaOPSTo(connection, delta_ops, this);
+    }
+    for (var i = 0; i < vv_keys.length; i++) {
+        if (this.versionVector.contains(vv_keys[i])) {
+            if (this.versionVector.get(vv_keys[i]) < vv[vv_keys[i]]) {
+                console.info("pd");
+                this.objectStore.propagateDelta(this.objectID, {all: true});
+                break;
+            }
+        } else {
+            console.info("pd");
+            this.objectStore.propagateDelta(this.objectID, {all: true});
+            break;
+        }
+    }
+};
+
+/**
+ *
+ * @param deltaOps
+ * @param connection
+ * @param originalMessage
+ */
+CRDT.prototype.deltaOPSFromNetwork = function (deltaOps, connection, originalMessage) {
+    console.error("deltaOPSFromNetwork");
+    console.error(deltaOps);
+    console.error(connection);
+    console.error(originalMessage);
+    this.garbageCollect(deltaOps.gcvv);
+    console.log(this)
+    this.applyDelta(deltaOps.delta_ops, deltaOps.vv, deltaOps.gcvv);
+    console.error("TODO: set vv merge on his vv");
 };
 
 /**

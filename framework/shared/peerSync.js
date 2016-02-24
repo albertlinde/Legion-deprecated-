@@ -187,6 +187,8 @@ PeerSync.prototype.sync = function () {
                 vv: crdt.getVersionVector(),
                 type: crdt.crdt.type
             });
+        } else if (crdt.crdt.propagation == CRDT.DELTA_BASED) {
+            console.warn("Not implemented yet.");
         } else {
             console.error("Shit happened.")
         }
