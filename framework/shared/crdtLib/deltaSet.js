@@ -54,6 +54,15 @@ var delta_set = {
                     this.state.removes.delete(r_keys[i]);
                 }
             }
+
+            var gvv_keys = Object.keys(gcvv);
+            for (var i = 0; i < gvv_keys.length; i++) {
+                var key = gvv_keys[i];
+                if (this.gcvv[key])
+                    this.gcvv[key] = Math.max(gcvv[key], this.gcvv[key]);
+                else
+                    this.gcvv[key] = gcvv[key];
+            }
         },
         getDelta: function (fromVV) {
             console.error("TODO: verify gcvv");

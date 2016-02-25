@@ -423,15 +423,6 @@ CRDT.prototype.deltaOPSFromNetwork = function (deltaOps, connection, originalMes
             this.versionVector.set(key, deltaOps.vv[key]);
     }
 
-    var gvv_keys = Object.keys(deltaOps.gcvv);
-    for (var i = 0; i < gvv_keys.length; i++) {
-        var key = gvv_keys[i];
-        if (this.gcvv[key])
-            this.gcvv[key] = Math.max(deltaOps.gcvv[key], this.gcvv[key]);
-        else
-            this.gcvv[key] = deltaOps.gcvv[key];
-    }
-
 };
 
 /**
