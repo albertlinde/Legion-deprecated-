@@ -620,7 +620,7 @@ ObjectStore.prototype.versionVectorDiff = function (vv1, vv2) {
     }
 
     for (var j = 0; j < keys2.length; j++) {
-        var currentKey = keys2[i];
+        var currentKey = keys2[j];
         if (!vv1[currentKey]) {
             ret.vv1.missing[currentKey] = [];
             for (var op_i = 1; op_i <= vv2[currentKey]; op_i++) {
