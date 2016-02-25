@@ -5,6 +5,8 @@ if (typeof exports != "undefined") {
     ALMap = ALMap.ALMap;
 }
 
+var TOMBSTONE_THRESHOLD = 25;
+
 var delta_set = {
     type: "DELTA_Set",
     propagation: CRDT.DELTA_BASED,
@@ -19,19 +21,19 @@ var delta_set = {
             /**
              *
              * @param element {Object}
-             * @param opNum {{id: {number}, opNum: {number}}}
+             * @param o {{id: {number}, o: {number}}}
              * @returns {{add: *}}
              */
-            add: function (element, opNum) {
-                console.warn("add", element, opNum, arguments);
+            add: function (element, o) {
+                if (objectsDebug)console.warn("add", element, o, arguments);
                 if (!this.state.adds.contains(element)) {
                     this.state.adds.set(element, new ALMap());
                     var e = this.state.adds.get(element);
-                    e.set(opNum, true);
+                    e.set(o, true);
                     return {add: element};
                 }
             },
-            remove: function (element, opNum) {
+            remove: function (element, o) {
                 var e = this.state.adds.get(element);
                 if (e) {
                     var data = {element: element, removes: e.keys()};
@@ -44,6 +46,20 @@ var delta_set = {
                         return {remove: data.element};
                     }
                 }
+
+                if (this.state.removes.size() > TOMBSTONE_THRESHOLD) {
+                    var gcvv = {};
+                    var vv = this.getVersionVector();
+                    var vvkeys = Object.keys(vv);
+                    for (var i = 0; i < vvkeys.length; i++) {
+                        if (vv[vvkeys[i]] > 5) {
+                            gcvv[vvkeys[i]] = vv[vvkeys[i]] - 5;
+                        }
+                    }
+                    console.info(gcvv);
+                    this.garbageCollect(gcvv);
+                }
+
             }
         },
         garbageCollect: function (gcvv) {
@@ -64,10 +80,18 @@ var delta_set = {
                     this.gcvv[key] = gcvv[key];
             }
         },
-        getDelta: function (fromVV) {
-            console.error("TODO: verify gcvv");
-            console.error("TODO: if < vv then add ALL of my state instead");
+        getDelta: function (fromVV, gcvv) {
             var ret = {has: false, adds: [], removes: []};
+
+            var all = false;
+            var his_vv_keys = Object.keys(fromVV);
+            for (var hvi = 0; hvi < his_vv_keys.length; hvi++) {
+                if (before({id: his_vv_keys[hvi], o: fromVV[his_vv_keys[hvi]]}, this.gcvv)) {
+                    console.warn("from < gcvv");
+                    all = true;
+                    break;
+                }
+            }
 
             var a_keys = this.state.adds.keys();
             for (var j = 0; j < a_keys.length; j++) {
@@ -75,7 +99,7 @@ var delta_set = {
                 var unique_keys = e.keys();
                 for (var k = 0; k < unique_keys.length; k++) {
                     var u_key = JSON.parse(unique_keys[k]);
-                    if (after(u_key, fromVV)) {
+                    if (all == true || after(u_key, fromVV)) {
                         ret.adds.push({key: a_keys[j], u: u_key});
                         ret.has = true;
                     }
@@ -96,12 +120,12 @@ var delta_set = {
         applyDelta: function (statePart, vv, gcvv) {
             /**
              *
-             * @type {Array.<{key:{string}, u:{id:{number}, opNum:{number}}}>}
+             * @type {Array.<{key:{string}, u:{id:{number}, o:{number}}}>}
              */
             var adds = statePart.adds;
             /**
              *
-             * @type {Array.<{id:{number}, opNum:{number}}>}
+             * @type {Array.<{id:{number}, o:{number}}>}
              */
             var removes = statePart.removes;
 
@@ -109,26 +133,21 @@ var delta_set = {
 
             //2- every my add: if < gcvv & ! in his thing. remove & dont add to removes!
 
-            console.error("TODO: applyDelta");
-            console.error(statePart);
-            console.error(vv);
-            console.error(gcvv);
+            if (objectsDebug)console.log("TODO: applyDelta");
+            if (objectsDebug)console.log(statePart);
+            if (objectsDebug)console.log(vv);
+            if (objectsDebug)console.log(gcvv);
 
             var temp_map = new ALMap();
             //1
             for (var i = 0; i < adds.length; i++) {
                 var curr_add = adds[i];
-                console.warn(curr_add);
                 if (!this.state.adds.contains(curr_add.key)) {
                     this.state.adds.set(curr_add.key, new ALMap());
                     //TODO: new adds. bubble up a state change to external (app) interface.
                 }
                 var e = this.state.adds.get(curr_add.key);
-                console.info(e);
                 e.set(curr_add.u, true);
-                console.info(e);
-                console.info(e.get(curr_add.u));
-
                 var temp_e = temp_map.get(curr_add.key);
                 if (!temp_e) {
                     temp_e = new ALMap();
@@ -143,18 +162,11 @@ var delta_set = {
 
             //2
             var local_adds = this.state.adds.keys();
-            console.log(local_adds)
-            console.log(removes)
             for (var lai = 0; lai < local_adds.length; lai++) {
                 var e = this.state.adds.get(local_adds[lai]);
                 var l_e = e.keys();
-                console.log(l_e)
                 for (var lei = 0; lei < l_e.length; lei++) {
                     for (var j = 0; j < removes.length; j++) {
-                        console.log(lei)
-                        console.log(l_e[lei])
-                        console.log(removes[j])
-                        console.log(l_e[lei] == removes[j])
                         if (l_e[lei] == removes[j])
                             e.delete(l_e[lei]);
                     }
@@ -193,12 +205,12 @@ if (typeof exports != "undefined") {
 var before = function (key, vv) {
     if (vv instanceof ALMap) {
         if (vv.contains(key.id)) {
-            return vv.get(key.id) > key.opNum;
+            return vv.get(key.id) > key.o;
         }
         return false;
     } else {
         if (vv[key.id]) {
-            return vv[key.id] > key.opNum;
+            return vv[key.id] > key.o;
         }
         return false;
     }
@@ -214,12 +226,12 @@ var after = function (key, vv) {
 
     if (vv instanceof ALMap) {
         if (vv.contains(key.id)) {
-            return vv.get(key.id) < key.opNum;
+            return vv.get(key.id) < key.o;
         }
         return true;
     } else {
         if (vv[key.id]) {
-            return vv[key.id] < key.opNum;
+            return vv[key.id] < key.o;
         }
         return true;
     }

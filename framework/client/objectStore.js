@@ -191,6 +191,10 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
         original.options = {};
     original.options.except = connection;
 
+    console.log(Date.now() + " Got " + message.content.type + " " + JSON.stringify(message).length);
+    if(JSON.stringify(message).length>1000){
+        console.info(message);
+    }
     switch (message.content.type) {
         case "OP":
             var objectID = message.content.objectID;
@@ -311,7 +315,7 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
                 var crdt = this.crdts.get(objectID);
                 var vv = crdt.getVersionVector();
                 var gcvv = crdt.getGCVV();
-                msg = {objectID: objectID, vv: vv, gcvv:gcvv};
+                msg = {objectID: objectID, vv: vv, gcvv: gcvv};
                 break;
         }
 
@@ -413,7 +417,7 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
                 var crdt = this.crdts.get(objectID);
                 var vv = crdt.getVersionVector();
                 var gcvv = crdt.getGCVV();
-                msg = {objectID: objectID, vv: vv, gcvv:gcvv};
+                msg = {objectID: objectID, vv: vv, gcvv: gcvv};
                 break;
         }
         pop.msg = msg;
