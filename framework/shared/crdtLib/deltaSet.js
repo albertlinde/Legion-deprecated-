@@ -76,16 +76,15 @@ var delta_set = {
             var r_keys = this.state.removes.keys();
             for (var i = 0; i < r_keys.length; i++) {
                 var key = JSON.parse(r_keys[i]);
-                if (after(key, fromVV)) {
-                    ret.removes.push(r_keys[i]);
-                    ret.has = true;
-                }
+                //if (after(key, fromVV)) {
+                ret.removes.push(r_keys[i]);
+                ret.has = true;
+                //}
             }
 
             return ret;
         },
         applyDelta: function (statePart, vv, gcvv) {
-            console.log(this)
             /**
              *
              * @type {Array.<{key:{string}, u:{id:{number}, opNum:{number}}}>}
@@ -130,15 +129,26 @@ var delta_set = {
 
             }
             for (var j = 0; j < removes.length; j++) {
-                this.state.removes.set(removes[i], true);
+                this.state.removes.set(removes[j], true);
             }
 
             //2
             var local_adds = this.state.adds.keys();
+            console.log(local_adds)
+            console.log(removes)
             for (var lai = 0; lai < local_adds.length; lai++) {
                 var e = this.state.adds.get(local_adds[lai]);
                 var l_e = e.keys();
+                console.log(l_e)
                 for (var lei = 0; lei < l_e.length; lei++) {
+                    for (var j = 0; j < removes.length; j++) {
+                        console.log(lei)
+                        console.log(l_e[lei])
+                        console.log(removes[j])
+                        console.log(l_e[lei] == removes[j])
+                        if (l_e[lei] == removes[j])
+                            e.delete(l_e[lei]);
+                    }
                     var p = JSON.parse(l_e[lei]);
                     if (after(p, gcvv)) {
                         //no op
@@ -155,6 +165,10 @@ var delta_set = {
                         }
                     }
                 }
+                if (e.size() == 0) {
+                    this.state.adds.delete(local_adds[lai]);
+                    //TODO: new remove. bubble up a state change to external (app) interface.
+                }
             }
             //thats it? :/
         }
@@ -167,17 +181,18 @@ if (typeof exports != "undefined") {
     CRDT_LIB.DELTA_Set = delta_set;
 }
 
-/**
- *
- * @param key
- * @param vv {ALMap}
- * @returns {boolean}
- */
 var before = function (key, vv) {
-    if (vv.contains(key.id)) {
-        return vv.get(key.id) > key.opNum;
+    if (vv instanceof ALMap) {
+        if (vv.contains(key.id)) {
+            return vv.get(key.id) > key.opNum;
+        }
+        return false;
+    } else {
+        if (vv[key.id]) {
+            return vv[key.id] > key.opNum;
+        }
+        return false;
     }
-    return false;
 };
 
 /**
@@ -187,8 +202,16 @@ var before = function (key, vv) {
  * @returns {boolean}
  */
 var after = function (key, vv) {
-    if (vv[key.id]) {
-        return vv[key.id] < key.opNum;
+
+    if (vv instanceof ALMap) {
+        if (vv.contains(key.id)) {
+            return vv.get(key.id) < key.opNum;
+        }
+        return true;
+    } else {
+        if (vv[key.id]) {
+            return vv[key.id] < key.opNum;
+        }
+        return true;
     }
-    return true;
 };

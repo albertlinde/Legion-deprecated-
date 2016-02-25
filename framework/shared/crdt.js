@@ -412,16 +412,33 @@ CRDT.prototype.deltaOPSFromNetwork = function (deltaOps, connection, originalMes
     console.error(connection);
     console.error(originalMessage);
     this.garbageCollect(deltaOps.gcvv);
-    console.log(this)
     this.applyDelta(deltaOps.delta_ops, deltaOps.vv, deltaOps.gcvv);
-    console.error("TODO: set vv merge on his vv");
+
+    var vv_keys = Object.keys(deltaOps.vv);
+    for (var i = 0; i < vv_keys.length; i++) {
+        var key = vv_keys[i];
+        if (this.versionVector.contains(key))
+            this.versionVector.set(key, Math.max(deltaOps.vv[key], this.versionVector.get(key)));
+        else
+            this.versionVector.set(key, deltaOps.vv[key]);
+    }
+
+    var gvv_keys = Object.keys(deltaOps.gcvv);
+    for (var i = 0; i < gvv_keys.length; i++) {
+        var key = gvv_keys[i];
+        if (this.gcvv[key])
+            this.gcvv[key] = Math.max(deltaOps.gcvv[key], this.gcvv[key]);
+        else
+            this.gcvv[key] = deltaOps.gcvv[key];
+    }
+
 };
 
 /**
  *
  * @param operations {Array.<{clientID,dependencyVV,opID,opName,result}>}
  * @param connection {PeerConnection | ObjectServerConnection | GDriveRTObjectsServerConnection}
- * @param originalMessage .{Object}
+ * @param originalMessage {Object}
  */
 CRDT.prototype.operationsFromNetwork = function (operations, connection, originalMessage) {
     var callbackValues = [];
