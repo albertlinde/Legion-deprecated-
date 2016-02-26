@@ -144,6 +144,18 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
     console.log("gotVVFromNetwork end");
 };
 
+ObjectStore.prototype.sendVVToAll = function (objectID, except) {
+    var crdt = this.crdts.get(objectID);
+    var request = {
+        objectID: objectID,
+        vv: crdt.getVersionVector()
+    };
+    var os = this;
+    this.legion.generateMessage(this.handlers.version_vector_propagation.type, request, function (result) {
+        os.legion.messagingAPI.broadcastMessage(result, [except, os.legion.connectionManager.serverConnection], true);
+    });
+};
+
 ObjectStore.prototype.sendVVToNode = function (objectID, receiver) {
     var crdt = this.crdts.get(objectID);
     var request = {
@@ -192,7 +204,7 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
     original.options.except = connection;
 
     console.log(Date.now() + " Got " + message.content.type + " " + JSON.stringify(message).length);
-    if(JSON.stringify(message).length>1000){
+    if (JSON.stringify(message).length > 1000) {
         console.info(message);
     }
     switch (message.content.type) {
@@ -278,6 +290,17 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
         var msg = {};
         switch (pop.type) {
             case "OP":
+                //NOTICE: papoc only start
+                var objectID = pop.objectID;
+                var thing = "" + objectID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                this.sendVVToNode(objectID, this.objectServer.peerConnection.remoteID);
+                return;
+
+                //NOTICE: papoc only end
                 var objectID = pop.objectID;
                 var clientID = pop.clientID;
                 var operationID = pop.operationID;
@@ -380,7 +403,17 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
         var msg = {};
         switch (pop.type) {
             case "OP":
+                //NOTICE: papoc only start
                 var objectID = pop.objectID;
+                var thing = "" + objectID;
+                if (done.contains(thing))
+                    return;
+                else
+                    done.set(thing, true);
+                this.sendVVToAll(objectID, options.except);
+                return;
+
+                //NOTICE: papoc only end
                 var clientID = pop.clientID;
                 var operationID = pop.operationID;
                 var thing = "" + objectID + "" + clientID + "" + operationID;
@@ -437,10 +470,10 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
                 }
             } else if (except) {
                 //console.log("Sending a", result.type, "except", except.remoteID);
-                os.legion.messagingAPI.broadcastMessage(result, [except, os.legion.connectionManager.serverConnection]);
+                os.legion.messagingAPI.broadcastMessage(result, [except, os.legion.connectionManager.serverConnection], true);
             } else {
                 //console.log("Sending a", result.type, "to all.");
-                os.legion.messagingAPI.broadcastMessage(result, [os.legion.connectionManager.serverConnection]);
+                os.legion.messagingAPI.broadcastMessage(result, [os.legion.connectionManager.serverConnection], true);
             }
         });
     } else {
@@ -456,7 +489,7 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
         }
         //IMPORTANT: this generate is actually useless BUT needed to enforce causality.
         this.legion.generateMessage("Fake", {fake: "data"}, function (answer) {
-            os.legion.messagingAPI.broadcastMessage(pop, [os.legion.connectionManager.serverConnection]);
+            os.legion.messagingAPI.broadcastMessage(pop, [os.legion.connectionManager.serverConnection], true);
         });
     }
 };

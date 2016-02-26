@@ -2,12 +2,12 @@ function B2BOverlay(overlay, legion) {
     this.overlay = overlay;
     this.legion = legion;
 
-    this.meta_interval = 25 * 1000;
+    this.meta_interval = 45 * 1000;
 
     this.initial_ttl = 3;
     this.initial_n = 5;
-    this.min = 1;
-    this.max = 6;
+    this.min = 7;
+    this.max = 10;
 
     this.conn_check_timeout = 8 * 1000;
     this.conn_check_timeout_startup = 4 * 1000;

@@ -1,8 +1,8 @@
-var DEFAULT_PEER_INIT_TIMEOUT = 7 * 1000;
+var DEFAULT_PEER_INIT_TIMEOUT = 15 * 1000;
 
-var KEEP_ALIVE_INTERVAL = 3000;
+var KEEP_ALIVE_INTERVAL = 10000;
 var KEEP_ALIVE_MESSAGE = {type: "ka"};
-var KEEP_ALIVE_MUST_HAVE = 10000;
+var KEEP_ALIVE_MUST_HAVE = 30000;
 
 function PeerConnection(remoteID, legion) {
     if (detailedDebug) {

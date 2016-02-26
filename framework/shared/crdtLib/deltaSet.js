@@ -5,7 +5,7 @@ if (typeof exports != "undefined") {
     ALMap = ALMap.ALMap;
 }
 
-var TOMBSTONE_THRESHOLD = 25;
+var TOMBSTONE_THRESHOLD = 10;
 
 var delta_set = {
     type: "DELTA_Set",
@@ -34,39 +34,41 @@ var delta_set = {
                 }
             },
             remove: function (element, o) {
+                var ret = null;
                 var e = this.state.adds.get(element);
                 if (e) {
                     var data = {element: element, removes: e.keys()};
                     for (var i = 0; i < data.removes.length; i++) {
-                        this.state.removes.set(data.removes[i], true);
+                        this.state.removes.set(o, data.removes[i]);
                         e.delete(data.removes[i]);
                     }
                     if (e.size() == 0) {
                         this.state.adds.delete(data.element);
-                        return {remove: data.element};
+                        ret = {remove: data.element};
                     }
                 }
 
-                if (this.state.removes.size() > TOMBSTONE_THRESHOLD) {
+                if (this.state.removes.size() >= TOMBSTONE_THRESHOLD) {
                     var gcvv = {};
                     var vv = this.getVersionVector();
                     var vvkeys = Object.keys(vv);
                     for (var i = 0; i < vvkeys.length; i++) {
-                        if (vv[vvkeys[i]] > 5) {
-                            gcvv[vvkeys[i]] = vv[vvkeys[i]] - 5;
+                        if (vv[vvkeys[i]] > 3) {
+                            gcvv[vvkeys[i]] = vv[vvkeys[i]] - 3;
                         }
                     }
                     console.info(gcvv);
                     this.garbageCollect(gcvv);
                 }
+                return ret;
 
             }
         },
         garbageCollect: function (gcvv) {
             var r_keys = this.state.removes.keys();
             for (var i = 0; i < r_keys.length; i++) {
-                var key = JSON.parse(r_keys[i]);
-                if (before(key, gcvv)) {
+                var val = this.state.removes.get(r_keys[i]);
+                if (before(val, gcvv) || before(JSON.parse(r_keys[i]), gcvv)) {
                     this.state.removes.delete(r_keys[i]);
                 }
             }
@@ -108,11 +110,11 @@ var delta_set = {
 
             var r_keys = this.state.removes.keys();
             for (var i = 0; i < r_keys.length; i++) {
-                var key = JSON.parse(r_keys[i]);
-                //if (after(key, fromVV)) {
-                ret.removes.push(r_keys[i]);
-                ret.has = true;
-                //}
+                var val = this.state.removes.get(r_keys[i]);
+                if (all == true || after(val, fromVV) || after(JSON.parse(r_keys[i]), fromVV)) {
+                    ret.removes.push({key: r_keys[i], u: val});
+                    ret.has = true;
+                }
             }
 
             return ret;
@@ -125,7 +127,7 @@ var delta_set = {
             var adds = statePart.adds;
             /**
              *
-             * @type {Array.<{id:{number}, o:{number}}>}
+             * @type {Array.<{key:{string}, u:{id:{number}, o:{number}}}>}
              */
             var removes = statePart.removes;
 
@@ -133,7 +135,7 @@ var delta_set = {
 
             //2- every my add: if < gcvv & ! in his thing. remove & dont add to removes!
 
-            if (objectsDebug)console.log("TODO: applyDelta");
+            if (objectsDebug)console.log("applyDelta");
             if (objectsDebug)console.log(statePart);
             if (objectsDebug)console.log(vv);
             if (objectsDebug)console.log(gcvv);
@@ -157,7 +159,20 @@ var delta_set = {
 
             }
             for (var j = 0; j < removes.length; j++) {
-                this.state.removes.set(removes[j], true);
+                var curr_rem = removes[j];
+                this.state.removes.set(curr_rem.key, curr_rem.u);
+            }
+
+            var im_behind = false;
+            var vv = Object.keys(this.getVersionVector());
+            for (var i = 0; i < vv.length; i++) {
+                var k = this.getVersionVector()[vv[i]];
+                if (gcvv[vv[i]]) {
+                    if (gcvv[vv[i]] > k) {
+                        im_behind = true;
+                        break;
+                    }
+                }
             }
 
             //2
@@ -167,21 +182,22 @@ var delta_set = {
                 var l_e = e.keys();
                 for (var lei = 0; lei < l_e.length; lei++) {
                     for (var j = 0; j < removes.length; j++) {
-                        if (l_e[lei] == removes[j])
+                        if (l_e[lei] == removes[j].u) {
                             e.delete(l_e[lei]);
+                        }
                     }
-                    var p = JSON.parse(l_e[lei]);
-                    if (after(p, gcvv)) {
-                        //no op
-                    } else {
-                        if (!temp_map.contains(local_adds[lai])) {
-                            e.delete(l_e[lei]);
+                    if (im_behind) {
+                        var p = JSON.parse(l_e[lei]);
+                        if (after(p, gcvv)) {
                         } else {
-                            var temp_e = temp_map.get(local_adds[lai]);
-                            if (temp_e.contains(p)) {
-                                //no op
-                            } else {
+                            if (!temp_map.contains(local_adds[lai])) {
                                 e.delete(l_e[lei]);
+                            } else {
+                                var temp_e = temp_map.get(local_adds[lai]);
+                                if (temp_e.contains(p)) {
+                                } else {
+                                    e.delete(l_e[lei]);
+                                }
                             }
                         }
                     }

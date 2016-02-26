@@ -379,7 +379,7 @@ CRDT.prototype.deltaFromNetwork = function (deltaVV, connection, originalMessage
 
     var vv = deltaVV.vv;
     var vv_keys = Object.keys(vv);
-    this.garbageCollect(deltaVV.gcvv);
+
     var delta_ops = this.getDelta(vv, deltaVV.gcvv);
     if (delta_ops.has) {
         if (objectsDebug)console.info(delta_ops);
@@ -411,8 +411,8 @@ CRDT.prototype.deltaOPSFromNetwork = function (deltaOps, connection, originalMes
     if (objectsDebug)console.error(deltaOps);
     if (objectsDebug)console.error(connection);
     if (objectsDebug)console.error(originalMessage);
-    this.garbageCollect(deltaOps.gcvv);
     this.applyDelta(deltaOps.delta_ops, deltaOps.vv, deltaOps.gcvv);
+    this.garbageCollect(deltaOps.gcvv);
 
     var vv_keys = Object.keys(deltaOps.vv);
     for (var i = 0; i < vv_keys.length; i++) {

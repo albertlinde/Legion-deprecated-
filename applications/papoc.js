@@ -23,14 +23,14 @@ function start(clientID) {
         overlayProtocol: B2BOverlay,
         messagingProtocol: FloodMessaging,
         objectOptions: {
-            serverInterval: 4000,
-            peerInterval: 2000
+            serverInterval: 1000000,
+            peerInterval: 5000
         },
         bullyProtocol: {
             type: SimpleBully,
             options: {
-                bullyMustHaveInterval: 30 * 1000,
-                bullySendInterval: 7 * 1000,
+                bullyMustHaveInterval: 60 * 1000,
+                bullySendInterval: 15 * 1000,
                 bullyStartTime: 2 * 1000
             }
         },
@@ -51,7 +51,7 @@ function start(clientID) {
 }
 
 var newRandomValue = function () {
-    return "randVal" + legion.clientID + ("" + Math.random()).substr(2, 5);
+    return legion.id + "randVal" + legion.id + ("" + Math.random()).substr(2, 5);
 };
 
 var op_set;
@@ -88,6 +88,8 @@ function rand_N(amount, timer) {
         return;
     }
     var i = setInterval(function () {
+        if (amount % 4 == 0)
+            printStates();
         if (amount-- <= 0) {
             clearInterval(i);
             return;
@@ -108,8 +110,8 @@ function add() {
     console.log("Adding.");
 
     var rand = newRandomValue();
-    op_set.add(rand);
-    state_set.add(rand);
+    //op_set.add(rand);
+    //state_set.add(rand);
     delta_set.add(rand);
 }
 
@@ -120,7 +122,7 @@ function remove() {
     }
     console.log("Removing.");
     var r = Math.random();
-    var op_set_val = op_set.getValue();
+    /*var op_set_val = op_set.getValue();
     var rem = op_set_val[Math.floor(r * op_set_val.length)];
     if (rem)
         op_set.remove(rem);
@@ -128,10 +130,9 @@ function remove() {
     var state_set_val = state_set.getValue();
     var state_set_rem = state_set_val[Math.floor(r * state_set_val.length)];
     if (state_set_rem)
-        state_set.remove(state_set_rem);
+        state_set.remove(state_set_rem);*/
     var delta_set_val = delta_set.getValue();
     var delta_set_rem = delta_set_val[Math.floor(r * delta_set_val.length)];
-
     if (delta_set_rem)
         delta_set.remove(delta_set_rem);
 }
@@ -152,10 +153,11 @@ function printStates() {
     var size_state_set_meta = getSetSize(state_set);
     var size_delta_set_meta = getSetSize(delta_set);
 
-    console.log("OP " + size_op_set_meta + " " + size_op_set_no_meta + " " + (size_op_set_no_meta / size_op_set_meta))
-    console.log("state " + size_state_set_meta + " " + size_state_set_no_meta + " " + (size_state_set_no_meta / size_state_set_meta))
-    console.log("delta " + size_delta_set_meta + " " + size_delta_set_no_meta + " " + (size_delta_set_no_meta / size_delta_set_meta))
+    console.log("OP " + op_set.getValue().length + " " + size_op_set_meta + " " + size_op_set_no_meta + " " + (size_op_set_no_meta / size_op_set_meta))
+    console.log("state " + state_set.getValue().length + " " + size_state_set_meta + " " + size_state_set_no_meta + " " + (size_state_set_no_meta / size_state_set_meta))
+    console.log("delta " + delta_set.getValue().length + " " + size_delta_set_meta + " " + size_delta_set_no_meta + " " + (size_delta_set_no_meta / size_delta_set_meta))
 }
+
 function getSetSize(crdt) {
     var size = 0;
 

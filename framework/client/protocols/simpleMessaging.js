@@ -24,8 +24,9 @@ FloodMessaging.prototype.sendTo = function (peer, message) {
  *
  * @param message {Object}
  * @param except {Array.<PeerConnection, ServerConnection>}
+ * @param useFanout .{boolean} Ensures sending to subset.
  */
-FloodMessaging.prototype.broadcastMessage = function (message, except) {
+FloodMessaging.prototype.broadcastMessage = function (message, except, useFanout) {
     var peers = this.legion.overlay.getPeers(this.legion.overlay.peerCount());
 
     if (message.destination) {
@@ -36,15 +37,22 @@ FloodMessaging.prototype.broadcastMessage = function (message, except) {
             }
         }
     }
-    for (var i = 0; i < peers.length; i++) {
+    var max = peers.length;
+    if (useFanout) {
+        max = 2;
+    }
+    var sent = 0;
+    for (var i = 0; sent < max && i < peers.length; i++) {
         if (peers[i].remoteID == message.sender)
             continue;
         var send = true;
         for (var j = 0; send && except && j < except.length; j++)
             if (except[j] && (peers[i].remoteID == except[j].remoteID))
                 send = false;
-        if (send)
+        if (send) {
             peers[i].send(message);
+            sent++;
+        }
     }
     var server = this.legion.connectionManager.serverConnection;
     if (server) {
