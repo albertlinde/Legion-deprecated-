@@ -72,7 +72,7 @@ function initService() {
                  * @param callback {Function}
                  */
 
-                db.versionVectorDiff = versionVectorDiff;
+                db.versionVectorDiff = CRDT.versionVectorDiff;
 
 
                 var ps = new PeerSync(db, db, socket);
@@ -159,49 +159,3 @@ function initService() {
         )
     }
 }
-
-/**
- * Notice: duplicate code in objectStore.
- * Returns the operations missing at each in form: {vv1:{missing:[]}, vv2:{missing:[]}}.
- * @param vv1
- * @param vv2
- * @returns {{vv1: {missing: {}}, vv2: {missing: {}}}}
- */
-var versionVectorDiff = function (vv1, vv2) {
-    var ret = {vv1: {missing: {}}, vv2: {missing: {}}};
-    var keys1 = Object.keys(vv1);
-    var keys2 = Object.keys(vv2);
-    for (var i = 0; i < keys1.length; i++) {
-        var currentKey = keys1[i];
-        if (!vv2[currentKey]) {
-            ret.vv2.missing[currentKey] = [];
-            for (var op_i = 1; op_i <= vv1[currentKey]; op_i++) {
-                ret.vv2.missing[currentKey].push(op_i);
-            }
-        } else if (vv2[currentKey] > vv1[currentKey]) {
-            ret.vv1.missing[currentKey] = [];
-            for (var op_i = vv1[currentKey] + 1; op_i <= vv2[currentKey]; op_i++) {
-                ret.vv1.missing[currentKey].push(op_i);
-            }
-        }
-    }
-
-    for (var j = 0; j < keys2.length; j++) {
-        var currentKey = keys2[i];
-        if (!vv1[currentKey]) {
-            ret.vv1.missing[currentKey] = [];
-            for (var op_i = 1; op_i <= vv2[currentKey]; op_i++) {
-                ret.vv1.missing[currentKey].push(op_i);
-            }
-        } else if (vv1[currentKey] > vv2[currentKey]) {
-            ret.vv2.missing[currentKey] = [];
-            for (var op_i = vv2[currentKey] + 1; op_i <= vv1[currentKey]; op_i++) {
-                ret.vv2.missing[currentKey].push(op_i);
-            }
-        }
-    }
-
-    return ret;
-};
-
-

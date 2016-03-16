@@ -289,7 +289,7 @@ CRDT_Database.prototype.gotVVFromNetwork = function (message, original, connecti
         return;
     }
 
-    var vvDiff = this.versionVectorDiff(crdt.getVersionVector(), hisVV);
+    var vvDiff = crdt.versionVectorDiff(crdt.getVersionVector(), hisVV);
 
     var os = this;
     if (Object.keys(vvDiff.vv2.missing).length > 0) {

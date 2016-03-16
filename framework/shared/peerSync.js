@@ -150,7 +150,7 @@ PeerSync.prototype.handleSync = function (message) {
         if (!my_op_crdt)
             continue;
         var my_crdts_vv = my_op_crdt.getVersionVector();
-        var vvDiff = this.objectStore.versionVectorDiff(my_crdts_vv, operationObjects[i].vv);
+        var vvDiff = my_op_crdt.versionVectorDiff(my_crdts_vv, operationObjects[i].vv);
         if (Object.keys(vvDiff.vv2.missing).length > 0) {
             answer.missing_ops.push({
                 id: my_op_crdt.objectID,
