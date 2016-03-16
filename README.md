@@ -8,6 +8,7 @@ You need node (npm) [https://nodejs.org/en/].
 $ git clone https://github.com/albertlinde/Legion
 $ cd Legion
 $ npm install
+$ ./compile 
 ```
 
 ### Running
@@ -15,6 +16,7 @@ $ npm install
 $ npm start
 ```
 **Start** starts both HTTP and Signalling server. Open localhost:8000 in your Google Chrome browser.
+Example application objects: counter_state, op_set, op_map, state_set, and delta_set.
 ```sh
 $ npm stop
 ```
