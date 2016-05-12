@@ -7,23 +7,31 @@ function ServerConnection(server, legion) {
 
     var sc = this;
     this.socket.onopen = function open() {
-        sc.legion.connectionManager.onOpenServer(sc);
+        sc.socket.send(legion.secure.getServerAuthenticationChallenge());
+        //sc.legion.connectionManager.onOpenServer(sc);
     };
 
     this.socket.onmessage = function (event) {
-
         var m = JSON.parse(event.data);
         console.log("Got " + m.type + " from " + sc.remoteID + " s: " + m.sender);
-        var original = JSON.parse(event.data);
-        if (m.content) {
-            decompress(m.content, function (result) {
-                m.content = JSON.parse(result);
-                sc.legion.messagingAPI.onMessage(sc, m, original);
-            });
+
+        if (m.auth) {
+            legion.secure.gotServerAuthenticationResult(m.auth);
+            if (m.auth.result == "Success") {
+                sc.legion.connectionManager.onOpenServer(sc);
+            }
         } else {
-            decompress("5d00000100040000000000000000331849b7e4c02e1ffffac8a000", function (result) {
-                sc.legion.messagingAPI.onMessage(sc, m, original);
-            });
+            var original = JSON.parse(event.data);
+            if (m.content) {
+                decompress(m.content, function (result) {
+                    m.content = JSON.parse(result);
+                    sc.legion.messagingAPI.onMessage(sc, m, original);
+                });
+            } else {
+                decompress("5d00000100040000000000000000331849b7e4c02e1ffffac8a000", function (result) {
+                    sc.legion.messagingAPI.onMessage(sc, m, original);
+                });
+            }
         }
     };
 
@@ -45,7 +53,7 @@ ServerConnection.prototype.isAlive = function () {
 };
 
 ServerConnection.prototype.send = function (message) {
-    if(message.N){
+    if (message.N) {
         //No op. Server will handle it.
     }
     if (typeof message == "object") {

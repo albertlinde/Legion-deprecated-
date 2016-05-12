@@ -70,9 +70,9 @@ GDriveRTObjectsServerConnection.prototype.doSend = function (message) {
             this.onServerContentFromNetwork(message);
             return;
         case (this.objectStore.handlers.version_vector_propagation.type):
-            console.error("This should never be called.");
+            console.warn("This should never be called.");
     }
-    console.error(message);
+    console.warn(message);
 };
 
 /**
@@ -87,7 +87,7 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
 
     localRootMap.operationsFromNetwork(rootMapOps, this);
 
-    var vvDiff = this.objectStore.versionVectorDiff(localRootMap.getVersionVector(), []);
+    var vvDiff = localRootMap.versionVectorDiff(localRootMap.getVersionVector(), []);
     var operations = localRootMap.getOperations(vvDiff.vv2.missing);
 
     for (var i = 0; i < operations.length; i++) {
@@ -99,40 +99,47 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSync = function (message) {
     var objectKeys = localRootMap.keys();
     for (var i = 0; i < objectKeys.length; i++) {
         var objectKey = objectKeys[i];
-        var objectList = this.document.getModel().getRoot().get(objectKey);
-        console.log("Object: ", objectKey);
-        console.log("ObjectList: ", objectList.asArray());
-        console.log("Object Type: ", localRootMap.get(objectKey)[0]);
+        if (this.document.getModel().getRoot().get(objectKey)) {
+            var t = this;
+            (function (objectKey) {
+                var objectList = t.document.getModel().getRoot().get(objectKey);
+                if (objectList) {
+                    console.log("Object: ", objectKey);
+                    console.log("ObjectList: ", objectList.asArray());
+                    console.log("Object Type: ", localRootMap.get(objectKey)[0]);
 
-        objectList.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, function (evt) {
-            var m_list = [];
-            for (var i = 0; i < evt.values.length; i++) {
-                m_list.push(evt.values[i]);
-            }
-            dc.operations(objectKey, m_list)
-        });
+                    objectList.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, function (evt) {
+                        var m_list = [];
+                        for (var j = 0; j < evt.values.length; j++) {
+                            m_list.push(evt.values[j]);
+                        }
+                        dc.operations(objectKey, m_list)
+                    });
 
-        var objectListAsArray = objectList.asArray();
-        var localObject;
-        switch (localRootMap.get(objectKey)[0]) {
-            case "Map":
-                console.log("Create map.");
-                localObject = this.objectStore.get(objectKey, CRDT_LIB.OP_ORMap.type, true);
-                break;
-            case "List":
-                console.log("Create list.");
-                localObject = this.objectStore.get(objectKey, CRDT_LIB.OP_List.type, true);
-                break;
-        }
-        localObject.operationsFromNetwork(objectListAsArray, this);
+                    var objectListAsArray = objectList.asArray();
+                    var localObject;
+                    switch (localRootMap.get(objectKey)[0]) {
+                        case "Map":
+                            console.log("Create map.");
+                            localObject = t.objectStore.get(objectKey, CRDT_LIB.OP_ORMap.type, true);
+                            break;
+                        case "List":
+                            console.log("Create list.");
+                            localObject = t.objectStore.get(objectKey, CRDT_LIB.OP_Treedoc.type, true);
+                            break;
+                    }
+                    localObject.operationsFromNetwork(objectListAsArray, t);
 
-        var vvDiff = this.objectStore.versionVectorDiff(localObject.getVersionVector(), []);
-        var operations = localObject.getOperations(vvDiff.vv2.missing);
+                    var vvDiff = localObject.versionVectorDiff(localObject.getVersionVector(), []);
+                    var operations = localObject.getOperations(vvDiff.vv2.missing);
 
-        for (var i = 0; i < operations.length; i++) {
-            if (!this.driveListHasOP(objectList, operations[i])) {
-                objectList.insert(objectList.length, operations[i]);
-            }
+                    for (var j = 0; j < operations.length; j++) {
+                        if (!t.driveListHasOP(objectList, operations[j])) {
+                            objectList.insert(objectList.length, operations[j]);
+                        }
+                    }
+                }
+            })(objectKey);
         }
     }
 
@@ -178,7 +185,7 @@ GDriveRTObjectsServerConnection.prototype.onSendPeerSyncAnswer = function (messa
 };
 
 GDriveRTObjectsServerConnection.prototype.onServerContentFromNetwork = function (message) {
-    var objectID = message.content.msg.objectID;
+    var objectID = message.content.objectID;
     if (!objectID)
         console.error(message)
     var objectList = this.document.getModel().getRoot().get(objectID);

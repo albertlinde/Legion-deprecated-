@@ -2,15 +2,15 @@ function B2BOverlay(overlay, legion) {
     this.overlay = overlay;
     this.legion = legion;
 
-    this.meta_interval = 45 * 1000;
+    this.meta_interval = 55 * 1000;
 
     this.initial_ttl = 3;
-    this.initial_n = 5;
-    this.min = 7;
-    this.max = 10;
+    this.initial_n = 7;
+    this.min = 5;
+    this.max = 8;
 
     this.conn_check_timeout = 8 * 1000;
-    this.conn_check_timeout_startup = 4 * 1000;
+    this.conn_check_timeout_startup = 20 * 1000;
     this.conn_check_timeout_multiplier = 1.5;
 
     this.RAND_VAL = 0.3;
@@ -29,7 +29,7 @@ function B2BOverlay(overlay, legion) {
 
     var meta_timeout = function () {
         bo.sendP2PMeta();
-        bo.meta_interval = Math.min(bo.meta_interval + 2500, 45 * 1000);
+        bo.meta_interval = Math.min(bo.meta_interval + 2500, 35 * 1000);
         setTimeout(meta_timeout, bo.meta_interval);
     };
     setTimeout(meta_timeout, bo.meta_interval);
@@ -130,7 +130,7 @@ B2BOverlay.prototype.onJoinRequest = function (message, original, connection) {
         var connected = false;
         if (this.overlay.peerCount() < this.min) {
             connected = true;
-        } else if (message.TTL == 0) {
+        } else if (message.TTL == 0 || !(connection instanceof  PeerConnection)) {
             connected = true;
         } else if (this.overlay.peerCount() < this.max) {
             if (this.legion.bullyProtocol.amBullied() && Math.random() < (1 - this.RAND_VAL)) {

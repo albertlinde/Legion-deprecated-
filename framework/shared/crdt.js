@@ -439,40 +439,42 @@ CRDT.prototype.operationsFromNetwork = function (operations, connection, origina
     var startingLength = operations.length;
     while (operations.length > 0) {
         var did = false;
-        console.log("Operations to go:" + operations.length);
+        //console.log("Operations to go:" + operations.length);
         while (i < operations.length) {
             var op = operations[i];
-            if (this.alreadyHadOp(op)) {
-                alreadyHad.push(op);
-                operations.splice(i, 1);
-                did = true;
-            } else if (this.depsMatchedFor(op)) {
-                var cbv = this.remotes[op.opName].apply(this, [op.result]);
-                this.addOpToHistory(op.clientID, op.opID, op.result, op.opName, op.dependencyVV);
-                this.addOpToCurrentVersionVector(op.clientID, op.opID);
-                callbackValues.push(cbv);
-                didntHave.push(op);
-                operations.splice(i, 1);
-                did = true;
-            } else {
-                i++;
-            }
+
+            if (op.dependencyVV) {
+                if (this.alreadyHadOp(op)) {
+                    alreadyHad.push(op);
+                    operations.splice(i, 1);
+                    did = true;
+                } else if (this.depsMatchedFor(op)) {
+                    var cbv = this.remotes[op.opName].apply(this, [op.result]);
+                    this.addOpToHistory(op.clientID, op.opID, op.result, op.opName, op.dependencyVV);
+                    this.addOpToCurrentVersionVector(op.clientID, op.opID);
+                    callbackValues.push(cbv);
+                    didntHave.push(op);
+                    operations.splice(i, 1);
+                    did = true;
+                } else {
+                    i++;
+                }
+            } else i++;
         }
         if (!did) {
-            console.warn(this.getState());
-            console.warn(this.getVersionVector());
-            console.warn(operations);
             this.objectStore.sendVVToNode(this.objectID, connection.remoteID);
             break;
         }
         i = 0;
     }
     if (alreadyHad.length > 0) {
-        console.warn("Already had:", alreadyHad);
+        //console.warn("Already had:", alreadyHad);
     }
     if (callbackValues.length > 0) {
         if (this.callback) {
-            this.callback(callbackValues, {local: false});
+            for (var k = 0; k < callbackValues.length; k++) {
+                this.callback(callbackValues[k], {local: false});
+            }
         }
     }
     if (didntHave.length == startingLength) {

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>GAPI</title>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <script type="application/javascript" src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
+</head>
+<body>
+<div>
+    <p>Console.</p>
+</div>
+<script type="application/javascript">
+    console.log("I'm alive!");
+    var CLIENT_ID = '1073496658879-9lia1jb7a5fcm6t6j8k8jvjr26u5ujes.apps.googleusercontent.com';
+
+    var realtimeUtils = new utils.RealtimeUtils({clientId: CLIENT_ID});
+
+    authorize();
+
+    function authorize() {
+        console.log("auth");
+        realtimeUtils.authorize(function (response) {
+            if (response.error) {
+                console.log(error);
+            } else {
+                start();
+            }
+        }, false);
+    }
+
+    function start() {
+        console.log("start.");
+        var id = realtimeUtils.getParam('id');
+        if (id) {
+            realtimeUtils.load(id.replace('/', ''), onFileLoaded, onFileInitialize);
+        } else {
+            realtimeUtils.createRealtimeFile('New Quickstart File', function (createResponse) {
+                console.log("?id=" + createResponse.id);
+                realtimeUtils.load(createResponse.id, onFileLoaded, onFileInitialize);
+            });
+        }
+    }
+    function onFileInitialize(model) {
+        console.log("ERROR: Should have been done!");
+    }
+
+    var g_doc;
+    var collaborativeList;
+    var ID = ("" + Math.random()).substring(2);
+    var myTime = 0;
+    function onFileLoaded(doc) {
+        console.log("onFileLoaded 1");
+        g_doc = doc;
+        collaborativeList = doc.getModel().getRoot().get('list');
+        wireListReader(collaborativeList);
+        console.log("onFileLoaded 2");
+
+        setTimeout(function () {
+            doListUpdate();
+        }, 350 * 1000);
+        setTimeout(function () {
+            calc();
+        }, 500 * 1000);
+    }
+
+    function doListUpdate() {
+        var object = {w: ID, time: (Date.now())};
+        myTime = object.time;
+        collaborativeList.insert(0, object);
+        console.log("Sending: " + ID);
+    }
+
+    function wireListReader(collaborativeList) {
+        console.log(collaborativeList.getId());
+        collaborativeList.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, function (evt) {
+            check(collaborativeList.asArray());
+        });
+    }
+
+    var answered = [];
+    var answers = [];
+
+    function check(array) {
+        for (var i = 0; i < array.length; i++) {
+            if (array[i].w) {
+                if (!answered[array[i].w] && (array[i].w != ID)) {
+                    //console.log("Answering: " + array[i].w);
+                    answered[array[i].w] = true;
+                    answer(array[i]);
+                }
+            }
+            if (array[i].r) {
+                if (!answers[array[i].id] && (array[i].r == ID)) {
+                    answers[array[i].id] = {endTime: Date.now(), medTime: array[i].time};
+                }
+            }
+        }
+    }
+
+    function calc() {
+        var totalF = 0;
+        var totalB = 0;
+        var totalRTT = 0;
+        var clients = Object.keys(answers);
+        for (var i = 0; i < clients.length; i++) {
+            var delayF = answers[clients[i]].medTime - myTime;
+            var delayB = answers[clients[i]].endTime - myTime;
+            var delayRTT = delayF + delayB;
+            totalF += delayF;
+            totalB += delayB;
+            totalRTT += delayRTT;
+            console.info("delayF: " + delayF);
+            console.info("delayB: " + delayB);
+            console.info("delayRTT: " + delayRTT);
+        }
+        console.info("Clients: " + clients.length);
+        console.info("Total: " + totalF);
+        console.info("Total: " + totalB);
+        console.info("Total: " + totalRTT);
+        console.info("Average: " + totalF / clients.length);
+        console.info("Average: " + totalB / clients.length);
+        console.info("Average: " + totalRTT / clients.length);
+    }
+
+    function answer(w) {
+        var object = {r: w.w, id: ID, time: (Date.now())};
+        collaborativeList.insert(0, object);
+    }
+
+</script>
+</body>
+</html>

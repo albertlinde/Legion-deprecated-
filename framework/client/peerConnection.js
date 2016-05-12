@@ -45,13 +45,19 @@ PeerConnection.prototype.onInitTimeout = function () {
 PeerConnection.prototype.setChannelHandlers = function () {
     var pc = this;
     this.channel.onmessage = function (event) {
-        var m = JSON.parse(event.data);
+        var deciphered = pc.legion.secure.decipher(event.data, pc, event);
+        if (!deciphered) {
+            //TODO: send back an error!
+            //TODO: tell him to bugger off if needed!
+        }
+        if (deciphered === true)return;
+        var m = JSON.parse(deciphered);
         if (m.type == KEEP_ALIVE_MESSAGE.type) {
             pc.lastKeepAlive = Date.now();
             return;
         }
-        console.log("Got " + m.type + " from " + pc.remoteID + " s: " + m.sender);
-        var original = JSON.parse(event.data);
+        //console.log("Got " + m.type + " from " + pc.remoteID + " s: " + m.sender);
+        var original = JSON.parse(deciphered);
         if (m.content) {
             try {
                 decompress(m.content, function (result) {
@@ -61,6 +67,7 @@ PeerConnection.prototype.setChannelHandlers = function () {
             }
             catch (e) {
                 console.error(event);
+                console.error(deciphered);
                 console.error(m);
                 console.error(original);
                 console.error(e);
@@ -200,8 +207,13 @@ PeerConnection.prototype.send = function (message) {
         message = JSON.stringify(message);
     }
     if (this.channel && this.channel.readyState == "open") {
-        this.channel.send(message);
-        console.log("Sent " + JSON.parse(message).type + " to " + this.remoteID + " s: " + JSON.parse(message).sender);
+        var ciphered = this.legion.secure.cipher(message);
+        if (this.channel && this.channel.readyState == "open") {
+            this.channel.send(ciphered);
+            //console.log("Sent " + JSON.parse(message).type + " to " + this.remoteID + " s: " + JSON.parse(message).sender);
+        } else {
+            console.warn("Peer has no open channel.")
+        }
     } else {
         console.warn("Peer has no open channel.")
     }

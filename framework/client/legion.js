@@ -17,6 +17,7 @@ function Legion(options) {
  * Joins the overlay.
  */
 Legion.prototype.join = function () {
+    this.secure = new this.options.securityProtocol(this);
     this.connectionManager.startSignallingConnection();
 };
 /**

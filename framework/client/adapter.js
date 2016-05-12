@@ -4,6 +4,11 @@ var attachMediaStream = null;
 var reattachMediaStream = null;
 var webrtcDetectedBrowser = null;
 
+var debug = false;
+var objectsDebug = false;
+var detailedDebug = false;
+var bullyLog = true;
+
 if (navigator.mozGetUserMedia) {
     console.log("This appears to be Firefox");
 

@@ -63,7 +63,6 @@ SimpleOverlay.prototype.floodJoin = function () {
 };
 
 SimpleOverlay.prototype.handleJoin = function (message, original, connection) {
-    console.log(message)
     if (!this.legion.connectionManager.hasPeer(message.sender)) {
         if (this.overlay.peerCount() <= 1)
             this.legion.connectionManager.connectPeer(message.sender);

@@ -85,7 +85,7 @@ CRDT_Database.prototype.clearPeersQueue = function () {
                             var crdt = os.crdts.get(objectID);
                             var vv = crdt.getVersionVector();
                             var gcvv = crdt.getGCVV();
-                            msg = {objectID: objectID, vv: vv, gcvv:gcvv};
+                            msg = {objectID: objectID, vv: vv, gcvv: gcvv};
                             break;
                     }
                     pop.msg = msg;

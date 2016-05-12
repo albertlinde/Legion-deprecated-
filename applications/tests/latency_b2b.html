@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>GAPI</title>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+
+    <script type="application/javascript" src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
+
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script type="application/javascript" src="https://www.gstatic.com/realtime/realtime-client-utils.js"></script>
+
+    <script src="./../../node_modules/lzma/src/lzma_worker-min.js"></script>
+    <script src="./../../node_modules/node-forge/js/forge.min.js"></script>
+
+    <script type="application/javascript" src="../../framework/client/adapter.js"></script>
+    <script type="application/javascript" src="../../framework/client/connectionManager.js"></script>
+    <script type="application/javascript" src="./../../framework/client/legion.js"></script>
+    <script type="application/javascript" src="./../../framework/client/messagingAPI.js"></script>
+    <script type="application/javascript" src="./../../framework/client/overlay.js"></script>
+    <script type="application/javascript" src="./../../framework/client/messagingAPI.js"></script>
+    <script type="application/javascript" src="./../../framework/client/overlay.js"></script>
+    <script type="application/javascript" src="./../../framework/client/peerConnection.js"></script>
+    <script type="application/javascript" src="./../../framework/client/serverConnection.js"></script>
+    <script type="application/javascript" src="./../../framework/client/objectServerConnection.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/simpleMessaging.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/b2bOverlay.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/simpleOverlay.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/simpleBully.js"></script>
+    <script type="application/javascript" src="./../../framework/client/protocols/serverBully.js"></script>
+
+    <script type="application/javascript" src="./../../framework/client/protocols/SecurityProtocol.js"></script>
+
+    <script type="application/javascript" src="./../../framework/client/objectStore.js"></script>
+
+    <script type="application/javascript" src="../../framework/shared/peerSync.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/Duplicates.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/ALMap.js"></script>
+    <script type="application/javascript" src="../../framework/shared/Compressor.js"></script>
+
+    <script type="application/javascript" src="./../../framework/shared/dataStructures/DS_TableList.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/dataStructures/DS_DLList.js"></script>
+
+    <script type="application/javascript" src="./../../framework/shared/crdt.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/ALQueue.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/crdtLib/opMap.js"></script>
+    <script type="application/javascript" src="./../../framework/shared/crdtLib/opTreedoc.js"></script>
+
+    <script type="application/javascript" src="./../../extensions/LegionRealtimeUtils.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/MergeUtils.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/MainBullyProtocol.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/DriveUtils.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/driveSignallingConnection.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/driveObjectsConnection.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/DriveApplicationInterface.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/driveSecurityProtocolConnection.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/packages/3diff.js"></script>
+    <script type="application/javascript" src="./../../extensions/GDriveRT/packages/diff_match_patch.js"></script>
+    <script type="application/javascript"
+            src="./../../extensions/GDriveRT/packages/ServerDate-master/lib/ServerDate.js"></script>
+
+</head>
+<body>
+<div>
+    <p>Console.</p>
+</div>
+<script type="application/javascript">
+    var CLIENT_ID = '1073496658879-9lia1jb7a5fcm6t6j8k8jvjr26u5ujes.apps.googleusercontent.com';
+
+    var realtimeUtils = new utils.RealtimeUtils({clientId: CLIENT_ID});
+    var lru = new LegionRealtimeUtils(realtimeUtils);
+
+    authorize();
+
+    function authorize() {
+        realtimeUtils.authorize(function (response) {
+            if (response.error) {
+                console.log(error);
+            } else {
+                start();
+            }
+        }, false);
+    }
+
+    function start() {
+        var id = realtimeUtils.getParam('id');
+        if (id) {
+            lru.load(id.replace('/', ''), onFileLoaded, onFileInitialize);
+        } else {
+            realtimeUtils.createRealtimeFile('New Quickstart File', function (createResponse) {
+                console.log("?id=" + createResponse.id);
+                realtimeUtils.load(createResponse.id, onFileLoaded, onFileInitialize);
+            });
+        }
+    }
+    function onFileInitialize(model) {
+        console.error("Should have been done!");
+    }
+
+    var g_doc;
+    var collaborativeList;
+    var ID = ("" + Math.random()).substring(2);
+    var myTime = 0;
+    function onFileLoaded(doc) {
+        console.log("onFileLoaded 1");
+        g_doc = doc;
+        collaborativeList = doc.getModel().getRoot().get('list');
+        wireListReader(collaborativeList);
+        console.log("onFileLoaded 2");
+
+        setTimeout(function () {
+            doListUpdate();
+        }, 350 * 1000);
+        setTimeout(function () {
+            calc();
+        }, 500 * 1000);
+    }
+
+    function doListUpdate() {
+        var object = {w: ID, time: (Date.now())};
+        myTime = object.time;
+        collaborativeList.insert(0, object);
+        //console.log("Sending: " + ID);
+    }
+
+    function wireListReader(collaborativeList) {
+        console.log(collaborativeList.getId());
+        collaborativeList.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, function (evt) {
+            check(collaborativeList.asArray());
+        });
+    }
+
+    var answered = [];
+    var answers = [];
+
+    function check(array) {
+        for (var i = 0; i < array.length; i++) {
+            if (array[i].w) {
+                if (!answered[array[i].w] && (array[i].w != ID)) {
+                    //console.log("Answering: " + array[i].w);
+                    answered[array[i].w] = true;
+                    answer(array[i]);
+                }
+            }
+            if (array[i].r) {
+                if (!answers[array[i].id] && (array[i].r == ID)) {
+                    answers[array[i].id] = {endTime: Date.now(), medTime: array[i].time};
+                }
+            }
+        }
+    }
+
+    function calc() {
+        var totalF = 0;
+        var totalB = 0;
+        var totalRTT = 0;
+        var clients = Object.keys(answers);
+        for (var i = 0; i < clients.length; i++) {
+            var delayF = answers[clients[i]].medTime - myTime;
+            var delayB = answers[clients[i]].endTime - myTime;
+            var delayRTT = delayF + delayB;
+            totalF += delayF;
+            totalB += delayB;
+            totalRTT += delayRTT;
+            console.info("delayF: " + delayF);
+            console.info("delayB: " + delayB);
+            console.info("delayRTT: " + delayRTT);
+        }
+        console.info("Clients: " + clients.length);
+        console.info("Total: " + totalF);
+        console.info("Total: " + totalB);
+        console.info("Total: " + totalRTT);
+        console.info("Average: " + totalF / clients.length);
+        console.info("Average: " + totalB / clients.length);
+        console.info("Average: " + totalRTT / clients.length);
+    }
+
+    function answer(w) {
+        var object = {r: w.w, id: ID, time: (Date.now())};
+        collaborativeList.insert(0, object);
+    }
+
+</script>
+</body>
+</html>

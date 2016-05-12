@@ -1,7 +1,7 @@
 var debug = false;
 var objectsDebug = false;
 var detailedDebug = false;
-var bullyLog = true;
+var bullyLog = false;
 
 function LegionRealtimeUtils(realtimeUtils) {
     //NOTICE: current implementation does not allow for objects in objects.
@@ -33,6 +33,8 @@ function LegionRealtimeUtils(realtimeUtils) {
 
     this.FileID_Merge = null;
 
+    this.FileID_KeyList = null;
+
     /**
      * Keeps key-value in the form crdtID-crdtType.
      * @type {CRDT}
@@ -44,8 +46,9 @@ function LegionRealtimeUtils(realtimeUtils) {
         FileID_Objects: "FileID_Objects",
         FileID_Merge: "FileID_Merge",
         FileID_MainBully: "FileID_MainBully",
+        FileID_KeyList: "FileID_KeyList",
         objectsMap: "RootMap",
-        WAIT_ON_MAP_INIT: 3 * 1000
+        WAIT_ON_MAP_INIT: 20 * 1000
     };
 
 
@@ -77,7 +80,7 @@ LegionRealtimeUtils.prototype.load = function (fileID, onLoad, onInit) {
                         });
                     });
                 }, function (arg) {
-                    //console.log("File init: " + fileID);
+                    console.log("File init: " + fileID);
                     onInit(arg);
                 });
             } else {
@@ -99,9 +102,11 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
 
     var persistence;
     var persistenceServer;
+    var secureServer;
+    var bullyProtocol;
     if (!this.persitence_on_legacy) {
         persistence = ObjectServerConnection;
-        persistenceServer = {ip: "localhost", port: 8004};
+        persistenceServer = {ip: "52.53.248.119", port: 8004};
     } else {
         persistence = GDriveRTObjectsServerConnection;
         persistenceServer = {};
@@ -109,11 +114,15 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
 
     if (!this.signalling_on_legacy) {
         signalling = ServerConnection;
-        signallingServer = {ip: "localhost", port: 8002};
+        signallingServer = {ip: "52.53.248.119", port: 8002};
+        secureServer=SecurityProtocol;
+        bullyProtocol=ServerBully;
     } else {
         signalling = GDriveRTSignallingServerConnection;
         signallingServer = {};
         clientID = "TEMP_ID";
+        secureServer=GDriveRTSecurityProtocolServerConnection;
+        bullyProtocol=SimpleBully;
     }
 
     var options = {
@@ -121,13 +130,13 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
         overlayProtocol: B2BOverlay,
         messagingProtocol: FloodMessaging,
         objectOptions: {
-            serverInterval: 5000,
-            peerInterval: 2000
+            serverInterval: 15000,
+            peerInterval: 10
         },
         bullyProtocol: {
-            type: SimpleBully,
+            type: bullyProtocol,
             options: {
-                bullyMustHaveInterval: 15 * 1000,
+                bullyMustHaveInterval: 75 * 1000,
                 bullySendInterval: 7 * 1000,
                 bullyStartTime: 2 * 1000
             }
@@ -139,7 +148,8 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
         objectServerConnection: {
             type: persistence,
             server: persistenceServer
-        }
+        },
+        securityProtocol: secureServer
     };
 
     this.legion = new Legion(options);
@@ -149,7 +159,7 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
 
     this.objectStore = this.legion.getObjectStore();
 
-    this.objectStore.defineCRDT(CRDT_LIB.OP_List);
+    this.objectStore.defineCRDT(CRDT_LIB.OP_Treedoc);
     this.objectStore.defineCRDT(CRDT_LIB.OP_ORMap);
 
     this.map = this.objectStore.get(this.constants.objectsMap, CRDT_LIB.OP_ORMap.type);
@@ -182,7 +192,7 @@ LegionRealtimeUtils.prototype.gotMap = function (onLoad) {
                     break;
                 case "List":
                     console.info("Object init: " + type + " ID: " + keys[i]);
-                    objects[keys[i]] = this.objectStore.get(keys[i], CRDT_LIB.OP_List.type);
+                    objects[keys[i]] = this.objectStore.get(keys[i], CRDT_LIB.OP_Treedoc.type);
                     break;
                 case "String":
                     console.error("Not implemented: strings");
@@ -190,7 +200,11 @@ LegionRealtimeUtils.prototype.gotMap = function (onLoad) {
             }
         }
         this.interfaceHandler = new GapiInterfaceHandler(objects, this.map);
-        onLoad(this.interfaceHandler);
+        var ih = this.interfaceHandler;
+        setTimeout(function () {
+                onLoad(ih);
+            }, 5000
+        );
     }
 };
 
@@ -243,7 +257,7 @@ LegionRealtimeUtils.prototype.startObjectsProtocol = function (onLoad) {
                         //console.log("Won't to write to Merge and Original file.");
                     }
                 });
-            }, 10 * 1000);
+            }, 30 * 1000);
         }
     }
 };
@@ -298,7 +312,7 @@ LegionRealtimeUtils.prototype.initRootMap = function (callback) {
                 console.info("Init List with id: " + object.id);
 
                 rootMap.set(object.id, "List");
-                objects[object.id] = objectStore.get(object.id, CRDT_LIB.OP_List.type);
+                objects[object.id] = objectStore.get(object.id, CRDT_LIB.OP_Treedoc.type);
 
                 for (var j = 0; j < object.value.length; j++) {
                     initObject(object.value[j], ref + "|" + object.id);
@@ -349,18 +363,18 @@ LegionRealtimeUtils.prototype.initRootMap = function (callback) {
                 for (var j = 0; j < object.value.length; j++) {
                     var currObjectL = object.value[j];
                     if (currObjectL.id) {
-                        objects[object.id].insert(j, objects[currObjectL.id]);
+                        objects[object.id].add(j, objects[currObjectL.id]);
                     } else if (currObjectL.ref) {
-                        objects[object.id].insert(j, objects[currObjectL.ref]);
+                        objects[object.id].add(j, objects[currObjectL.ref]);
                     } else if (currObjectL.json) {
-                        objects[object.id].insert(j, currObjectL.json);
+                        objects[object.id].add(j, currObjectL.json);
                     }
 
                     fillObject(object.value[j], ref + "|" + object.id);
                 }
             }
             if (object.type == "EditableString") {
-                console.error("Not implemented: EditableString");
+                console.warn("Not implemented: EditableString");
             }
         }
         if (object.ref) {
@@ -423,39 +437,72 @@ LegionRealtimeUtils.prototype.checkIfMainBully = function (callback) {
  * @param callback
  */
 LegionRealtimeUtils.prototype.createMergeFile = function (callback) {
-    console.log("createMergeFile start");
-    if (this.FileID_Merge) {
-        realtimeUtils.load(this.FileID_Merge.replace('/', ''),
-            function (doc) {
-                console.log("createMergeFile end");
-                doc.close();
-                callback();
-            }, function (model) {
+    if (lru.merge_to_legacy) {
+        console.log("createMergeFile start");
+        if (this.FileID_Merge) {
+            this.realtimeUtils.load(this.FileID_Merge.replace('/', ''),
+                function (doc) {
+                    console.log("createMergeFile end");
+                    doc.close();
+                    callback();
+                }, function (model) {
 
-                var keys = lru.revisions.keys();
-                var maxRevN = keys.sort()[keys.length - 1];
-                var maxRevV = lru.revisions.get(maxRevN);
-                var local = lru.mergeUtils.getLocalValue();
+                    var keys = lru.revisions.keys();
+                    var maxRevN = keys.sort()[keys.length - 1];
+                    var maxRevV = lru.revisions.get(maxRevN);
+                    var local = lru.mergeUtils.getLocalValue();
 
-                var map = model.createMap({
-                    FileID_Original: lru.FileID_Original,
-                    gapi: {num: maxRevN, val: maxRevV},
-                    b2b: {val: local}
+                    var map = model.createMap({
+                        FileID_Original: lru.FileID_Original,
+                        gapi: {num: maxRevN, val: maxRevV},
+                        b2b: {val: local}
+                    });
+                    model.getRoot().set('b2b_map', map);
                 });
+        } else {
+            getPropertyFromFile(lru.FileID_Original, lru.constants.FileID_Merge, function (property) {
+                if (!property) {
+                    lru.realtimeUtils.createRealtimeFile(lru.constants.FileID_Merge, function (createResponse) {
+                        addPropertyToFile(lru.FileID_Original, lru.constants.FileID_Merge, createResponse.id, function () {
+                            lru.createMergeFile(callback);
+                            console.log("createMergeFile: " + createResponse.id);
+                        });
+                    });
+                } else {
+                    lru.FileID_Merge = property;
+                    lru.createMergeFile(callback);
+                }
+            });
+        }
+    } else callback();
+};
+
+LegionRealtimeUtils.prototype.createKeyFile = function (key) {
+    console.log("createKeyFile start");
+    if (this.FileID_KeyList) {
+        this.realtimeUtils.load(this.FileID_KeyList.replace('/', ''),
+            function (doc) {
+                console.log("createKeyFile end");
+                doc.close();
+            }, function (model) {
+                var map = model.createMap({
+                    "1": key
+                });
+
                 model.getRoot().set('b2b_map', map);
             });
     } else {
-        getPropertyFromFile(lru.FileID_Original, lru.constants.FileID_Merge, function (property) {
+        getPropertyFromFile(lru.FileID_Original, lru.constants.FileID_KeyList, function (property) {
             if (!property) {
-                lru.realtimeUtils.createRealtimeFile(lru.constants.FileID_Merge, function (createResponse) {
-                    addPropertyToFile(lru.FileID_Original, lru.constants.FileID_Merge, createResponse.id, function () {
-                        lru.createMergeFile(callback);
-                        console.log("createMergeFile: " + createResponse.id);
+                lru.realtimeUtils.createRealtimeFile(lru.constants.FileID_KeyList, function (createResponse) {
+                    addPropertyToFile(lru.FileID_Original, lru.constants.FileID_KeyList, createResponse.id, function () {
+                        lru.createKeyFile(key);
+                        console.log("createKeyFile: " + createResponse.id);
                     });
                 });
             } else {
-                lru.FileID_Merge = property;
-                lru.createMergeFile(callback);
+                lru.FileID_KeyList = property;
+                lru.createKeyFile(key);
             }
         });
     }
@@ -485,7 +532,7 @@ LegionRealtimeUtils.prototype.createObjectsFile = function (callback) {
                 model.getRoot().set("RootMap", list);
 
                 var vv = rootMap.getVersionVector();
-                var vvDiff = lru.objectStore.versionVectorDiff(vv, []);
+                var vvDiff = rootMap.versionVectorDiff(vv, []);
                 var ops = rootMap.getOperations(vvDiff.vv2.missing);
 
                 for (var i = 0; i < ops.length; i++) {
@@ -493,22 +540,25 @@ LegionRealtimeUtils.prototype.createObjectsFile = function (callback) {
                 }
 
                 var keys = rootMap.keys();
+                console.info(keys);
                 for (var i = 0; i < keys.length; i++) {
                     var key = keys[i];
+                    console.info(key);
                     var crdt = lru.objectStore.getCRDT(key);
+                    if (crdt) {
+                        map.set(key, crdt.crdt.type);
+                        var list = model.createList();
+                        model.getRoot().set(key, list);
 
-                    map.set(key, crdt.crdt.type);
-                    var list = model.createList();
-                    model.getRoot().set(key, list);
-
-                    if (crdt.crdt.propagation == CRDT.STATE_BASED) {
-                        list.insert(0, crdt.toJSONString(crdt.getState()));
-                    } else if (crdt.crdt.propagation == CRDT.OP_BASED) {
-                        var vv = crdt.getVersionVector();
-                        var vvDiff = lru.objectStore.versionVectorDiff(vv, []);
-                        var ops = crdt.getOperations(vvDiff.vv2.missing);
-                        for (var i = 0; i < ops.length; i++) {
-                            list.insert(i, ops[i]);
+                        if (crdt.crdt.propagation == CRDT.STATE_BASED) {
+                            list.insert(0, crdt.toJSONString(crdt.getState()));
+                        } else if (crdt.crdt.propagation == CRDT.OP_BASED) {
+                            var vv = crdt.getVersionVector();
+                            var vvDiff = rootMap.versionVectorDiff(vv, []);
+                            var ops = crdt.getOperations(vvDiff.vv2.missing);
+                            for (var j = 0; j < ops.length; j++) {
+                                list.insert(j, ops[j]);
+                            }
                         }
                     }
                 }

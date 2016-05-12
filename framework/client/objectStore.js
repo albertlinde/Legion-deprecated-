@@ -110,7 +110,7 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
         return;
     }
 
-    var vvDiff = CRDT.versionVectorDiff(crdt.getVersionVector(), hisVV);
+    var vvDiff = crdt.versionVectorDiff(crdt.getVersionVector(), hisVV);
 
     var os = this;
     if (Object.keys(vvDiff.vv2.missing).length > 0) {
@@ -141,7 +141,7 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
         }
         this.sendVVToNode(objectID, message.sender);
     }
-    console.log("gotVVFromNetwork end");
+    //console.log("gotVVFromNetwork end");
 };
 
 ObjectStore.prototype.sendVVToAll = function (objectID, except) {
@@ -203,10 +203,10 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
         original.options = {};
     original.options.except = connection;
 
-    console.log(Date.now() + " Got " + message.content.type + " " + JSON.stringify(message).length);
-    if (JSON.stringify(message).length > 1000) {
-        console.info(message);
-    }
+    //console.log(Date.now() + " Got " + message.content.type + " " + JSON.stringify(message).length);
+    //if (JSON.stringify(message).length > 1000) {
+    //    console.info(message);
+    //}
     switch (message.content.type) {
         case "OP":
             var objectID = message.content.objectID;
@@ -222,6 +222,7 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
             if (!ops) {
                 ops = message.content.ops;
             }
+
             var crdt = this.crdts.get(message.content.objectID);
             crdt.operationsFromNetwork(ops, connection, original);
             break;
@@ -290,6 +291,7 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
         var msg = {};
         switch (pop.type) {
             case "OP":
+                /*
                 //NOTICE: papoc only start
                 var objectID = pop.objectID;
                 var thing = "" + objectID;
@@ -301,6 +303,7 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
                 return;
 
                 //NOTICE: papoc only end
+                */
                 var objectID = pop.objectID;
                 var clientID = pop.clientID;
                 var operationID = pop.operationID;
@@ -381,7 +384,7 @@ ObjectStore.prototype.clearServerQueue = function () {
     }
 
     if (this.serverQueue.size() > 0) {
-        console.log("Messages in server queue: " + this.serverQueue.size());
+        if(debug)console.log("Messages in server queue: " + this.serverQueue.size());
         var pop = this.serverQueue.pop();
         var done = new ALMap();
         while (pop) {
@@ -403,6 +406,7 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
         var msg = {};
         switch (pop.type) {
             case "OP":
+                /*
                 //NOTICE: papoc only start
                 var objectID = pop.objectID;
                 var thing = "" + objectID;
@@ -414,6 +418,8 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
                 return;
 
                 //NOTICE: papoc only end
+                */
+                var objectID = pop.objectID;
                 var clientID = pop.clientID;
                 var operationID = pop.operationID;
                 var thing = "" + objectID + "" + clientID + "" + operationID;
@@ -496,7 +502,7 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
 
 ObjectStore.prototype.clearPeersQueue = function () {
     if (this.peersQueue.size() > 0) {
-        console.log("Messages in peers queue: " + this.peersQueue.size());
+        if(debug)console.log("Messages in peers queue: " + this.peersQueue.size());
         var pop = this.peersQueue.pop();
         var done = new ALMap();
         while (pop) {

@@ -30,7 +30,7 @@ function start(clientID) {
             peerInterval: 2000
         },
         bullyProtocol: {
-            type: SimpleBully,
+            type: ServerBully,
             options: {
                 bullyMustHaveInterval: 30 * 1000,
                 bullySendInterval: 7 * 1000,
@@ -44,7 +44,8 @@ function start(clientID) {
         objectServerConnection: {
             type: ObjectServerConnection,
             server: {ip: "localhost", port: 8004}
-        }
+        },
+        securityProtocol: SecurityProtocol
     };
 
     legion = new Legion(options);

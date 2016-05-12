@@ -1,0 +1,2 @@
+cd Legion
+npm start

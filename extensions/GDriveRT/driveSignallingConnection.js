@@ -1,5 +1,6 @@
 var B2B_MAP = "b2bmap";
 function GDriveRTSignallingServerConnection(argument, legion) {
+    console.error("a")
     this.argument = argument;
     this.legion = legion;
     this.lru = legion.lru;
@@ -27,14 +28,28 @@ function GDriveRTSignallingServerConnection(argument, legion) {
         sc.model = doc.getModel();
         if (sc.lru.legion.id == "TEMP_ID")
             sc.setID();
+        sc.map = sc.document.getModel().getRoot().get(B2B_MAP);
+        sc.legion.secure.setKey(sc.map.get("1"));
+        //TODO: listener on map: if K:Key -> update key
+
+
         sc.initOverlay();
 
     }, function (model) {
         //console.info("load: B");
+        var key = {};
+        key.id = "1";
+        key.key = forge.random.getBytesSync(16);
+        key.iv = forge.random.getBytesSync(16);
         var map = model.createMap({
-            B2B_MAP: B2B_MAP
+            B2B_MAP: B2B_MAP,
+            "1": key
         });
         model.getRoot().set(B2B_MAP, map);
+
+        sc.lru.createKeyFile(key);
+        sc.lru.legion.secure.setKey(key);
+
     });
     //console.info("load: C");
 
@@ -62,6 +77,7 @@ GDriveRTSignallingServerConnection.prototype.initOverlay = function () {
     this.map.set(this.lru.legion.id, this.messageList);
 
     this.messageList.addEventListener(gapi.drive.realtime.EventType.VALUES_ADDED, function (evt) {
+        //console.info(evt);
         var m_list = [];
         for (var i = 0; i < evt.values.length; i++) {
             m_list.push(sc.messageList.get(0));
@@ -116,7 +132,6 @@ GDriveRTSignallingServerConnection.prototype.send = function (message) {
     }
 };
 
-
 GDriveRTSignallingServerConnection.prototype.collabBC = function (message, receiver, sender, N) {
     function idfrom(collab) {
         return collab.sessionId;
@@ -131,10 +146,11 @@ GDriveRTSignallingServerConnection.prototype.collabBC = function (message, recei
         for (var j = 0; j < collaborators.length; j++) {
             if (collaborators[j].isMe)continue;
             if (idfrom(collaborators[j]) != receiver)continue;
-            console.log("Drive S Sending toR: " + idfrom(collaborators[j]));
             peerMessageList = this.map.get(idfrom(collaborators[j]));
-            if (peerMessageList)
+            if (peerMessageList) {
+                console.log("Drive S Sending toR: " + idfrom(collaborators[j]));
                 peerMessageList.push(message);
+            }
             return;
         }
     }
@@ -147,12 +163,14 @@ GDriveRTSignallingServerConnection.prototype.collabBC = function (message, recei
     }
 
     for (var i = 0; i < end; i++) {
-        if (collaborators[i].isMe || collaborators[i] == sender)continue;
+        if (collaborators[i].isMe || collaborators[i].sessionId == sender)continue;
         if (this.legion.overlay.peers.contains(receiver))continue;
-        console.log("Drive S Sending to: " + idfrom(collaborators[i]));
-        peerMessageList = this.map.get(idfrom(collaborators[i]));
-        if (peerMessageList)
+        var id = idfrom(collaborators[i]);
+        peerMessageList = this.map.get(id);
+        if (peerMessageList) {
+            console.log("Drive S Sending to: " + id);
             peerMessageList.push(message);
+        }
     }
 };
 

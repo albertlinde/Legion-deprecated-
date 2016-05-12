@@ -16,10 +16,10 @@ MessagingAPI.prototype.onMessage = function (connection, message, original) {
         console.warn("Return to creator fault", message, connection.remoteID);
         return;
     }
-    if (!this.duplicates.contains(message.sender, message.ID)) {
+    if (message.type == "SHB" || !this.duplicates.contains(message.sender, message.ID)) {
         this.duplicates.add(message.sender, message.ID)
     } else {
-        console.log("Duplicate: (" + message.sender + "," + message.ID + ")");
+        //console.log("Duplicate: (" + message.sender + "," + message.ID + ")");
         return;
     }
 
@@ -43,7 +43,7 @@ MessagingAPI.prototype.deliver = function (message, original, connection) {
     if (this.callbacks.contains(message.type)) {
         this.callbacks.get(message.type)(message, original, connection);
     } else {
-        console.error("can't deliver: no handler defined", JSON.stringify(message));
+        console.warn("can't deliver: no handler defined", JSON.stringify(message));
     }
 };
 

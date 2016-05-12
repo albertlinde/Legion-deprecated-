@@ -21,7 +21,7 @@ var op_orMap = {
             var ret = {};
             var keys = this.state.adds.keys();
             for (var i = 0; i < keys.length; i++) {
-                ret[keys[i]]= this.state.adds.get(keys[i]).keys();
+                ret[keys[i]] = this.state.adds.get(keys[i]).keys();
             }
             return ret;
         },
@@ -33,6 +33,7 @@ var op_orMap = {
                     if (!values) {
                         return {key: key, value: value, unique: unique, removes: []};
                     }
+
                     if (values.size() == 1 && values.contains(value)) {
                         return null;
                     }
@@ -46,7 +47,7 @@ var op_orMap = {
                     return {key: key, value: value, unique: unique, removes: removes};
                 },
                 remote: function (data) {
-                    if (!data.key)return;
+                    if(!data.key)return;
 
                     var ret = {};
                     var key = data.key;
@@ -108,7 +109,7 @@ var op_orMap = {
                         delete ret.removes;
 
                     if (ret.change || ret.add || ret.removes) {
-                        return ret
+                        return ret;
                     }
                 }
             },
@@ -181,7 +182,7 @@ var op_orMap = {
                         delete ret.removes;
 
                     if (ret.removes) {
-                        return ret
+                        return ret;
                     }
                 }
             }

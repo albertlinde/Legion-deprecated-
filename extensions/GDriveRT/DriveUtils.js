@@ -33,6 +33,13 @@ function addPropertyToFile(fileId, key, value, callback) {
         'fileId': fileId,
         'resource': body
     });
+    /*
+    var request = gapi.client.drive.properties.insert(
+
+        {
+            'fileId': fileId}, body
+    );pacman
+    */
     request.execute(function (resp) {
         callback(resp);
     });
