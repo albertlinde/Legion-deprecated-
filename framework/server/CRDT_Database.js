@@ -12,6 +12,7 @@ if (typeof exports != "undefined") {
 
 function CRDT_Database(messaging, peerSyncs) {
     var cb = this;
+    //TODO: the non-constant constants must be put somewhere neat.
     this.peerSendInterval = 2000;
     this.peersQueue = new ALQueue();
 
@@ -24,8 +25,11 @@ function CRDT_Database(messaging, peerSyncs) {
     this.saveTime = 5000;
 
     this.messageCount = Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
+    //TODO: hardcoded ID!
     this.id = "localhost:8004";
 
+    //TODO: this must be optional/definable
+    //TODO: if there is a savetodisk there must be a load from disk?
     setInterval(function () {
         cb.saveToDisk()
     }, this.saveTime);
@@ -156,6 +160,7 @@ CRDT_Database.prototype.sendVVToNode = function (objectID, receiver) {
 
 
 CRDT_Database.prototype.saveToDisk = function () {
+    //TODO: do actually save to disk?
     console.log("(not) saving to disk.");
     var keys = this.crdts.keys();
     for (var i = 0; i < keys.length; i++) {
@@ -209,6 +214,7 @@ CRDT_Database.prototype.propagateState = function (objectID, options) {
 };
 
 CRDT_Database.prototype.defineCRDT = function (crdt) {
+    //TODO: some CRDTS should be pre-defined.
     if (this.types.contains(crdt.type)) {
         util.error("Can't redefine existing CRDT.", crdt);
     } else {
@@ -322,6 +328,7 @@ CRDT_Database.prototype.gotVVFromNetwork = function (message, original, connecti
 };
 
 CRDT_Database.prototype.generateMessage = function (type, data, callback) {
+    //TODO: message generation shouldn't be at the DB level.?
     if (!type) {
         util.error("No type for message.");
         return;

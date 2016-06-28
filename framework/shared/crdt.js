@@ -4,6 +4,8 @@ if (typeof exports != "undefined") {
 }
 
 
+//TODO: the crdt_type thing is not used. should be defined else-where.
+//TODO: not all crdts have merge, compare, etc...
 /**
  * Notice: this object's only use is type checking.
  * @type {{type: string, propagation: number, crdt: {base_value: Function, getValue: Function, operations: {}, merge: Function, compare: Function, fromJSONString: Function, toJSONString: Function}}}
@@ -52,10 +54,14 @@ var crtd_type = {
  * @constructor
  */
 function CRDT(objectID, crdt, objectStore) {
+    //TODO: {ObjectStore | CRDT_Database} -> there should be well defined interfaces.
     this.objectStore = objectStore;
     this.objectID = objectID;
+    //TODO: a crdt with a crdt which has a crdt?
+    //TODO: well defined CRDT types.
+    // the following things are only valid for some cases.
+    // maybe even separate to different sub crtd objects?
     this.crdt = crdt;
-
 
     this.state = {};
 
@@ -177,9 +183,11 @@ function CRDT(objectID, crdt, objectStore) {
             (function (key) {
                 c[key] = function () {
                     var ret = c.crdt.crdt.operations[key].apply(c, arguments);
-                    c.objectStore.propagateState(c.objectID, {all: true});
-                    if (c.callback)
-                        c.callback(ret, {local: true});
+                    if (ret.change) {
+                        c.objectStore.propagateState(c.objectID, {all: true});
+                        if (c.callback)
+                            c.callback(ret, {local: true});
+                    } else return ret;
                 };
             })(keys[i]);
         }

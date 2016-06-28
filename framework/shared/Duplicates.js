@@ -1,3 +1,4 @@
+//TODO: make this self-contained.
 if (typeof exports != "undefined")
     exports.Duplicates = Duplicates;
 

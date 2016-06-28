@@ -19,6 +19,7 @@ ServerMessaging.prototype.sendTo = function (peer, message) {
 };
 
 ServerMessaging.prototype.broadcastMessage = function (message, except) {
+    //TODO: define and confirm message type
     if (typeof message == "object") {
         message = JSON.stringify(message);
     }
@@ -32,12 +33,14 @@ ServerMessaging.prototype.broadcastMessage = function (message, except) {
                 this.peerSyncs.delete(message.destination);
                 ps.finalize();
                 console.log("ServerMessaging (1). Removed dead peer: " + message.destination);
+                //TODO: this return might have been put here for the wrong reasons:
                 return; //odds of me propagating this and the node receiving it are truly amazing.
             }
         } else {
             return;
         }
     }
+    //TODO: define and confirm except
     for (var j = 0; except && j < except.length; j++) {
         if (typeof except[j] == "object") {
             except[j] = except[j].remoteID;

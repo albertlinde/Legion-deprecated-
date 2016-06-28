@@ -5,10 +5,12 @@ var util = require('util');
 exports.AuthServer = AuthServer;
 
 function AuthServer() {
+    //TODO: a key should come from a file.
     this.newKeyPair();
     this.publicKeyString = JSON.stringify(forge.pki.publicKeyToAsn1(this.publicKey));
 
     this.keys = new ALMap();
+    //TODO: ids of keys can't start at 1 every time the server is re-booted!
     this.keys.set(1, this.newKey(1));
     var ass = this;
     /*setInterval(function () {
@@ -26,6 +28,7 @@ AuthServer.prototype.getKey = function (keyID) {
 };
 
 AuthServer.prototype.newKey = function (keyID) {
+    //TODO: parameterizable
     util.log("New key: " + keyID);
     var key = {};
     key.id = keyID;
@@ -35,11 +38,13 @@ AuthServer.prototype.newKey = function (keyID) {
 };
 
 AuthServer.prototype.clientCheck = function (client_id) {
+    //TODO: programmer-defined. the id alone is not enough
     return true;
     return parseInt(client_id) > 0 && parseInt(client_id) < 10;
 };
 
 AuthServer.prototype.verify = function (c) {
+    //TODO: see (clientCheck)
     var ret = {auth: {}};
 
     if (c.type != "Auth" || c.client_id != c.clientChallenge || !this.clientCheck(c.client_id))
@@ -55,7 +60,6 @@ AuthServer.prototype.signedMessageDigest = function (string) {
     var md = forge.md.sha256.create();
     md.update(string);
     return this.privateKey.sign(md);
-    //var verified = publicKey.verify(md.digest().bytes(), signature);
 };
 
 AuthServer.prototype.newKeyPair = function () {

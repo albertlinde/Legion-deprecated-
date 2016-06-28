@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="Legion: map examples">
+    <meta name="author" content="http://novasys.di.fct.unl.pt/~alinde/">
+
+    <title>Legion: Map examples</title>
+
+    <link href="./../../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./../../node_modules/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="./../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="./../../framework/client/adapter.js"></script>
+
+    <script src="./../legion-min.js"></script>
+    <script src="./../../node_modules/node-forge/js/forge.min.js"></script>
+    <script src="./../../node_modules/lzma/src/lzma_worker-min.js"></script>
+</head>
+
+<body role="document">
+
+<!-- Fixed navbar -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Legion showcase</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="index.html">Back</a></li>
+                <li class="active"><a href="#">Map examples</a></li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container theme-showcase" role="main">
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <h1>Legion Map Examples</h1>
+
+        <p>This page contains examples of using the Legion framework.</p>
+    </div>
+    <div class="page-header">
+        <h1>Usage</h1>
+    </div>
+<pre class="prettyprint linenums">
+    var legion = new Legion();
+    legion.join();
+    var objectStore = legion.getObjectStore();
+
+    var map_state = objectStore.get("map_1_state", Legion.STATE_Map);
+    var map_operations = objectStore.get("map_2_opers", Legion.OPERATIONS_Map);
+    var map_delta = objectStore.get("map_3_delta", Legion.DELTA_Map);
+
+    map_*.set(key, value);
+    map_*.get(key);
+    map_*.delete(key);
+
+    console.log(map_*.asArray()); //Array of pairs
+    console.log(map_*.keys()); //Array
+    console.log(map_*.values()); //Array
+    console.log(map_*.contains(element)); //Boolean
+    console.log(map_*.size()); //Number
+</pre>
+    <div class="page-header">
+        <h1>Example</h1>
+    </div>
+
+    <div id="example">
+        <div class="row">
+            <div class="col-md">
+                <div class="container">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Input</h3>
+                        </div>
+                        <div class="panel-body">
+                            Key:
+                            <input type="text" id="map_key" placeholder="key" value="key">
+                            Value:
+                            <input type="text" id="map_value" placeholder="value" value="value">
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Set(key, value)</th>
+                        <th>Delete(key)</th>
+                        <th>Size</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>State</td>
+                        <td>
+                            <button onclick="add_state()" id="add_state" type="button"
+                                    class="btn btn-xs btn-success disabled">Add
+                            </button>
+                        </td>
+                        <td>
+                            <button onclick="remove_state()" id="remove_state" type="button"
+                                    class="btn btn-xs btn-success disabled">Remove
+                            </button>
+                        </td>
+                        <td><span id="set_state_value"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Operation</td>
+                        <td>
+                            <button onclick="add_opers()" id="add_ops" type="button"
+                                    class="btn btn-xs btn-success disabled">Add
+                            </button>
+                        </td>
+                        <td>
+                            <button onclick="remove_opers()" id="remove_ops" type="button"
+                                    class="btn btn-xs btn-success disabled">Remove
+                            </button>
+                        </td>
+                        <td><span id="set_operations_value"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Delta</td>
+                        <td>
+                            <button onclick="add_delta()" id="add_delta" type="button"
+                                    class="btn btn-xs btn-danger disabled">Add
+                            </button>
+                        </td>
+                        <td>
+                            <button onclick="remove_delta()" id="remove_delta" type="button"
+                                    class="btn btn-xs btn-danger disabled">Remove
+                            </button>
+                        </td>
+                        <td><span id="set_delta_value"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">State Map Elements</h3>
+                        </div>
+                        <div class="panel-body">
+                            <ul class="list-group" id="list_map_state">
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Operation Map Elements</h3>
+                        </div>
+                        <div class="panel-body">
+                            <ul class="list-group" id="list_map_opers">
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Delta Map Elements</h3>
+                        </div>
+                        <div class="panel-body">
+                            <ul class="list-group" id="list_map_delta">
+
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="application/javascript">
+        var map_state;
+        var map_operations;
+        var map_delta;
+
+        var legion = new Legion();
+        legion.join();
+        var objectStore = legion.getObjectStore();
+
+        map_state = objectStore.get("map_1_state", Legion.STATE_Map);
+        map_operations = objectStore.get("map_2_operations", Legion.OPERATIONS_Map);
+        //set_delta = objectStore.get("map_3_delta", Legion.DELTA_Map);
+
+        map_state.setOnStateChange(function (updates, meta) {
+            console.log("State Map change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " array: " + JSON.stringify(map_state.asArray()));
+            mapChanged("#list_map_state", map_state.asArray());
+        });
+        map_operations.setOnStateChange(function (updates, meta) {
+            console.log("Operations Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(map_operations.getValue()));
+            mapChanged("#list_map_opers", map_operations.asArray());
+        });
+        //set_delta.setOnStateChange(function (updates, meta) {
+        //    console.log("Delta Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(set_delta.getValue()));
+        //});
+
+        legion.onJoin(function () {
+
+            $("#add_state").removeClass("disabled");
+            $("#remove_state").removeClass("disabled");
+
+            $("#add_ops").removeClass("disabled");
+            $("#remove_ops").removeClass("disabled");
+
+            //$("#add_delta").removeClass("disabled");
+            //$("#rem_delta").removeClass("disabled");
+
+            mapChanged("#list_map_state", map_state.asArray());
+            mapChanged("#list_map_opers", map_operations.asArray());
+            //setChanged("#list_set_delta", set_operations.asArray());
+
+        });
+
+        var mapChanged = function (list_html_id, array) {
+
+            $(list_html_id)[0].innerHTML = "";
+            for (var i = 0; i < array.length; i++) {
+                $(list_html_id)[0].innerHTML = $(list_html_id)[0].innerHTML + ('<li class="list-group-item">' + array[i] + '</li>');
+            }
+        };
+
+        var getKeyValue = function () {
+            return {k: $("#map_key")[0].value, v: $("#map_value")[0].value};
+        };
+
+        var add_state = function () {
+            var kv = getKeyValue();
+            map_state.set(kv.k, kv.v);
+        };
+        var add_opers = function () {
+            var kv = getKeyValue();
+            map_operations.set(kv.k, kv.v);
+        };
+        var add_delta = function () {
+            var kv = getKeyValue();
+            //set_delta.add(kv.k, kv.v);
+        };
+        var remove_state = function () {
+            var kv = getKeyValue();
+            map_state.delete(kv.k);
+        };
+        var remove_opers = function () {
+            var kv = getKeyValue();
+            map_operations.delete(kv.k);
+        };
+        var remove_delta = function () {
+            var kv = getKeyValue();
+            //set_delta.remove(kv.k);
+        };
+
+    </script>
+</div>
+
+</body>
+</html>
+

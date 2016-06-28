@@ -1,3 +1,4 @@
+//TODO: check where this is used and REMOVE.
 if (typeof exports != "undefined")
     exports.ALList = ALList;
 

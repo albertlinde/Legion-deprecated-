@@ -1,6 +1,9 @@
+//TODO: make debugging useful.
+//TODO: the whole compression, encryption and signing part looks hacked into the code.
 function MessagingAPI(legion) {
     this.legion = legion;
     this.messagingProtocol = new this.legion.options.messagingProtocol(this, this.legion);
+    //TODO: inner and outer(application) callback handlers
     this.callbacks = new ALMap();
     this.duplicates = new Duplicates();
 }
@@ -12,6 +15,7 @@ function MessagingAPI(legion) {
  * @param original {Object}
  */
 MessagingAPI.prototype.onMessage = function (connection, message, original) {
+    //TODO: none of the following checks are well defined or justified.
     if (message.sender == this.legion.id) {
         console.warn("Return to creator fault", message, connection.remoteID);
         return;
@@ -40,8 +44,19 @@ MessagingAPI.prototype.onMessage = function (connection, message, original) {
  * @param connection
  */
 MessagingAPI.prototype.deliver = function (message, original, connection) {
+    //TODO: tis should not be given to the outside world.
     if (this.callbacks.contains(message.type)) {
-        this.callbacks.get(message.type)(message, original, connection);
+        message.data = message.content;
+
+        var mapi = this;
+        try {
+            decompress(message.data, function (result) {
+                message.data = JSON.parse(result);
+                mapi.callbacks.get(message.type)(message, original, connection);
+            });
+        } catch (e) {
+            mapi.callbacks.get(message.type)(message, original, connection);
+        }
     } else {
         console.warn("can't deliver: no handler defined", JSON.stringify(message));
     }
@@ -53,6 +68,7 @@ MessagingAPI.prototype.deliver = function (message, original, connection) {
  * @param except
  */
 MessagingAPI.prototype.broadcastMessage = function (message, except) {
+    //TODO: except shouldn't be given to applications(see this.sendTo).
     this.messagingProtocol.broadcastMessage(message, except);
 };
 
@@ -62,6 +78,7 @@ MessagingAPI.prototype.broadcastMessage = function (message, except) {
  * @param message
  */
 MessagingAPI.prototype.sendTo = function (peer, message) {
+    //TODO: to fine grained control for applications at this level.
     if (message.destination) {
         console.warn("Notice: message had a pre-defined destination!")
     }
@@ -69,6 +86,7 @@ MessagingAPI.prototype.sendTo = function (peer, message) {
 };
 
 MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
+    //TODO: see this.sendTo
     if (!message.N) {
         console.error("NO N!");
         return;
@@ -109,8 +127,10 @@ MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
  */
 MessagingAPI.prototype.broadcast = function (type, data) {
     var mapi = this;
+    //TODO: a way to internally sing messages would be nice
     this.legion.generateMessage(type, data, function (result) {
         mapi.broadcastMessage(result);
+        mapi.deliver(result);
     });
 };
 

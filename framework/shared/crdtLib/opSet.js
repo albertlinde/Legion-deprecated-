@@ -1,6 +1,6 @@
 if (typeof generateUniqueIdentifier == "undefined") {
     generateUniqueIdentifier = function () {
-        return ("" + Math.random()).substr(2,8)+("" + Math.random()).substr(2,8);
+        return ("" + Math.random()).substr(2, 8) + ("" + Math.random()).substr(2, 8);
     }
 }
 
@@ -11,7 +11,7 @@ if (typeof exports != "undefined") {
     ALMap = ALMap.ALMap;
 }
 var op_orset = {
-    type: "OP_ORSet",
+    type: "OPERATIONS_Set",
     propagation: CRDT.OP_BASED,
     crdt: {
         base_value: {
@@ -21,7 +21,14 @@ var op_orset = {
             return this.state.adds.keys();
         },
         operations: {
-            add: {
+            asArray: {
+                local: function (element) {
+                    return null;
+                },
+                remote: function (data) {
+                    return this.state.adds.keys();
+                }
+            }, add: {
                 local: function (element) {
                     var unique = generateUniqueIdentifier();
                     return {element: element, unique: unique};
@@ -69,7 +76,7 @@ var op_orset = {
 };
 
 if (typeof exports != "undefined") {
-    exports.OP_ORSet = op_orset;
+    exports.OPERATIONS_Set = op_orset;
 } else {
-    CRDT_LIB.OP_ORSet = op_orset;
+    CRDT_LIB.OPERATIONS_Set = op_orset;
 }

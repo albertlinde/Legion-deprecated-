@@ -1,3 +1,5 @@
+//TODO: make this self-contained.
+//TODO: re-define security checks
 function ServerConnection(server, legion) {
     this.legion = legion;
     this.server = server;
@@ -28,6 +30,7 @@ function ServerConnection(server, legion) {
                     sc.legion.messagingAPI.onMessage(sc, m, original);
                 });
             } else {
+                //TODO: this is an expensive fix. fix it better.
                 decompress("5d00000100040000000000000000331849b7e4c02e1ffffac8a000", function (result) {
                     sc.legion.messagingAPI.onMessage(sc, m, original);
                 });
@@ -53,6 +56,7 @@ ServerConnection.prototype.isAlive = function () {
 };
 
 ServerConnection.prototype.send = function (message) {
+    //TODO: define and confirm message type
     if (message.N) {
         //No op. Server will handle it.
     }

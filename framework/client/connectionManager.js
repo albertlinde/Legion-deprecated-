@@ -5,6 +5,7 @@ function ConnectionManager(legion) {
     this.peerConnections = new ALMap();
 
     var cm = this;
+    //TODO: the following strings are defined where?
     this.legion.messagingAPI.setHandlerFor("OfferAsAnswer", function (message, original) {
         cm.handleSignalling(message, original)
     });
@@ -18,10 +19,10 @@ function ConnectionManager(legion) {
 }
 
 ConnectionManager.prototype.startSignallingConnection = function () {
+    //TODO: this if is not enough: concurrent calls to the method.
     if (!this.serverConnection)
         new this.legion.options.signallingConnection.type(this.legion.options.signallingConnection.server, this.legion);
 };
-
 
 ConnectionManager.prototype.hasPeer = function (peerID) {
     return this.peerConnections.contains(peerID);
@@ -29,6 +30,7 @@ ConnectionManager.prototype.hasPeer = function (peerID) {
 
 //assumes peer does not exist
 ConnectionManager.prototype.connectPeer = function (peerID) {
+    //TODO: remove assumption
     if (this.hasPeer(peerID)) {
         return false;
     } else {
@@ -38,9 +40,9 @@ ConnectionManager.prototype.connectPeer = function (peerID) {
     }
 };
 
-//no longer assumes peer does not exist
 //if it had the peer, the winning started is te one with lowest id.
 ConnectionManager.prototype.connectPeerRemote = function (message) {
+    //TODO: decision is based by id. is this the best way?
     var peerID = message.sender;
     var offer = message.content;
     var hadPeer = this.peerConnections.get(peerID);
@@ -60,6 +62,8 @@ ConnectionManager.prototype.connectPeerRemote = function (message) {
 };
 
 ConnectionManager.prototype.handleSignalling = function (message, original) {
+    //TODO: again, this isn't well defined.
+    //TODO: message.unique is not explained anywhere.
     if (message.destination != this.legion.id) {
         this.legion.messagingAPI.broadcastMessage(original);
     } else {
@@ -95,6 +99,7 @@ ConnectionManager.prototype.onCloseServer = function (serverConnection) {
         this.serverConnection = null;
         this.legion.overlay.onServerDisconnect(serverConnection);
     }
+    //TODO: the internal if vill be void.
     if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
         if (this.legion.objectStore)
             this.legion.objectStore.onServerDisconnect(serverConnection);
@@ -106,6 +111,7 @@ ConnectionManager.prototype.onCloseServer = function (serverConnection) {
 };
 
 ConnectionManager.prototype.onOpenServer = function (serverConnection) {
+    //TODO: this should be individual for server types
     console.log(this.legion.getTime() + " Overlay OPEN " + this.legion.id + " to " + serverConnection.remoteID + " of type " + (serverConnection.constructor.name));
     if (serverConnection instanceof this.legion.options.signallingConnection.type) {
         this.serverConnection = serverConnection;
@@ -119,11 +125,13 @@ ConnectionManager.prototype.onOpenServer = function (serverConnection) {
     }
     if (this.legion.bullyProtocol)
         this.legion.bullyProtocol.onServerConnection(serverConnection);
+    this.legion.onOpenServer(serverConnection);
 };
 
 ConnectionManager.prototype.onOpenClient = function (clientConnection) {
     console.log(this.legion.getTime() + " Overlay OPEN " + this.legion.id + " to " + clientConnection.remoteID);
     this.legion.overlay.addPeer(clientConnection);
+    //TODO: the ifs will be void.
     if (this.legion.objectStore)
         this.legion.objectStore.onClientConnection(clientConnection);
     if (this.legion.bullyProtocol)
@@ -134,6 +142,7 @@ ConnectionManager.prototype.onCloseClient = function (clientConnection) {
     console.log(this.legion.getTime() + " Overlay CLOSE " + this.legion.id + " to " + clientConnection.remoteID);
     this.peerConnections.delete(clientConnection.remoteID);
     this.legion.overlay.removePeer(clientConnection);
+    //TODO: the ifs will be void.
     if (this.legion.objectStore)
         this.legion.objectStore.onClientDisconnect(clientConnection);
     if (this.legion.bullyProtocol)
@@ -142,6 +151,7 @@ ConnectionManager.prototype.onCloseClient = function (clientConnection) {
 
 ConnectionManager.prototype.sendStartOffer = function (offer, unique, clientConnection) {
     var cm = this;
+    //TODO: see CM.constructor
     this.legion.generateMessage("OfferAsAnswer", offer, function (result) {
         result.destination = clientConnection.remoteID;
         result.unique = unique;
@@ -151,6 +161,7 @@ ConnectionManager.prototype.sendStartOffer = function (offer, unique, clientConn
 
 ConnectionManager.prototype.sendReturnOffer = function (offer, unique, clientConnection) {
     var cm = this;
+    //TODO: see CM.constructor
     this.legion.generateMessage("OfferReturn", offer, function (result) {
         result.destination = clientConnection.remoteID;
         result.unique = unique;
@@ -160,6 +171,7 @@ ConnectionManager.prototype.sendReturnOffer = function (offer, unique, clientCon
 
 ConnectionManager.prototype.sendICE = function (candidate, unique, clientConnection) {
     var cm = this;
+    //TODO: see CM.constructor
     this.legion.generateMessage("ICE", candidate, function (result) {
         result.destination = clientConnection.remoteID;
         result.unique = unique;

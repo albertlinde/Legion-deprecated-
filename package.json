@@ -12,7 +12,7 @@
     "webrtc"
   ],
   "scripts": {
-    "install": "./compile.sh",
+    "install": "./install.sh",
     "start": "./run-server.sh",
     "stop": "./kill-server.sh"
   },
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/albertlinde/Legion#readme",
   "dependencies": {
+    "bootstrap": "^3.3.6",
     "express": "^4.13.3",
     "lzma": "~2.1.6",
     "node-forge": "^0.6.39",
@@ -30,6 +31,7 @@
     "path": "~0.11.14",
     "uglify-js": "^2.6.1",
     "util": "~0.10.3",
+    "vis": "^4.16.1",
     "walk": "^2.3.9",
     "ws": "~0.7.1"
   }

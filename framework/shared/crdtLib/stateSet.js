@@ -1,6 +1,6 @@
 if (typeof generateUniqueIdentifier == "undefined") {
     generateUniqueIdentifier = function () {
-        return ("" + Math.random()).substr(2,8)+("" + Math.random()).substr(2,8);
+        return ("" + Math.random()).substr(2, 8) + ("" + Math.random()).substr(2, 8);
     }
 }
 
@@ -22,12 +22,15 @@ var state_set = {
             return this.state.adds.keys();
         },
         operations: {
+            asArray: function () {
+                return this.state.adds.keys();
+            },
             add: function (element) {
                 if (!this.state.adds.contains(element)) {
                     this.state.adds.set(element, new ALMap());
                     var e = this.state.adds.get(element);
                     e.set(generateUniqueIdentifier(), true);
-                    return {add: element};
+                    return {add: element, change:true};
                 }
             },
             remove: function (element) {
@@ -40,7 +43,7 @@ var state_set = {
                     }
                     if (e.size() == 0) {
                         this.state.adds.delete(data.element);
-                        return {remove: data.element};
+                        return {remove: data.element, change:true};
                     }
                 }
             }
@@ -150,11 +153,13 @@ var state_set = {
 
                 for (var j = 0; !first && j < keys_l_u.length; j++) {
                     if (!e_r.contains(keys_l_u[j])) {
+                        //TODO: tombstone check.
                         first = true;
                     }
                 }
                 for (var j = 0; !second && j < keys_r_u.length; j++) {
                     if (!e_l.contains(keys_r_u[j])) {
+                        //TODO: tombstone check.
                         second = true;
                     }
                 }

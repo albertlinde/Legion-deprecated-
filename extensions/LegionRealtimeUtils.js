@@ -4,7 +4,11 @@ var detailedDebug = false;
 var bullyLog = false;
 
 function LegionRealtimeUtils(realtimeUtils) {
-    //NOTICE: current implementation does not allow for objects in objects.
+    //TODO: current implementation does not allow for objects in objects.
+    //TODO: documentation
+    //TODO: check the of legion
+    //TODO: check timers, currently setup time is to long!
+    //TODO: Strings have been removed, re-add.
     this.realtimeUtils = realtimeUtils;
 
     this.legion = null;
@@ -53,6 +57,7 @@ function LegionRealtimeUtils(realtimeUtils) {
 
 
     this.mergeUtils = new MergeUtils(this);
+    //TODO: not all revisions should be kept.
     this.revisions = new ALMap();
 }
 /**
@@ -96,6 +101,7 @@ LegionRealtimeUtils.prototype.load = function (fileID, onLoad, onInit) {
  * @param onLoad {Function}
  */
 LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
+    //TODO: clientID coming from random doesn't seem a good idea here.
     var signalling;
     var signallingServer;
     var clientID = ("" + Math.random()).substr(2, 4);
@@ -104,6 +110,7 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
     var persistenceServer;
     var secureServer;
     var bullyProtocol;
+    //TODO: addresses should be parameters.
     if (!this.persitence_on_legacy) {
         persistence = ObjectServerConnection;
         persistenceServer = {ip: "52.53.248.119", port: 8004};
@@ -125,6 +132,7 @@ LegionRealtimeUtils.prototype.gotOverlayFile = function (onLoad) {
         bullyProtocol=SimpleBully;
     }
 
+    //TODO: export the options to somewhere else
     var options = {
         clientID: clientID,
         overlayProtocol: B2BOverlay,

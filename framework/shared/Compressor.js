@@ -1,3 +1,4 @@
+//TODO: this should be optional/parameterizable. when using security this actually might be bad.
 if (typeof exports != "undefined") {
     exports.compress = compress;
     exports.decompress = decompress;

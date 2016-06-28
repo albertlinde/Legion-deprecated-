@@ -1,13 +1,16 @@
+//TODO: logging control
 function ObjectServerConnection(server, objectStore, legion) {
     this.server = server;
     this.objectStore = objectStore;
     this.legion = legion;
     this.remoteID = this.server.ip + ":" + this.server.port;
 
+    //TODO: wss or at the least, support for.
     this.socket = new WebSocket("ws://" + this.server.ip + ":" + this.server.port + "");
 
     var sc = this;
     this.socket.onopen = function open() {
+        //TODO: where is this explained?
         sc.legion.generateMessage("CLIENT_ID", null, function (result) {
             result.clientID = sc.legion.id;
             sc.send(JSON.stringify(result));
@@ -44,6 +47,7 @@ ObjectServerConnection.prototype.close = function () {
 };
 
 ObjectServerConnection.prototype.send = function (message) {
+    //TODO: define and confirm message type
     if (typeof message == "object") {
         message = JSON.stringify(message);
     }

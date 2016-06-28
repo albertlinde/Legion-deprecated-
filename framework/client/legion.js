@@ -1,9 +1,39 @@
 function Legion(options) {
     this.options = options;
+    this.onJoinCallback = null;
 
-    this.messageCount = Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
+    if (!this.options) {
+        this.options = {
+            clientID: this.randInt(),
+            overlayProtocol: B2BOverlay,
+            messagingProtocol: FloodMessaging,
+            objectOptions: {
+                serverInterval: 5000,
+                peerInterval: 200
+            },
+            bullyProtocol: {
+                type: ServerBully
+            },
+            signallingConnection: {
+                type: ServerConnection,
+                server: {ip: "localhost", port: 8002}
+            },
+            objectServerConnection: {
+                type: ObjectServerConnection,
+                server: {ip: "localhost", port: 8004}
+
+            },
+            securityProtocol: SecurityProtocol
+        }
+    } else {
+        //TODO: check if options has everything well defined.
+    }
+
+    //TODO: this seems a bad fix:
+    this.messageCount = this.randInt();
     this.id = this.options.clientID;
 
+    //TODO: the following should have a well defined order
     this.messagingAPI = new MessagingAPI(this);
     if (this.options.bullyProtocol)
         this.bullyProtocol = new this.options.bullyProtocol.type(this);
@@ -11,12 +41,14 @@ function Legion(options) {
     this.connectionManager = new ConnectionManager(this);
 
 
+    //TODO: this should be instantiated.
     this.objectStore = null;
 }
 /**
  * Joins the overlay.
  */
 Legion.prototype.join = function () {
+    //TODO: why is security being started here?
     this.secure = new this.options.securityProtocol(this);
     this.connectionManager.startSignallingConnection();
 };
@@ -33,6 +65,7 @@ Legion.prototype.getMessageAPI = function () {
  * @returns {ObjectStore}
  */
 Legion.prototype.getObjectStore = function () {
+    //TODO: remove instantiating from here.
     if (!this.objectStore) {
         this.objectStore = new ObjectStore(this);
     }
@@ -49,6 +82,8 @@ Legion.prototype.getObjectStore = function () {
  * @param callback {Function}
  */
 Legion.prototype.generateMessage = function (type, data, callback) {
+    //TODO: this should not be accessible from the outside.
+    //TODO: define a way to sign messages
     if (!type) {
         console.error("No type for message.");
         return;
@@ -105,6 +140,7 @@ Legion.prototype.generateMessage = function (type, data, callback) {
  * @param callback {Function}
  */
 Legion.prototype.reGenerateMessage = function (oldMessage, newData, callback) {
+    //TODO: this seems like a hammered fix.
     if (!newData) {
         if (oldMessage.content)
             delete oldMessage.content;
@@ -125,6 +161,7 @@ Legion.prototype.reGenerateMessage = function (oldMessage, newData, callback) {
  * @returns {number}
  */
 Legion.prototype.getTime = function () {
+    //TODO: this should be fixed.
     return Date.now();
 };
 
@@ -133,5 +170,20 @@ Legion.prototype.getTime = function () {
  * @returns {number}
  */
 Legion.prototype.randInt = function () {
+    //TODO: why does the API export this?
     return Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
+};
+
+Legion.prototype.onJoin = function (callback) {
+    //TODO: onJoin when already joined.
+    this.onJoinCallback = callback;
+};
+
+Legion.prototype.onOpenServer = function (serverConnection) {
+    //TODO: signalling is seperate from secure and from data.
+    //TODO: error on verifying permissions to server.
+    if (this.onJoinCallback) {
+        this.onJoinCallback();
+        this.onJoinCallback = null;
+    }
 };

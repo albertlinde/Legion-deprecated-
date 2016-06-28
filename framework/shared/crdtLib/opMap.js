@@ -11,7 +11,7 @@ if (typeof exports != "undefined") {
     ALMap = ALMap.ALMap;
 }
 var op_orMap = {
-    type: "OP_ORMap",
+    type: "OPERATIONS_Map",
     propagation: CRDT.OP_BASED,
     crdt: {
         base_value: {
@@ -47,7 +47,7 @@ var op_orMap = {
                     return {key: key, value: value, unique: unique, removes: removes};
                 },
                 remote: function (data) {
-                    if(!data.key)return;
+                    if (!data.key)return;
 
                     var ret = {};
                     var key = data.key;
@@ -80,7 +80,7 @@ var op_orMap = {
                         } else {
                             var uniques = values.get(value);
                             if (!uniques) {
-                                var uniques = new ALMap();
+                                uniques = new ALMap();
                                 values.set(value, uniques);
                             }
                             uniques.set(unique, true);
@@ -89,21 +89,23 @@ var op_orMap = {
                     }
 
                     ret.removes = [];
-                    var value_keys = values.keys();
-                    for (var i = 0; i < value_keys.length; i++) {
-                        var unique_keys = values.get(value_keys[i]).keys();
-                        for (var j = 0; j < unique_keys.length; j++) {
-                            if (removes.contains(unique_keys[j])) {
-                                values.get(value_keys[i]).delete(unique_keys[j]);
+                    if (values) {
+                        var value_keys = values.keys();
+                        for (var i = 0; i < value_keys.length; i++) {
+                            var unique_keys = values.get(value_keys[i]).keys();
+                            for (var j = 0; j < unique_keys.length; j++) {
+                                if (removes.contains(unique_keys[j])) {
+                                    values.get(value_keys[i]).delete(unique_keys[j]);
+                                }
+                            }
+                            if (values.get(value_keys[i]).size() == 0) {
+                                values.delete(value_keys[i]);
+                                ret.removes.push({key: key, value: value_keys[i]});
                             }
                         }
-                        if (values.get(value_keys[i]).size() == 0) {
-                            values.delete(value_keys[i]);
-                            ret.removes.push({key: key, value: value_keys[i]});
+                        if (values.size() == 0) {
+                            this.state.adds.delete(key);
                         }
-                    }
-                    if (values.size() == 0) {
-                        this.state.adds.delete(key);
                     }
                     if (ret.removes.length == 0)
                         delete ret.removes;
@@ -135,6 +137,19 @@ var op_orMap = {
                 },
                 remote: function (data) {
                     return this.state.adds.keys()
+                }
+            },
+            asArray: {
+                local: function (key) {
+                    return null;
+                },
+                remote: function (data) {
+                    var ret = [];
+                    var keys = this.state.adds.keys();
+                    for (var i = 0; i < keys.length; i++) {
+                        ret.push([keys[i], this.state.adds.get(keys[i]).keys()]);
+                    }
+                    return ret;
                 }
             },
             delete: {
@@ -191,7 +206,7 @@ var op_orMap = {
 };
 
 if (typeof exports != "undefined") {
-    exports.OP_ORMap = op_orMap;
+    exports.OPERATIONS_Map = op_orMap;
 } else {
-    CRDT_LIB.OP_ORMap = op_orMap;
+    CRDT_LIB.OPERATIONS_Map = op_orMap;
 }

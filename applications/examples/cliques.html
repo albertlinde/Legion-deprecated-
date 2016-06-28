@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="Legion: counter examples">
+    <meta name="author" content="http://novasys.di.fct.unl.pt/~alinde/">
+
+    <title>Legion: Overlay Cliques examples</title>
+
+    <link href="./../../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./../../node_modules/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="./../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="./../../framework/client/adapter.js"></script>
+
+    <script src="./../legion-min.js"></script>
+    <script src="./../../node_modules/node-forge/js/forge.min.js"></script>
+    <script src="./../../node_modules/lzma/src/lzma_worker-min.js"></script>
+
+    <script type="text/javascript" src="./../../node_modules/vis/dist/vis.js"></script>
+    <link href="./../../node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css"/>
+
+</head>
+
+<body role="document">
+
+<!-- Fixed navbar -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Legion showcase</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="index.html">Back</a></li>
+                <li class="active"><a href="#">Overlay Cliques Examples</a></li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container theme-showcase" role="main">
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <h1>Legion Overlay Cliques examples</h1>
+
+        <p>This page contains examples of using the Legion framework.</p>
+    </div>
+    <div class="alert alert-danger" role="alert">
+        <strong>Warning!</strong> This page is currently being worked on.
+    </div>
+    <div class="alert alert-danger" role="alert">
+        <strong>Warning!</strong> Network data is static!
+    </div>
+
+    <div class="page-header">
+        <h1>Usage</h1>
+    </div>
+<pre class="prettyprint linenums">
+    var options = {
+        clientID: randInt(1000, 9000),
+        overlayProtocol: CliquesOverlay
+    };
+    var objectStore, map;
+    var legion = new Legion(options);
+
+    legion.overlay.setOnChange(function(change, peerIds, serverIds){
+        if(map)
+            map.set(clientID, {peers: peerIds, servers: serverIds});
+    });
+    legion.join();
+
+    legion.onJoin(function () {
+        objectStore = legion.getObjectStore();
+        map = objectStore.get("overlay_map", Legion.OPERATIONS_Map);
+
+        map.setOnStateChange(function (updates, meta) {
+            resetGraph(map.asArray());
+        });
+    }
+</pre>
+
+    <div class="page-header">
+        <h1>Network</h1>
+    </div>
+    <div>
+        <div class="row">
+            <button onclick="TODO()" id="add_client" type="button"
+                    class="btn btn-xs btn-success disabled">Add client
+            </button>
+        </div>
+        <div style="height: 500px; background-color: #FAFAFA" class="row col-md-8" id="mynetwork">
+
+        </div>
+    </div>
+
+    <script type="application/javascript">
+        function start() {
+            $("#add_client").removeClass("disabled");
+        }
+
+        var nodes = [
+            {id: 0, value: 50, label: 'localhost:8002'},
+            {id: 1, value: 2, label: '1'},
+            {id: 2, value: 2, label: '2'},
+            {id: 3, value: 2, label: '3'},
+            {id: 4, value: 2, label: '4'},
+            {id: 5, value: 2, label: '5'},
+            {id: 6, value: 2, label: '6'},
+            {id: 7, value: 2, label: '7'},
+            {id: 8, value: 2, label: '8'},
+            {id: 9, value: 2, label: '9'}
+        ];
+
+        // create connections between people
+        // value corresponds with the amount of contact between two people
+        var edges = [
+            {from: 1, to: 2, value: 1, title: 'pc'},
+            {from: 2, to: 4, value: 1, title: 'pc'},
+            {from: 5, to: 0, value: 1, title: 'pc'},
+            {from: 3, to: 5, value: 1, title: 'pc'},
+            {from: 4, to: 8, value: 1, title: 'pc'},
+            {from: 5, to: 4, value: 1, title: 'pc'},
+            {from: 6, to: 4, value: 1, title: 'pc'},
+            {from: 6, to: 2, value: 1, title: 'pc'},
+            {from: 6, to: 7, value: 1, title: 'pc'},
+            {from: 9, to: 7, value: 1, title: 'pc'},
+            {from: 3, to: 7, value: 1, title: 'pc'},
+            {from: 8, to: 1, value: 1, title: 'pc'},
+            {from: 2, to: 0, value: 1, title: 'sc'}
+        ];
+
+        // Instantiate our network object.
+        var container = document.getElementById('mynetwork');
+        var network;
+        function draw() {
+            // create people.
+            // value corresponds with the age of the person
+
+            var data = {
+                nodes: nodes,
+                edges: edges
+            };
+            var options = {
+                autoResize: true
+            };
+            network = new vis.Network(container, data, options);
+        }
+        draw();
+    </script>
+</div>
+
+</body>
+</html>
+

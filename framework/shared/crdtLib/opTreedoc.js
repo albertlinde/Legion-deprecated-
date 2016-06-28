@@ -74,7 +74,7 @@ if (typeof exports != "undefined") {
     DS_TableList = DS_TableList.DS_TableList;
 }
 var OP_Treedoc = {
-    type: "OP_Treedoc",
+    type: "OPERATIONS_List",
     propagation: CRDT.OP_BASED,
     crdt: {
         base_value: {
@@ -88,7 +88,20 @@ var OP_Treedoc = {
             return ret;
         },
         operations: {
-            addAll: {
+            asArray: {
+                local: function () {
+                    return null;
+                },
+                remote: function (data) {
+                    var ret = [];
+
+                    for (var i = 0; i < this.state.list.size(); i++) {
+                        ret.push(this.state.list.get(i).value);
+                    }
+
+                    return ret;
+                }
+            }, addAll: {
                 local: function (pos, values) {
                     return ({ids: generateIds(this.state.list, pos, values.length), values: values});
                 },
@@ -178,9 +191,9 @@ var OP_Treedoc = {
 };
 
 if (typeof exports != "undefined") {
-    exports.OP_Treedoc = OP_Treedoc;
+    exports.OPERATIONS_List = OP_Treedoc;
 } else {
-    CRDT_LIB.OP_Treedoc = OP_Treedoc;
+    CRDT_LIB.OPERATIONS_List = OP_Treedoc;
 }
 
 

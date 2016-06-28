@@ -1,5 +1,6 @@
+//TODO: this should be somewhere else.
 var CRDT_LIB = {};
-
+//TODO: debugging at the objects level.
 /**
  *
  * @param legion {Legion}
@@ -11,11 +12,15 @@ function ObjectStore(legion) {
     this.types = new ALMap();
     this.crdts = new ALMap();
 
+    //TODO: default CRDTS. (List, Map, Set, Counter)
+    //TODO: pre-defined CRDTS. (State,Op, Delta implementations)
+
     this.objectServer = null;
 
     this.peerSyncs = new ALMap();
 
     var os = this;
+    //TODO: re-define the OS:things
     this.handlers = {
         peerSync: {
             type: "OS:PS", callback: function (message) {
@@ -52,9 +57,11 @@ function ObjectStore(legion) {
             }
         }
     };
-
+    //TODO: re-define the whole queues thing. maybe we dont want to use it, and
+    // maybe it has to be on the level of connections themselves
     this.serverQueue = new ALQueue();
 
+    //TODO: re-define the options
     this.serverTimer = setInterval(function () {
         os.clearServerQueue();
     }, this.legion.options.objectOptions.serverInterval);
@@ -65,10 +72,12 @@ function ObjectStore(legion) {
         os.clearPeersQueue();
     }, this.legion.options.objectOptions.peerInterval);
 
+    //TODO: the following thing will be void.
     var peers = this.legion.overlay.getPeers();
     if (peers.length > 0) {
         console.warn("Already have peers!", peers.length);
     }
+    //TODO: same thing as above.
     for (var i = 0; i < peers.length; i++) {
         var p = new PeerSync(this.legion, this, peers[i]);
         this.peerSyncs.set(peers[i].remoteID, p);
@@ -83,9 +92,22 @@ function ObjectStore(legion) {
     this.legion.messagingAPI.setHandlerFor(this.handlers.version_vector_propagation.type, this.handlers.version_vector_propagation.callback);
 
 
+    //TODO: this should be parameterizable apart from signalling.
     this.legion.bullyProtocol.setOnBullyCallback(function (b) {
         os.checkIfMustHaveServer();
     });
+
+    this.defineCRDT(CRDT_LIB.STATE_Counter);
+    this.defineCRDT(CRDT_LIB.OPERATIONS_Counter);
+
+    this.defineCRDT(CRDT_LIB.OPERATIONS_Set);
+    this.defineCRDT(CRDT_LIB.STATE_Set);
+
+    this.defineCRDT(CRDT_LIB.OPERATIONS_Map);
+    this.defineCRDT(CRDT_LIB.STATE_Map);
+
+    this.defineCRDT(CRDT_LIB.OPERATIONS_List);
+    //this.defineCRDT(CRDT_LIB.STATE_List);
 
 }
 
@@ -101,15 +123,19 @@ ObjectStore.prototype.checkIfMustHaveServer = function () {
  * @param original
  */
 ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
+    //TODO: There should be no need for the original.
     var objectID = message.content.objectID;
     var hisVV = message.content.vv;
 
     var crdt = this.crdts.get(objectID);
     if (!crdt) {
+        //TODO: resolve the following:
         console.warn("Not implemented: vv for CRDT I do not have.");
         return;
     }
 
+    //TODO: well defined version vectors.
+    //TODO: the whole vv thing is to slow.
     var vvDiff = crdt.versionVectorDiff(crdt.getVersionVector(), hisVV);
 
     var os = this;
@@ -145,6 +171,7 @@ ObjectStore.prototype.gotVVFromNetwork = function (message, original) {
 };
 
 ObjectStore.prototype.sendVVToAll = function (objectID, except) {
+    //TODO: why and when is this used? this should not be used.
     var crdt = this.crdts.get(objectID);
     var request = {
         objectID: objectID,
@@ -157,6 +184,7 @@ ObjectStore.prototype.sendVVToAll = function (objectID, except) {
 };
 
 ObjectStore.prototype.sendVVToNode = function (objectID, receiver) {
+    //TODO: should ALWAYS be to a single connection.
     var crdt = this.crdts.get(objectID);
     var request = {
         objectID: objectID,
@@ -199,6 +227,7 @@ ObjectStore.prototype.onMessageFromServer = function (message, original, connect
 };
 
 ObjectStore.prototype.gotContentFromNetwork = function (message, original, connection) {
+    //TODO: redefine the whole content objects messaging stuff.
     if (!original.options)
         original.options = {};
     original.options.except = connection;
@@ -261,6 +290,8 @@ ObjectStore.prototype.gotContentFromNetwork = function (message, original, conne
  * @param message
  */
 ObjectStore.prototype.propagateMessage = function (message, extra) {
+    //TODO: remove the extra.
+    //TODO: remove this as a whole, there should be no INDEPENDENT messages on this level anymore!
     message.extra = extra;
     this.serverQueue.push(message);
     this.peersQueue.push(message);
@@ -273,6 +304,7 @@ ObjectStore.prototype.disconnectFromObjectServer = function () {
 };
 
 ObjectStore.prototype.connectToObjectServer = function () {
+    //TODO: the if is not enough. concurrent calls (see signalling server)
     if (!this.objectServer && this.legion.options.objectServerConnection)
         new this.legion.options.objectServerConnection.type(this.legion.options.objectServerConnection.server, this, this.legion);
 };
@@ -292,18 +324,18 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
         switch (pop.type) {
             case "OP":
                 /*
-                //NOTICE: papoc only start
-                var objectID = pop.objectID;
-                var thing = "" + objectID;
-                if (done.contains(thing))
-                    return;
-                else
-                    done.set(thing, true);
-                this.sendVVToNode(objectID, this.objectServer.peerConnection.remoteID);
-                return;
+                 //NOTICE: papoc only start
+                 var objectID = pop.objectID;
+                 var thing = "" + objectID;
+                 if (done.contains(thing))
+                 return;
+                 else
+                 done.set(thing, true);
+                 this.sendVVToNode(objectID, this.objectServer.peerConnection.remoteID);
+                 return;
 
-                //NOTICE: papoc only end
-                */
+                 //NOTICE: papoc only end
+                 */
                 var objectID = pop.objectID;
                 var clientID = pop.clientID;
                 var operationID = pop.operationID;
@@ -368,6 +400,7 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
 };
 
 ObjectStore.prototype.clearServerQueue = function () {
+    //TODO: re-define what happens in all cases.
     if (!this.legion.bullyProtocol.amBullied()) {
         if (!this.objectServer) {
             console.log("Don't have a connection to objects server. Will try again soon.");
@@ -384,7 +417,7 @@ ObjectStore.prototype.clearServerQueue = function () {
     }
 
     if (this.serverQueue.size() > 0) {
-        if(debug)console.log("Messages in server queue: " + this.serverQueue.size());
+        if (debug)console.log("Messages in server queue: " + this.serverQueue.size());
         var pop = this.serverQueue.pop();
         var done = new ALMap();
         while (pop) {
@@ -407,18 +440,18 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
         switch (pop.type) {
             case "OP":
                 /*
-                //NOTICE: papoc only start
-                var objectID = pop.objectID;
-                var thing = "" + objectID;
-                if (done.contains(thing))
-                    return;
-                else
-                    done.set(thing, true);
-                this.sendVVToAll(objectID, options.except);
-                return;
+                 //NOTICE: papoc only start
+                 var objectID = pop.objectID;
+                 var thing = "" + objectID;
+                 if (done.contains(thing))
+                 return;
+                 else
+                 done.set(thing, true);
+                 this.sendVVToAll(objectID, options.except);
+                 return;
 
-                //NOTICE: papoc only end
-                */
+                 //NOTICE: papoc only end
+                 */
                 var objectID = pop.objectID;
                 var clientID = pop.clientID;
                 var operationID = pop.operationID;
@@ -502,7 +535,7 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
 
 ObjectStore.prototype.clearPeersQueue = function () {
     if (this.peersQueue.size() > 0) {
-        if(debug)console.log("Messages in peers queue: " + this.peersQueue.size());
+        if (debug)console.log("Messages in peers queue: " + this.peersQueue.size());
         var pop = this.peersQueue.pop();
         var done = new ALMap();
         while (pop) {
@@ -521,6 +554,7 @@ ObjectStore.prototype.defineCRDT = function (crdt) {
         console.error("Can't redefine existing CRDT.", crdt);
     } else {
         this.types.set(crdt.type, crdt);
+        Legion[crdt.type] = crdt.type;
     }
 };
 
@@ -531,6 +565,7 @@ ObjectStore.prototype.defineCRDT = function (crdt) {
  * @returns {Object}
  */
 ObjectStore.prototype.get = function (objectID, type, dontSendVV) {
+    //TODO: define what get and getCRDT do.
     if (!this.types.contains(type)) {
         console.error("No typedef found for CRDT.", type);
     } else {

@@ -1,3 +1,4 @@
+//TODO: make constants be somewhere nice (from CRDT_Database also)
 var PORT = 8004;
 
 var PeerSync = require('./../shared/peerSync.js').PeerSync;
@@ -11,6 +12,7 @@ var ALMap = require('./../shared/ALMap.js').ALMap;
 
 var CRDT = require('./../shared/crdt.js').CRDT;
 
+//TODO: should not be here.
 var CRDT_LIB = {};
 CRDT_LIB.STATE_Counter = require('./../shared/crdtLib/stateCounter.js').STATE_Counter;
 CRDT_LIB.OP_ORSet = require('./../shared/crdtLib/opSet.js').OP_ORSet;
@@ -20,6 +22,7 @@ CRDT_LIB.DELTA_Set = require('./../shared/crdtLib/deltaSet.js').DELTA_Set;
 
 var util = require('util');
 var WebSocket = require('ws');
+//TODO: use storage... (not here)
 var storage = require('node-persist');
 
 var WebSocketServer;
@@ -54,6 +57,8 @@ function initService() {
         var nodes = [];
 
         wss.on('connection', function (socket) {
+                //TODO: how does security work here?
+                //TODO: hardcoded ids.
                 var os = {
                     id: "localhost:8004",
                     messageCount: 0
@@ -71,10 +76,10 @@ function initService() {
                  * @param data {Object}
                  * @param callback {Function}
                  */
-
+                //TODO: why is this?
                 db.versionVectorDiff = CRDT.versionVectorDiff;
 
-
+                //TODO: will be ClientSync
                 var ps = new PeerSync(db, db, socket);
                 db.handlers = {
                     peerSync: {

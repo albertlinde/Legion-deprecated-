@@ -1,6 +1,9 @@
 #NPM modules
 /node_modules
 
+#IDEA generated files
+.idea
+
 # Compiled source #
 ###################
 *.com

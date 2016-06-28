@@ -28,6 +28,8 @@ function initService() {
     var iterableNodes = [];
     var messageCount = 0;
 
+    //TODO: id is hardcoded.
+    //TODO: on server re-boot message generation breaks.
     /**
      *
      * @param type {string}
@@ -48,13 +50,13 @@ function initService() {
      * @returns {number}
      */
     var computeDistance = function (sourceID, TargetID) {
+        //TODO: usage?
         return 1;
     };
 
     var authority = new AuthServer();
-    //console.log(authority.getKey(1));
-    //console.log(Object.keys(authority.getKey(1)));
 
+    //TODO: well defined security and parameters
     setInterval(function () {
         var HB = generateMessage("SHB");
         HB.timestamp = Date.now();
@@ -73,9 +75,11 @@ function initService() {
     wss.on('connection', function (socket) {
             util.log("Connection.");
             socket.on('message', function incoming(message) {
-                    util.log(message);
+                    //util.log(message);
+                    //TODO: try catch on parse.
                     var parsed = JSON.parse(message);
                     if (parsed.type == "Auth") {
+                        //TODO: again, define security.
                         var auth = authority.verify(parsed);
                         socket.send(JSON.stringify(auth));
                         if (auth.auth.result == "Failed") {

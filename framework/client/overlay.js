@@ -56,6 +56,7 @@ Overlay.prototype.getPeers = function (amount) {
  * @returns {Array.<Object>}
  */
 Overlay.prototype.shuffle = function (array) {
+    //TODO: why is this here?
     var tmp, current, top = array.length;
     if (top) while (--top) {
         current = Math.floor(Math.random() * (top + 1));

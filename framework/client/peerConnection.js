@@ -1,3 +1,5 @@
+//TODO: constants should not be here.
+//TODO: a lot of messages send the same data. optimize sdp.
 var DEFAULT_PEER_INIT_TIMEOUT = 15 * 1000;
 
 var KEEP_ALIVE_INTERVAL = 10000;
@@ -27,6 +29,7 @@ function PeerConnection(remoteID, legion) {
 }
 
 PeerConnection.prototype.keepAlive = function () {
+    //TODO: keep alive should be used to verify key validity.
     if (this.lastKeepAlive + KEEP_ALIVE_MUST_HAVE < Date.now()) {
         console.warn("Peer " + this.legion.id + " keepAlive timeout from " + this.remoteID + ".");
         if (this.isAlive())
@@ -38,6 +41,7 @@ PeerConnection.prototype.keepAlive = function () {
 };
 
 PeerConnection.prototype.onInitTimeout = function () {
+    //TODO: confirm startup failure control. (and cancellALll)
     console.warn("Peer " + this.legion.id + " connection timeout before getting offer from " + this.remoteID + ".");
     this.cancelAll(true);
 };
@@ -131,6 +135,7 @@ PeerConnection.prototype.return_ice = function (candidate) {
 
 PeerConnection.prototype.onicecandidate = function (event) {
     if (event.candidate) {
+        console.info(event.candidate);
         this.legion.connectionManager.sendICE(event.candidate, this.unique, this);
     }
 };
@@ -156,6 +161,7 @@ PeerConnection.prototype.startLocal = function () {
     };
 
     this.peer.createOffer(function (offer) {
+            console.info(offer);
             pc.peer.setLocalDescription(offer);
             pc.legion.connectionManager.sendStartOffer(offer, pc.unique, pc);
         }, function (error) {
@@ -203,6 +209,7 @@ PeerConnection.prototype.getMeta = function () {
 };
 
 PeerConnection.prototype.send = function (message) {
+    //TODO: as in serverconnection, check message type
     if (typeof message == "object") {
         message = JSON.stringify(message);
     }
@@ -219,6 +226,7 @@ PeerConnection.prototype.send = function (message) {
     }
 };
 
+//TODO: the following should not be here:
 /**
  * WebRTC parameters.
  */

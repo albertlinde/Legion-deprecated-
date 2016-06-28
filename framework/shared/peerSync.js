@@ -12,6 +12,9 @@
  *      clear the message queue.
  *
  */
+
+//TODO: sever and peer sync should be decoupled(-able).
+//TODO: the whole synchronization seems messy
 if (typeof exports != "undefined") {
     exports.PeerSync = PeerSync;
 
@@ -52,6 +55,7 @@ function PeerSync(legion, objectStore, peerConnection) {
      * @type {ALMap}
      */
     this.sharedObjects = new ALMap();
+    //TODO: this can change?
 
     var ps = this;
     this.psTimeout = setTimeout(function () {
@@ -60,6 +64,7 @@ function PeerSync(legion, objectStore, peerConnection) {
 }
 
 PeerSync.prototype.close = function () {
+    //TODO: should this have permission to close a data connection?
     this.peerConnection.close();
     this.finalize();
 };

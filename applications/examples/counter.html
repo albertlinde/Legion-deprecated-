@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="Legion: counter examples">
+    <meta name="author" content="http://novasys.di.fct.unl.pt/~alinde/">
+
+    <title>Legion: Counter examples</title>
+
+    <link href="./../../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./../../node_modules/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="./../../node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="./../../framework/client/adapter.js"></script>
+
+    <script src="./../../applications/legion-min.js"></script>
+    <script src="./../../node_modules/node-forge/js/forge.min.js"></script>
+    <script src="./../../node_modules/lzma/src/lzma_worker-min.js"></script>
+</head>
+
+<body role="document">
+
+<!-- Fixed navbar -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Legion showcase</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="index.html">Back</a></li>
+                <li class="active"><a href="#">Counter Examples</a></li>
+            </ul>
+        </div>
+        <!--/.nav-collapse -->
+    </div>
+</nav>
+
+<div class="container theme-showcase" role="main">
+
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="jumbotron">
+        <h1>Legion Counter examples</h1>
+
+        <p>This page contains examples of using the Legion framework.</p>
+    </div>
+    <div class="page-header">
+        <h1>Usage</h1>
+    </div>
+<pre class="prettyprint linenums">
+    var legion = new Legion();
+    legion.join();
+    var objectStore = legion.getObjectStore();
+
+    var counter_state = objectStore.get("objectID1", Legion.STATE_Counter);
+    var counter_operations = objectStore.get("objectID2", Legion.OPERATIONS_Counter);
+    var counter_delta = objectStore.get("objectID3", Legion.DELTA_Counter);
+
+    counter_*.increment(1); //Value >= 1
+    counter_*.decrement(1); //Value >= 1
+
+    console.log(counter_*.getValue()); //Integer
+</pre>
+    <div class="page-header">
+        <h1>Example</h1>
+    </div>
+
+    <div id="example">
+        <div class="row">
+            <div class="col-md">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Add(1)</th>
+                        <th>Remove(1)</th>
+                        <th>Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>State</td>
+                        <td>
+                            <button onclick="inc_state()" id="inc_state" type="button"
+                                    class="btn btn-xs btn-success disabled">Increment
+                            </button>
+                        </td>
+                        <td>
+                            <button onclick="dec_state()" id="dec_state" type="button"
+                                    class="btn btn-xs btn-success disabled">Decrement
+                            </button>
+                        </td>
+                        <td><span id="counter_state_value"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Operation</td>
+                        <td>
+                            <button onclick="inc_opers()" id="inc_ops" type="button"
+                                    class="btn btn-xs btn-success disabled">Increment
+                            </button>
+                        </td>
+                        <td>
+                            <button onclick="dec_opers()" id="dec_ops" type="button"
+                                    class="btn btn-xs btn-success disabled">Decrement
+                            </button>
+                        </td>
+                        <td><span id="counter_operations_value"></span></td>
+                    </tr>
+                    <tr>
+                        <td>Delta</td>
+                        <td>
+                            <button onclick="inc_delta()" id="inc_delta" type="button"
+                                    class="btn btn-xs btn-danger disabled">Increment
+                            </button>
+                        </td>
+                        <td>
+                            <button onclick="dec_delta()" id="dec_delta" type="button"
+                                    class="btn btn-xs btn-danger disabled">Decrement
+                            </button>
+                        </td>
+                        <td><span id="counter_delta_value"></span></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="application/javascript">
+        var counter_state;
+        var counter_operations;
+        var counter_delta;
+
+        var legion = new Legion();
+        legion.join();
+        var objectStore = legion.getObjectStore();
+
+        counter_state = objectStore.get("counter_1_state", Legion.STATE_Counter);
+        counter_operations = objectStore.get("counter_2_operations", Legion.OPERATIONS_Counter);
+        //counter_delta = objectStore.get("counter_3_delta", CRDT_LIB.DELTA_Counter);
+
+        counter_state.setOnStateChange(function (updates, meta) {
+            console.log("State Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(counter_state.getValue()));
+            $("#counter_state_value")[0].textContent = counter_state.getValue();
+        });
+        counter_operations.setOnStateChange(function (updates, meta) {
+            console.log("Operations Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(counter_operations.getValue()));
+            $("#counter_operations_value")[0].textContent = counter_operations.getValue();
+        });
+        //counter_delta.setOnStateChange(function (updates, meta) {
+        //    console.log("Delta Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(counter_delta.getValue()));
+        //});
+
+
+        legion.onJoin(function () {
+
+            $("#inc_state").removeClass("disabled");
+            $("#dec_state").removeClass("disabled");
+
+            $("#inc_ops").removeClass("disabled");
+            $("#dec_ops").removeClass("disabled");
+
+            //$("#inc_delta").removeClass("disabled");
+            //$("#dec_delta").removeClass("disabled");
+
+            $("#counter_state_value")[0].textContent = counter_state.getValue();
+            $("#counter_operations_value")[0].textContent = counter_operations.getValue();
+            //$("#counter_delta_value")[0].textContent = counter_delta.getValue();
+        });
+
+        var inc_state = function () {
+            counter_state.increment(1);
+        };
+        var inc_opers = function () {
+            counter_operations.increment(1);
+        };
+        var inc_delta = function () {
+            //counter_delta.increment(1);
+        };
+        var dec_state = function () {
+            counter_state.decrement(1);
+        };
+        var dec_opers = function () {
+            counter_operations.decrement(1);
+        };
+        var dec_delta = function () {
+            //counter_delta.decrement(1);
+        };
+
+    </script>
+</div>
+
+</body>
+</html>
+
