@@ -59,11 +59,8 @@
 
         <p>This page contains examples of using the Legion framework.</p>
     </div>
-    <div class="alert alert-danger" role="alert">
+    <div class="alert alert-warning" role="alert">
         <strong>Warning!</strong> This page is currently being worked on.
-    </div>
-    <div class="alert alert-danger" role="alert">
-        <strong>Warning!</strong> Network data is static!
     </div>
 
     <div class="page-header">
@@ -98,7 +95,7 @@
     </div>
     <div>
         <div class="row">
-            <button onclick="TODO()" id="add_client" type="button"
+            <button onclick="start()" id="add_client" type="button"
                     class="btn btn-xs btn-success disabled">Add client
             </button>
         </div>
@@ -108,48 +105,95 @@
     </div>
 
     <script type="application/javascript">
+        $("#add_client").removeClass("disabled");
+
+
         function start() {
-            $("#add_client").removeClass("disabled");
+            var clientID = 1000 + Math.floor((Math.random() * 9999) % (10000));
+            var options = {
+                clientID: clientID,
+                overlayProtocol: CliquesOverlay
+            };
+            var objectStore, map;
+            var legion = new Legion(options);
+
+            legion.overlay.setOnChange(function (change, peerIds, serverIds) {
+                if (map)
+                    map.set(clientID, {peers: peerIds, servers: serverIds});
+            });
+            legion.join();
+
+            legion.onJoin(function () {
+
+
+                objectStore = legion.getObjectStore();
+                map = objectStore.get("overlay_map", Legion.OPERATIONS_Map);
+
+                map.setOnStateChange(function (updates, meta) {
+                    resetGraph(map.asArray());
+                });
+            });
         }
 
+
+        var resetGraph = function (array) {
+            var nodes = new ALMap();
+            var edges = [];
+
+            for (var i = 0; i < array.length; i++) {
+                var id1 = parseInt(array[i][0]);
+                var data = JSON.parse(array[i][1]);
+                console.log(data);
+                for (var j = 0; j < data.peers.length; j++) {
+                    var id2 = parseInt(data.peers[j]);
+                    nodes.set(id2, true);
+                    edges.push({from: id1, to: id2, value: 1, title: 'pc'});
+                }
+                for (var j = 0; j < data.servers.length; j++) {
+                    nodes.set(j, true);
+                    edges.push({from: id1, to: j, value: 2, title: 'sc'});
+                }
+                nodes.set(id1, true);
+            }
+
+            var nodes2 = nodes.keys().map(function (currentObject) {
+                if (parseInt(currentObject) < 100) {
+                    return {id: parseInt(currentObject), value: 10, label: currentObject}
+                } else
+                    return {id: parseInt(currentObject), value: 1, label: currentObject}
+            });
+
+            reset(nodes2, edges);
+        };
+
+        var reset = function (nodes, edges) {
+            var data = {
+                nodes: nodes,
+                edges: edges
+            };
+            var options = {
+                autoResize: true
+            };
+            console.info(data);
+            network = new vis.Network(container, data, options);
+        };
+
         var nodes = [
-            {id: 0, value: 50, label: 'localhost:8002'},
-            {id: 1, value: 2, label: '1'},
-            {id: 2, value: 2, label: '2'},
-            {id: 3, value: 2, label: '3'},
-            {id: 4, value: 2, label: '4'},
-            {id: 5, value: 2, label: '5'},
-            {id: 6, value: 2, label: '6'},
-            {id: 7, value: 2, label: '7'},
-            {id: 8, value: 2, label: '8'},
-            {id: 9, value: 2, label: '9'}
+            {id: 0, value: 1, label: '1'},
+            {id: 1, value: 1, label: '2'}
         ];
 
         // create connections between people
         // value corresponds with the amount of contact between two people
         var edges = [
             {from: 1, to: 2, value: 1, title: 'pc'},
-            {from: 2, to: 4, value: 1, title: 'pc'},
-            {from: 5, to: 0, value: 1, title: 'pc'},
-            {from: 3, to: 5, value: 1, title: 'pc'},
-            {from: 4, to: 8, value: 1, title: 'pc'},
-            {from: 5, to: 4, value: 1, title: 'pc'},
-            {from: 6, to: 4, value: 1, title: 'pc'},
-            {from: 6, to: 2, value: 1, title: 'pc'},
-            {from: 6, to: 7, value: 1, title: 'pc'},
-            {from: 9, to: 7, value: 1, title: 'pc'},
-            {from: 3, to: 7, value: 1, title: 'pc'},
-            {from: 8, to: 1, value: 1, title: 'pc'},
-            {from: 2, to: 0, value: 1, title: 'sc'}
+            {from: 2, to: 4, value: 1, title: 'pc'}
         ];
 
         // Instantiate our network object.
         var container = document.getElementById('mynetwork');
         var network;
         function draw() {
-            // create people.
-            // value corresponds with the age of the person
-
             var data = {
                 nodes: nodes,
                 edges: edges
