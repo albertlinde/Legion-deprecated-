@@ -1,13 +1,6 @@
 # Legion
 
-**WIP:**  
-Currently re-building the examples to make them easier to understand. \
-Existing data-types are being worked on.\
-Data synchronization between peers and server is under review.\
-Existing security features are under review.
-
-The Legion code base.\
-Version 0.2.0.
+The Legion code base Version 0.2.0.
 
 ### Installation
 You need node (npm) [https://nodejs.org/en/].
@@ -47,6 +40,12 @@ Logs can be found in the folder **run**.
 ```
 
 ---
+
+**WIP:**
+* Currently re-building the examples to make them easier to understand. 
+* Existing data-types are being worked on.
+* Data synchronization between peers and server is under review.
+* Existing security features are under review.
 
 ### Sub projects
 [**LegionOverlayVis**](https://github.com/albertlinde/LegionOverlayVis) - A peer-to-peer overlay network visualisation tool.
