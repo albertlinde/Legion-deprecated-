@@ -2,33 +2,41 @@ function Legion(options) {
     this.options = options;
     this.onJoinCallback = null;
 
-    if (!this.options) {
-        this.options = {
-            clientID: this.randInt(),
-            overlayProtocol: B2BOverlay,
-            messagingProtocol: FloodMessaging,
-            objectOptions: {
-                serverInterval: 5000,
-                peerInterval: 200
-            },
-            bullyProtocol: {
-                type: ServerBully
-            },
-            signallingConnection: {
-                type: ServerConnection,
-                server: {ip: "localhost", port: 8002}
-            },
-            objectServerConnection: {
-                type: ObjectServerConnection,
-                server: {ip: "localhost", port: 8004}
-
-            },
-            securityProtocol: SecurityProtocol
-        }
-    } else {
-        //TODO: check if options has everything well defined.
+    if (!options.clientID) {
+        options.clientID = this.randInt();
     }
-
+    if (!options.overlayProtocol) {
+        options.overlayProtocol = B2BOverlay;
+    }
+    if (!options.messagingProtocol) {
+        options.messagingProtocol = FloodMessaging;
+    }
+    if (!options.objectOptions) {
+        options.objectOptions = {
+            serverInterval: 5000,
+            peerInterval: 200
+        };
+    }
+    if (!options.bullyProtocol) {
+        options.bullyProtocol = {
+            type: ServerBully
+        };
+    }
+    if (!options.signallingConnection) {
+        options.signallingConnection = {
+            type: ServerConnection,
+            server: {ip: "localhost", port: 8002}
+        };
+    }
+    if (!options.objectServerConnection) {
+        options.objectServerConnection = {
+            type: ObjectServerConnection,
+            server: {ip: "localhost", port: 8004}
+        };
+    }
+    if (!options.securityProtocol) {
+        options.securityProtocol = SecurityProtocol;
+    }
     //TODO: this seems a bad fix:
     this.messageCount = this.randInt();
     this.id = this.options.clientID;
