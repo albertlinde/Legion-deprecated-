@@ -3,6 +3,7 @@ function Overlay(legion) {
     this.peers = new ALMap();
 
     this.overlayProtocol = new this.legion.options.overlayProtocol(this, this.legion);
+    this.onChangeCallback = null;
 }
 
 /**
@@ -16,21 +17,41 @@ Overlay.prototype.peerCount = function () {
 Overlay.prototype.addPeer = function (peerConnection) {
     this.peers.set(peerConnection.remoteID, peerConnection);
     this.overlayProtocol.onClientConnection(peerConnection);
+    this.changedOverlay();
 };
 
 Overlay.prototype.removePeer = function (peerConnection) {
     this.peers.delete(peerConnection.remoteID);
     this.overlayProtocol.onClientDisconnect(peerConnection);
+    this.changedOverlay();
 };
 
 Overlay.prototype.onServerDisconnect = function (serverConnection) {
     this.overlayProtocol.onServerDisconnect(serverConnection);
+    this.changedOverlay();
 };
 
 Overlay.prototype.onServerConnection = function (serverConnection) {
     this.overlayProtocol.onServerConnection(serverConnection);
+    this.changedOverlay();
 };
 
+Overlay.prototype.changedOverlay = function (change) {
+    var peers = this.peers.keys();
+    var servers = [];
+    if (!this.legion.bullyProtocol.amBullied()) {
+        servers.push("SignallingServer");
+        servers.push("ObjectServer");
+    }
+
+    if (this.onChangeCallback) {
+        this.onChangeCallback(change, peers, servers);
+    }
+};
+
+Overlay.prototype.setOnChange = function (callback) {
+    this.onChangeCallback = callback;
+};
 
 /**
  * Returns a randomized sample from the connected peers.
