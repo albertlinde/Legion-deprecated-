@@ -85,6 +85,15 @@ MessagingAPI.prototype.sendTo = function (peer, message) {
     this.messagingProtocol.sendTo(peer, message);
 };
 
+/**
+ * Propagates a message to a given amount of peers.
+ * message.N is divided over all peers.
+ * if the second argument is true, all peers get (at most) message.N = 1 and
+ * the rest of N is sent to the signalling server.
+ * If N is lower than the number of peers, message is sent to a subset of peers and never to the server.
+ * @param message
+ * @param toServerIfBully
+ */
 MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
     //TODO: see this.sendTo
     if (!message.N) {
@@ -92,30 +101,50 @@ MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
         return;
     }
     var peers = this.legion.overlay.getPeers(message.N);
-    var missing = 0;
-    if (peers.length == message.N) {
-        message.N = 1;
+
+    var firstSet = 0;
+    var secondSet = 0;
+    var firstSetAmount = 0;
+    var toServer = 0;
+
+    if (toServerIfBully && this.legion.bullyProtocol.amBully()) {
+        firstSet = 0;
+        secondSet = 1;
+        firstSetAmount = 0;
+        toServer = message.N - peers.length;
     } else {
-        missing = message.N - peers.length;
+        var amount = Math.floor(message.N / peers.length);
+        firstSet = amount + 1;
+        secondSet = amount;
+        firstSetAmount = Math.ceil(message.N % peers.length);
+        toServer = message.N - peers.length;
     }
-    for (var i = 0; i < peers.length; i++) {
-        if (i == 0 && !this.legion.bullyProtocol.amBullied()) {
-            var m2 = JSON.parse(JSON.stringify(message));
-            m2.N = 1 + missing;
-            if (peers[i].remoteID != message.sender) {
-                peers[i].send(m2);
-            }
+
+    var messageFirstSet = JSON.parse(JSON.stringify(message));
+    messageFirstSet.N = firstSet;
+    var messageSecondSet = JSON.parse(JSON.stringify(message));
+    messageSecondSet.N = secondSet;
+
+    for (var i = 0; i < firstSetAmount; i++) {
+        if (peers[i].remoteID != message.sender) {
+            peers[i].send(messageFirstSet);
         } else {
-            if (peers[i].remoteID != message.sender) {
-                peers[i].send(message);
-            }
+            toServer++;
         }
     }
-    if (!this.legion.bullyProtocol.amBullied()) {
+    for (var i = firstSetAmount; i < peers.length; i++) {
+        if (peers[i].remoteID != message.sender) {
+            peers[i].send(messageSecondSet);
+        } else {
+            toServer++;
+        }
+    }
+
+    if (toServer > 0 && toServerIfBully && this.legion.bullyProtocol.amBully()) {
+        var messageServer = JSON.parse(JSON.stringify(message));
+        messageServer.N = toServer;
         if (this.legion.connectionManager.serverConnection && this.legion.connectionManager.serverConnection.isAlive()) {
-            var m3 = JSON.parse(JSON.stringify(message));
-            m3.N = 1 + missing;
-            this.legion.connectionManager.serverConnection.send(m3);
+            this.legion.connectionManager.serverConnection.send(messageServer);
         }
     }
 };
