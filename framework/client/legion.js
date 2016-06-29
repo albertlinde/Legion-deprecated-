@@ -1,5 +1,6 @@
 function Legion(options) {
     this.options = options;
+    this.joined = false;
     this.onJoinCallback = null;
 
     if (!options.clientID) {
@@ -182,16 +183,27 @@ Legion.prototype.randInt = function () {
     return Math.floor((Math.random() * Number.MAX_VALUE) % (Math.pow(10, 10)));
 };
 
+/**
+ * Sets a callback which is called when a connection is first established to a signalling server.
+ * If a connection has already been made the callback is called immediately.
+ * @param callback {Function}
+ */
 Legion.prototype.onJoin = function (callback) {
-    //TODO: onJoin when already joined.
-    this.onJoinCallback = callback;
+    if (this.joined) {
+        callback();
+    } else {
+        this.onJoinCallback = callback;
+    }
 };
 
 Legion.prototype.onOpenServer = function (serverConnection) {
     //TODO: signalling is seperate from secure and from data.
     //TODO: error on verifying permissions to server.
-    if (this.onJoinCallback) {
-        this.onJoinCallback();
-        this.onJoinCallback = null;
+    if (!this.joined) {
+        this.joined = true;
+        if (this.onJoinCallback) {
+            this.onJoinCallback();
+            this.onJoinCallback = null;
+        }
     }
 };
