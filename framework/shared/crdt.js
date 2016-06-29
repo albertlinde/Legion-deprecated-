@@ -3,53 +3,10 @@ if (typeof exports != "undefined") {
     exports.CRDT = CRDT;
 }
 
-
-//TODO: the crdt_type thing is not used. should be defined else-where.
-//TODO: not all crdts have merge, compare, etc...
-/**
- * Notice: this object's only use is type checking.
- * @type {{type: string, propagation: number, crdt: {base_value: Function, getValue: Function, operations: {}, merge: Function, compare: Function, fromJSONString: Function, toJSONString: Function}}}
- */
-var crtd_type = {
-    type: "crdtType",
-    propagation: 0 | 1,
-    crdt: {
-        /**
-         * Returns the starting (empty) internal CRDT state.
-         * @type {Object}
-         */
-        base_value: function () {
-        },
-
-        getValue: function () {
-        },
-
-        operations: {},
-
-        merge: function (local, remote) {
-        },
-
-        compare: function (local, remote) {
-        },
-
-        fromJSONString: function (jsObject) {
-        },
-
-        toJSONString: function (state) {
-        },
-        garbageCollect: function (gcvv) {
-        },
-        getDelta: function (fromVV) {
-        },
-        applyDelta: function (statePart, vv, gcvv) {
-        }
-    }
-};
-
 /**
  * CRDT instance as encapsulation.
  * @param objectID
- * @param crdt {crtd_type}
+ * @param crdt
  * @param objectStore {ObjectStore | CRDT_Database}
  * @constructor
  */
@@ -57,65 +14,12 @@ function CRDT(objectID, crdt, objectStore) {
     //TODO: {ObjectStore | CRDT_Database} -> there should be well defined interfaces.
     this.objectStore = objectStore;
     this.objectID = objectID;
-    //TODO: a crdt with a crdt which has a crdt?
-    //TODO: well defined CRDT types.
-    // the following things are only valid for some cases.
-    // maybe even separate to different sub crtd objects?
     this.crdt = crdt;
 
+    /**
+     * Create the default value (empty object).
+     */
     this.state = {};
-
-    /**
-     * Returns the CRDT value (application use-able).
-     * @type {Function}
-     */
-    this.getValue = crdt.crdt.getValue;
-
-    /**
-     * Receives two arguments, returning the merge of both objects applied on the first argument.
-     * Returns {mergeResult = local, stateChange = amount}.
-     * mergeResult has the merge result.
-     * stateChange has the value to be sent to the application.
-     * @type {Function}
-     */
-    this.merge = crdt.crdt.merge;
-
-    /**
-     * Receives two arguments (state).
-     * Returns L,E,H if the second argument is, in order, lower, equal or higher then the first argument.
-     * Returns MM if no conclusion can be made (i.e., must merge).
-     * Returns {CRDT.STATE.COMPARE_RESPONSE.EQUALS|CRDT.STATE.COMPARE_RESPONSE.LOWER|CRDT.STATE.COMPARE_RESPONSE.HIGHER|CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE}
-     * @type {Function}
-     * @returns {CRDT.STATE.COMPARE_RESPONSE.EQUALS|CRDT.STATE.COMPARE_RESPONSE.LOWER|CRDT.STATE.COMPARE_RESPONSE.HIGHER|CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE}
-     *
-     */
-    this.compare = crdt.crdt.compare;
-
-    /**
-     * Accepts a JSON representation (jsObject, i.e., JSON parsed) of a CRDT and returns an Javascript Object.
-     * @type {Function}
-     */
-    this.fromJSONString = crdt.crdt.fromJSONString;
-
-    /**
-     * Accepts a Javascript object (CRDT state) and returns a JSON representation.
-     * @type {Function}
-     */
-    this.toJSONString = crdt.crdt.toJSONString;
-
-    this.garbageCollect = crdt.crdt.garbageCollect;
-    this.getDelta = crdt.crdt.getDelta;
-    this.applyDelta = crdt.crdt.applyDelta;
-
-    /**
-     * State of garbace collection.
-     * @type {{number: number}}
-     */
-    this.gcvv = {};
-
-    /**
-     * Creates a default value (empty object).
-     */
     var stateKeys = Object.keys(this.crdt.crdt.base_value.state);
     for (var i = 0; i < stateKeys.length; i++) {
         if (typeof this.crdt.crdt.base_value.state[stateKeys[i]] == "function") {
@@ -125,27 +29,33 @@ function CRDT(objectID, crdt, objectStore) {
         }
     }
 
-    this.locals = [];
-    this.remotes = [];
-
-    this.localOP = 0;
-
     /**
-     * Each pos (clientID) contain  s an ALMap, which contains at each pos the opID and the l_ret value.
+     * Returns the CRDT value (application use-able).
+     * @type {Function}
      */
-    this.opHistory = new ALMap();
+    this.getValue = crdt.crdt.getValue;
 
-    /**
-     * Each pos (clientID) contains the highest op applied.
-     * @type {ALMap}
-     */
-    this.versionVector = new ALMap();
     /**
      * Assigns local operations.
      */
     var keys = Object.keys(this.crdt.crdt.operations);
     var c = this;
     if (this.crdt.propagation == CRDT.OP_BASED) {
+        /**
+         * Each pos (clientID) contain  s an ALMap, which contains at each pos the opID and the l_ret value.
+         */
+        this.opHistory = new ALMap();
+        /**
+         * Each pos (clientID) contains the highest op applied.
+         * @type {ALMap}
+         */
+        this.versionVector = new ALMap();
+
+        this.localOP = 0;
+
+        this.locals = [];
+        this.remotes = [];
+
         for (var i = 0; i < keys.length; i++) {
             (function (key) {
                 c.locals[key] = c.crdt.crdt.operations[key].local;
@@ -179,6 +89,38 @@ function CRDT(objectID, crdt, objectStore) {
             })(keys[i]);
         }
     } else if (this.crdt.propagation == CRDT.STATE_BASED) {
+        /**
+         * Receives two arguments, returning the merge of both objects applied on the first argument.
+         * Returns {mergeResult, stateChange}.
+         * mergeResult has the merge result.
+         * stateChange has the value to be sent to the application.
+         * @type {Function}
+         */
+        this.merge = crdt.crdt.merge;
+
+        /**
+         * Receives two arguments (state).
+         * Returns L,E,H if the second argument is, in order, lower, equal or higher then the first argument.
+         * Returns MM if no conclusion can be made (i.e., must merge).
+         * Returns {CRDT.STATE.COMPARE_RESPONSE.EQUALS|CRDT.STATE.COMPARE_RESPONSE.LOWER|CRDT.STATE.COMPARE_RESPONSE.HIGHER|CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE}
+         * @type {Function}
+         * @returns {CRDT.STATE.COMPARE_RESPONSE.EQUALS|CRDT.STATE.COMPARE_RESPONSE.LOWER|CRDT.STATE.COMPARE_RESPONSE.HIGHER|CRDT.STATE.COMPARE_RESPONSE.MUST_MERGE}
+         *
+         */
+        this.compare = crdt.crdt.compare;
+
+        /**
+         * Accepts a JSON representation (jsObject, i.e., JSON parsed) of a CRDT and returns an Javascript Object.
+         * @type {Function}
+         */
+        this.fromJSONString = crdt.crdt.fromJSONString;
+
+        /**
+         * Accepts a Javascript object (CRDT state) and returns a JSON representation.
+         * @type {Function}
+         */
+        this.toJSONString = crdt.crdt.toJSONString;
+
         for (var i = 0; i < keys.length; i++) {
             (function (key) {
                 c[key] = function () {
@@ -192,6 +134,24 @@ function CRDT(objectID, crdt, objectStore) {
             })(keys[i]);
         }
     } else if (this.crdt.propagation == CRDT.DELTA_BASED) {
+        this.garbageCollect = crdt.crdt.garbageCollect;
+        this.getDelta = crdt.crdt.getDelta;
+        this.applyDelta = crdt.crdt.applyDelta;
+
+        /**
+         * Each pos (clientID) contains the highest op applied.
+         * @type {ALMap}
+         */
+        this.versionVector = new ALMap();
+
+        /**
+         * State of garbace collection.
+         * @type {{number: number}}
+         */
+        this.gcvv = {};
+
+        this.localOP = 0;
+
         for (var i = 0; i < keys.length; i++) {
             (function (key) {
                 c[key] = function () {
@@ -209,8 +169,9 @@ function CRDT(objectID, crdt, objectStore) {
                 };
             })(keys[i]);
         }
+
     } else {
-        console.error("No def for propagation type", this.crdt.propagation);
+        console.error("No definitions found for propagation type", this.crdt.propagation);
         console.error(JSON.stringify(this.crdt), objectID);
     }
 
@@ -222,7 +183,7 @@ function CRDT(objectID, crdt, objectStore) {
      * False when due to a remote operation.
      * @type {Function|null}
      */
-    this.callback = null
+    this.callback = null;
 }
 
 /**
@@ -430,7 +391,6 @@ CRDT.prototype.deltaOPSFromNetwork = function (deltaOps, connection, originalMes
         else
             this.versionVector.set(key, deltaOps.vv[key]);
     }
-
 };
 
 /**
