@@ -7,7 +7,20 @@ function Legion(options) {
         options.clientID = this.randInt();
     }
     if (!options.overlayProtocol) {
-        options.overlayProtocol = B2BOverlay;
+        options.overlayProtocol = {
+            type: RandomGraphOverlay,
+            parameters: {
+                meta_interval: 15 * 1000,
+                initial_ttl: 3,
+                initial_n: 3,
+                min: 5,
+                max: 7,
+                conn_check_timeout: 8 * 1000,
+                conn_check_timeout_startup: 20 * 1000,
+                conn_check_timeout_multiplier: 1.5,
+                RAND_VAL: 0.3
+            }
+        }
     }
     if (!options.messagingProtocol) {
         options.messagingProtocol = FloodMessaging;
