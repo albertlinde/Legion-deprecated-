@@ -42,18 +42,12 @@ CliquesOverlay.prototype.init = function (contact_node) {
 };
 
 CliquesOverlay.prototype.floodJoin = function () {
-    //random sample of peers
+    var serverConnection = this.legion.connectionManager.serverConnection;
 
-    if (!this.started) {
-        var serverConnection = this.legion.connectionManager.serverConnection;
-
-        if (!serverConnection) {
-            //this forces a connection to the server.
-            if (!this.legion.bullyProtocol.amBullied()) {
-                this.legion.connectionManager.startSignallingConnection();
-            }
+    if (!serverConnection) {
+        if (!this.legion.bullyProtocol.amBullied()) {
+            this.legion.connectionManager.startSignallingConnection();
         }
-        this.started = true;
     }
     var so = this;
     this.legion.generateMessage("Connect", null, function (result) {
@@ -63,13 +57,14 @@ CliquesOverlay.prototype.floodJoin = function () {
 
 CliquesOverlay.prototype.handleJoin = function (message, original, connection) {
     if (!this.legion.connectionManager.hasPeer(message.sender)) {
-        if (this.overlay.peerCount() <= 1)
-            this.legion.connectionManager.connectPeer(message.sender);
+        this.legion.connectionManager.connectPeer(message.sender);
     }
 
-    this.legion.messagingAPI.broadcastMessage(original, [connection]);
+    if (connection instanceof PeerConnection) {
+        this.legion.messagingAPI.broadcastMessage(original, [connection]);
+    }
 
-    if (this.legion.bullyProtocol.amBullied()) {
+    if (this.legion.bullyProtocol.amBullied() && !(connection instanceof  this.legion.options.signallingConnection.type)) {
         if (this.legion.connectionManager.serverConnection) {
             this.legion.connectionManager.serverConnection.close()
         }

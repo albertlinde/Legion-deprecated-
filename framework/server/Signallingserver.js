@@ -1,6 +1,7 @@
 var PORT = 8002;
 
 var SERVER_HB_INTERVAL = 25000;
+var SERVER_HB_VALIDITY = 75000;
 
 var D = require('./../shared/Duplicates.js');
 
@@ -60,7 +61,7 @@ function initService() {
     setInterval(function () {
         var HB = generateMessage("SHB");
         HB.timestamp = Date.now();
-        HB.validity = 75000;
+        HB.validity = SERVER_HB_VALIDITY;
         HB.KeyID = authority.getCurrentKey().id;
         HB.signature = authority.signedMessageDigest("" + HB.timestamp + HB.ID + HB.KeyID + HB.validity);
         var msg = JSON.stringify(HB);

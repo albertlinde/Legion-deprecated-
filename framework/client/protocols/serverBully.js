@@ -13,9 +13,8 @@ function ServerBully(legion) {
                     sb.lastSHB = message;
                     if (message.ID > sb.legion.secure.getCurrentKeyID()) {
                         connection.socket.send(sb.legion.secure.getServerAuthenticationChallenge());
-                    }
-
-                    sb.floodBully();
+                    } else
+                        sb.floodBully();
                 } else {
                     if (sb.legion.secure.verifySHB(message)) {
                         var hisID = connection.remoteID;

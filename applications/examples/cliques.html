@@ -106,7 +106,7 @@
 
     <script type="application/javascript">
         $("#add_client").removeClass("disabled");
-
+        var legion, map;
 
         function start() {
             var clientID = 1000 + Math.floor((Math.random() * 9999) % (10000));
@@ -115,8 +115,8 @@
                 overlayProtocol: CliquesOverlay,
                 objectServerConnection: {type: "NONE"}
             };
-            var objectStore, map;
-            var legion = new Legion(options);
+            var objectStore;
+            legion = new Legion(options);
 
             legion.overlay.setOnChange(function (change, peerIds, serverIds) {
                 if (map)
@@ -144,11 +144,12 @@
             for (var i = 0; i < array.length; i++) {
                 var id1 = parseInt(array[i][0]);
                 var data = JSON.parse(array[i][1]);
-                console.log(data);
+                //console.log(data);
                 for (var j = 0; j < data.peers.length; j++) {
                     var id2 = parseInt(data.peers[j]);
                     nodes.set(id2, true);
-                    edges.push({from: id1, to: id2, value: 1, title: 'pc'});
+                    if (id1 < id2)
+                        edges.push({from: id1, to: id2, value: 1, title: 'pc'});
                 }
                 for (var j = 0; j < data.servers.length; j++) {
                     nodes.set(j, true);
