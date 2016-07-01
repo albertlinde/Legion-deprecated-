@@ -305,6 +305,9 @@ ObjectStore.prototype.disconnectFromObjectServer = function () {
 
 ObjectStore.prototype.connectToObjectServer = function () {
     //TODO: the if is not enough. concurrent calls (see signalling server)
+    if (this.legion.options.objectServerConnection.type == "NONE") {
+        return;
+    }
     if (!this.objectServer && this.legion.options.objectServerConnection)
         new this.legion.options.objectServerConnection.type(this.legion.options.objectServerConnection.server, this, this.legion);
 };
@@ -400,6 +403,10 @@ ObjectStore.prototype.useServerMessage = function (done, pop) {
 };
 
 ObjectStore.prototype.clearServerQueue = function () {
+    if (this.legion.options.objectServerConnection.type == "NONE") {
+        this.serverQueue.clear();
+        return;
+    }
     //TODO: re-define what happens in all cases.
     if (!this.legion.bullyProtocol.amBullied()) {
         if (!this.objectServer) {

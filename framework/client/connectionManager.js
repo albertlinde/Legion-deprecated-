@@ -100,11 +100,13 @@ ConnectionManager.prototype.onCloseServer = function (serverConnection) {
         this.legion.overlay.onServerDisconnect(serverConnection);
     }
     //TODO: the internal if vill be void.
-    if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
-        if (this.legion.objectStore)
-            this.legion.objectStore.onServerDisconnect(serverConnection);
-        else
-            console.error("Should not disconnect form objects server when not having an objects store!")
+    if (this.legion.options.objectServerConnection.type != "NONE") {
+        if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
+            if (this.legion.objectStore)
+                this.legion.objectStore.onServerDisconnect(serverConnection);
+            else
+                console.error("Should not disconnect form objects server when not having an objects store!")
+        }
     }
     if (this.legion.bullyProtocol)
         this.legion.bullyProtocol.onServerDisconnect(serverConnection);
@@ -117,11 +119,13 @@ ConnectionManager.prototype.onOpenServer = function (serverConnection) {
         this.serverConnection = serverConnection;
         this.legion.overlay.onServerConnection(serverConnection);
     }
-    if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
-        if (this.legion.objectStore)
-            this.legion.objectStore.onServerConnection(serverConnection);
-        else
-            console.error("Should not connect to objects server when not having an objects store!")
+    if (this.legion.options.objectServerConnection.type != "NONE") {
+        if (serverConnection instanceof this.legion.options.objectServerConnection.type) {
+            if (this.legion.objectStore)
+                this.legion.objectStore.onServerConnection(serverConnection);
+            else
+                console.error("Should not connect to objects server when not having an objects store!")
+        }
     }
     if (this.legion.bullyProtocol)
         this.legion.bullyProtocol.onServerConnection(serverConnection);
