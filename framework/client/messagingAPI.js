@@ -107,7 +107,7 @@ MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
     var firstSetAmount = 0;
     var toServer = 0;
 
-    if (toServerIfBully && this.legion.bullyProtocol.amBully()) {
+    if (toServerIfBully && !this.legion.bullyProtocol.amBullied()) {
         firstSet = 0;
         secondSet = 1;
         firstSetAmount = 0;
@@ -140,7 +140,7 @@ MessagingAPI.prototype.propagateToN = function (message, toServerIfBully) {
         }
     }
 
-    if (toServer > 0 && toServerIfBully && this.legion.bullyProtocol.amBully()) {
+    if (toServer > 0 && toServerIfBully && !this.legion.bullyProtocol.amBullied()) {
         var messageServer = JSON.parse(JSON.stringify(message));
         messageServer.N = toServer;
         if (this.legion.connectionManager.serverConnection && this.legion.connectionManager.serverConnection.isAlive()) {
