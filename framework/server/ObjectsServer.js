@@ -12,13 +12,20 @@ var ALMap = require('./../shared/ALMap.js').ALMap;
 
 var CRDT = require('./../shared/crdt.js').CRDT;
 
-//TODO: should not be here.
+//TODO: CRDT_LIB should not be here.
 var CRDT_LIB = {};
+
+CRDT_LIB.OPERATIONS_Counter = require('./../shared/crdtLib/opCounter.js').OPERATIONS_Counter;
 CRDT_LIB.STATE_Counter = require('./../shared/crdtLib/stateCounter.js').STATE_Counter;
-CRDT_LIB.OP_ORSet = require('./../shared/crdtLib/opSet.js').OP_ORSet;
-CRDT_LIB.OP_ORMap = require('./../shared/crdtLib/opMap.js').OP_ORMap;
+
+CRDT_LIB.OPERATIONS_Set = require('./../shared/crdtLib/opSet.js').OPERATIONS_Set;
 CRDT_LIB.STATE_Set = require('./../shared/crdtLib/stateSet.js').STATE_Set;
-CRDT_LIB.DELTA_Set = require('./../shared/crdtLib/deltaSet.js').DELTA_Set;
+
+CRDT_LIB.OPERATIONS_Map = require('./../shared/crdtLib/opMap.js').OPERATIONS_Map;
+CRDT_LIB.STATE_Map = require('./../shared/crdtLib/stateMap.js').STATE_Map;
+
+CRDT_LIB.OPERATIONS_List = require('./../shared/crdtLib/opTreedoc.js').OPERATIONS_List;
+//CRDT_LIB.STATE_List = require('./../shared/crdtLib/opTreedoc.js').STATE_List;
 
 var util = require('util');
 var WebSocket = require('ws');
@@ -46,11 +53,14 @@ function initService() {
      */
     var db = new CRDT_Database(messagingAPI, peerSyncs);
 
+    db.defineCRDT(CRDT_LIB.OPERATIONS_Counter);
     db.defineCRDT(CRDT_LIB.STATE_Counter);
-    db.defineCRDT(CRDT_LIB.OP_ORSet);
-    db.defineCRDT(CRDT_LIB.OP_ORMap);
+    db.defineCRDT(CRDT_LIB.OPERATIONS_Set);
     db.defineCRDT(CRDT_LIB.STATE_Set);
-    db.defineCRDT(CRDT_LIB.DELTA_Set);
+    db.defineCRDT(CRDT_LIB.OPERATIONS_Map);
+    db.defineCRDT(CRDT_LIB.STATE_Map);
+    db.defineCRDT(CRDT_LIB.OPERATIONS_List);
+    //db.defineCRDT(CRDT_LIB.STATE_List);
 
     { // Client connection handling.
         var duplicates = new D.Duplicates();
@@ -76,7 +86,7 @@ function initService() {
                  * @param data {Object}
                  * @param callback {Function}
                  */
-                //TODO: why is this?
+                    //TODO: why is this?
                 db.versionVectorDiff = CRDT.versionVectorDiff;
 
                 //TODO: will be ClientSync

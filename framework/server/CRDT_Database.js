@@ -214,7 +214,6 @@ CRDT_Database.prototype.propagateState = function (objectID, options) {
 };
 
 CRDT_Database.prototype.defineCRDT = function (crdt) {
-    //TODO: some CRDTS should be pre-defined.
     if (this.types.contains(crdt.type)) {
         util.error("Can't redefine existing CRDT.", crdt);
     } else {
