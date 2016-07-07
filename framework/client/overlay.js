@@ -2,7 +2,7 @@ function Overlay(legion) {
     this.legion = legion;
     this.peers = new ALMap();
 
-    this.overlayProtocol = new this.legion.options.overlayProtocol(this, this.legion);
+    this.overlayProtocol = new this.legion.options.overlayProtocol.type(this, this.legion);
     this.onChangeCallback = null;
 }
 

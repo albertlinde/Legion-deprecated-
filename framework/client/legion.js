@@ -1,4 +1,7 @@
 function Legion(options) {
+    if(!options){
+        options = {};
+    }
     this.options = options;
     this.joined = false;
     this.onJoinCallback = null;
