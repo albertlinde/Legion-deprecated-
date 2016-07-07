@@ -33,7 +33,7 @@ var state_counter = {
                 if (!this.state.inc.contains(id))
                     this.state.inc.set(id, 0);
                 this.state.inc.set(id, this.state.inc.get(id) + amount);
-                return amount;
+                return {val: amount, change:true};
             },
             decrement: function (id, amount) {
                 if (!amount) {
@@ -43,7 +43,7 @@ var state_counter = {
                 if (!this.state.dec.contains(id))
                     this.state.dec.set(id, 0);
                 this.state.dec.set(id, this.state.dec.get(id) + amount);
-                return -amount;
+                return {val: -amount, change:true};
             }
         },
         merge: function (local, remote) {
