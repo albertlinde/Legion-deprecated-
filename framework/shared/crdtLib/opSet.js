@@ -30,10 +30,16 @@ var op_orset = {
                 }
             }, add: {
                 local: function (element) {
-                    var unique = generateUniqueIdentifier();
-                    return {element: element, unique: unique};
+                    var e = this.state.adds.get(element);
+                    if (!e) {
+                        var unique = generateUniqueIdentifier();
+                        return {element: element, unique: unique};
+                    } else
+                        return null;
                 },
                 remote: function (data) {
+                    if (!data.unique)
+                        return;
                     if (!this.state.removes.contains(data.unique)) {
                         if (!this.state.adds.contains(data.element)) {
                             this.state.adds.set(data.element, new ALMap());
@@ -50,14 +56,14 @@ var op_orset = {
                 local: function (element) {
                     var e = this.state.adds.get(element);
                     if (!e) {
-                        return {element: element, removes: []};
+                        return null;
                     }
                     var removes = e.keys();
                     return {element: element, removes: removes};
                 },
                 remote: function (data) {
-                    if (data.removes.length == 0) {
-                        return {}
+                    if (!data.removes) {
+                        return null;
                     }
                     var e = this.state.adds.get(data.element);
                     for (var i = 0; i < data.removes.length; i++) {

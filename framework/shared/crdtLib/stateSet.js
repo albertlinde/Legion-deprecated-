@@ -30,7 +30,9 @@ var state_set = {
                     this.state.adds.set(element, new ALMap());
                     var e = this.state.adds.get(element);
                     e.set(generateUniqueIdentifier(), true);
-                    return {add: element, change:true};
+                    return {add: element, change: true};
+                } else {
+                    return {change: false};
                 }
             },
             remove: function (element) {
@@ -43,8 +45,10 @@ var state_set = {
                     }
                     if (e.size() == 0) {
                         this.state.adds.delete(data.element);
-                        return {remove: data.element, change:true};
+                        return {remove: data.element, change: true};
                     }
+                } else {
+                    return {change: false};
                 }
             }
         },
