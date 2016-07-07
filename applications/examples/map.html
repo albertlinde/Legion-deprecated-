@@ -120,7 +120,7 @@
                                     class="btn btn-xs btn-success disabled">Remove
                             </button>
                         </td>
-                        <td><span id="set_state_value"></span></td>
+                        <td><span id="map_state_value"></span></td>
                     </tr>
                     <tr>
                         <td>Operation</td>
@@ -134,7 +134,7 @@
                                     class="btn btn-xs btn-success disabled">Remove
                             </button>
                         </td>
-                        <td><span id="set_operations_value"></span></td>
+                        <td><span id="map_operations_value"></span></td>
                     </tr>
                     <tr>
                         <td>Delta</td>
@@ -148,7 +148,7 @@
                                     class="btn btn-xs btn-danger disabled">Remove
                             </button>
                         </td>
-                        <td><span id="set_delta_value"></span></td>
+                        <td><span id="map_delta_value"></span></td>
                     </tr>
                     </tbody>
                 </table>
@@ -209,11 +209,11 @@
 
         map_state.setOnStateChange(function (updates, meta) {
             console.log("State Map change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " array: " + JSON.stringify(map_state.asArray()));
-            mapChanged("#list_map_state", map_state.asArray());
+            mapChanged("#list_map_state", map_state.asArray(), "state");
         });
         map_operations.setOnStateChange(function (updates, meta) {
             console.log("Operations Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(map_operations.getValue()));
-            mapChanged("#list_map_opers", map_operations.asArray());
+            mapChanged("#list_map_opers", map_operations.asArray(), "operations");
         });
         //set_delta.setOnStateChange(function (updates, meta) {
         //    console.log("Delta Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(set_delta.getValue()));
@@ -230,18 +230,20 @@
             //$("#add_delta").removeClass("disabled");
             //$("#rem_delta").removeClass("disabled");
 
-            mapChanged("#list_map_state", map_state.asArray());
-            mapChanged("#list_map_opers", map_operations.asArray());
+            mapChanged("#list_map_state", map_state.asArray(), "state");
+            mapChanged("#list_map_opers", map_operations.asArray(), "operations");
             //setChanged("#list_set_delta", set_operations.asArray());
 
         });
 
-        var mapChanged = function (list_html_id, array) {
+        var mapChanged = function (list_html_id, array, type) {
 
             $(list_html_id)[0].innerHTML = "";
             for (var i = 0; i < array.length; i++) {
                 $(list_html_id)[0].innerHTML = $(list_html_id)[0].innerHTML + ('<li class="list-group-item">' + array[i] + '</li>');
             }
+
+            $("#map_" + type + "_value")[0].textContent = array.length;
         };
 
         var getKeyValue = function () {
