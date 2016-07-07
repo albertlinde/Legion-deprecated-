@@ -70,6 +70,8 @@ var state_map = {
                             removed.push(elementsKeys[i]);
                         }
                     }
+                    if (!anyRemove)
+                        return {change: false};
                 }
                 else {
                     this.state.adds.set(key, new ALMap());
