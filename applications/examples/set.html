@@ -203,11 +203,11 @@
 
         set_state.setOnStateChange(function (updates, meta) {
             console.log("State Set change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " array: " + JSON.stringify(set_state.asArray()));
-            setChanged("#list_set_state", set_state.asArray());
+            setChanged("#list_set_state", set_state.asArray(), "state");
         });
         set_operations.setOnStateChange(function (updates, meta) {
             console.log("Operations Set change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " array: " + JSON.stringify(set_operations.asArray()));
-            setChanged("#list_set_opers", set_operations.asArray());
+            setChanged("#list_set_opers", set_operations.asArray(), "operations");
         });
         //set_delta.setOnStateChange(function (updates, meta) {
         //    console.log("Delta Counter change: " + JSON.stringify(updates) + " " + JSON.stringify(meta) + " value: " + JSON.stringify(set_delta.getValue()));
@@ -225,17 +225,18 @@
             //$("#add_delta").removeClass("disabled");
             //$("#rem_delta").removeClass("disabled");
 
-            setChanged("#list_set_state", set_state.asArray());
-            setChanged("#list_set_opers", set_operations.asArray());
+            setChanged("#list_set_state", set_state.asArray(), "state");
+            setChanged("#list_set_opers", set_operations.asArray(), "operations");
             //setChanged("#list_set_delta", set_operations.asArray());
 
         });
 
-        var setChanged = function (list_html_id, array) {
+        var setChanged = function (list_html_id, array, type) {
             $(list_html_id)[0].innerHTML = "";
             for (var i = 0; i < array.length; i++) {
                 $(list_html_id)[0].innerHTML = $(list_html_id)[0].innerHTML + ('<li class="list-group-item">' + array[i] + '</li>');
             }
+            $("#set_" + type + "_value")[0].textContent = array.length;
         };
 
         var add_state = function () {
