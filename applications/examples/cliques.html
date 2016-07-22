@@ -112,7 +112,7 @@
             var clientID = 1000 + Math.floor((Math.random() * 9999) % (10000));
             var options = {
                 clientID: clientID,
-                overlayProtocol: CliquesOverlay,
+                overlayProtocol: {type: CliquesOverlay},
                 objectServerConnection: {type: "NONE"}
             };
             var objectStore;
