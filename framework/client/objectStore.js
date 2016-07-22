@@ -59,14 +59,14 @@ function ObjectStore(legion) {
     };
     //TODO: re-define the whole queues thing. maybe we dont want to use it, and
     // maybe it has to be on the level of connections themselves
-    this.serverQueue = new ALQueue();
+    this.serverQueue = new DS_DLList();
 
     //TODO: re-define the options
     this.serverTimer = setInterval(function () {
         os.clearServerQueue();
     }, this.legion.options.objectOptions.serverInterval);
 
-    this.peersQueue = new ALQueue();
+    this.peersQueue = new DS_DLList();
 
     this.peersTimer = setInterval(function () {
         os.clearPeersQueue();
@@ -293,8 +293,8 @@ ObjectStore.prototype.propagateMessage = function (message, extra) {
     //TODO: remove the extra.
     //TODO: remove this as a whole, there should be no INDEPENDENT messages on this level anymore!
     message.extra = extra;
-    this.serverQueue.push(message);
-    this.peersQueue.push(message);
+    this.serverQueue.addLast(message);
+    this.peersQueue.addLast(message);
 };
 
 ObjectStore.prototype.disconnectFromObjectServer = function () {
@@ -425,11 +425,11 @@ ObjectStore.prototype.clearServerQueue = function () {
 
     if (this.serverQueue.size() > 0) {
         if (debug)console.log("Messages in server queue: " + this.serverQueue.size());
-        var pop = this.serverQueue.pop();
+        var pop = this.serverQueue.removeFirst();
         var done = new ALMap();
         while (pop) {
             this.useServerMessage(done, pop);
-            pop = this.serverQueue.pop();
+            pop = this.serverQueue.removeFirst();
         }
     }
 };
@@ -543,11 +543,11 @@ ObjectStore.prototype.usePeersMessage = function (done, pop) {
 ObjectStore.prototype.clearPeersQueue = function () {
     if (this.peersQueue.size() > 0) {
         if (debug)console.log("Messages in peers queue: " + this.peersQueue.size());
-        var pop = this.peersQueue.pop();
+        var pop = this.peersQueue.removeFirst();
         var done = new ALMap();
         while (pop) {
             this.usePeersMessage(done, pop);
-            pop = this.peersQueue.pop();
+            pop = this.peersQueue.removeFirst();
         }
     }
 };
@@ -612,8 +612,8 @@ ObjectStore.prototype.propagate = function (objectID, clientID, operationID, opt
         objectType: objectType
     };
 
-    this.serverQueue.push(queuedOP);
-    this.peersQueue.push(queuedOP);
+    this.serverQueue.addLast(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 /**
@@ -630,8 +630,8 @@ ObjectStore.prototype.propagateAll = function (objectID, ops, options) {
         options: options
     };
 
-    this.serverQueue.push(queuedOP);
-    this.peersQueue.push(queuedOP);
+    this.serverQueue.addLast(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 /**
@@ -686,8 +686,8 @@ ObjectStore.prototype.propagateState = function (objectID, options) {
         objectID: objectID,
         options: options
     };
-    this.serverQueue.push(queuedOP);
-    this.peersQueue.push(queuedOP);
+    this.serverQueue.addLast(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 ObjectStore.prototype.getCRDT = function (objectID) {
@@ -700,8 +700,8 @@ ObjectStore.prototype.propagateDelta = function (objectID, options) {
         objectID: objectID,
         options: options
     };
-    this.serverQueue.push(queuedOP);
-    this.peersQueue.push(queuedOP);
+    this.serverQueue.addLast(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 ObjectStore.prototype.sendDeltaOPSTo = function (connection, delta_ops, crdt) {
