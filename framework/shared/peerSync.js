@@ -20,8 +20,8 @@ if (typeof exports != "undefined") {
 
     ALMap = require('./ALMap.js');
     ALMap = ALMap.ALMap;
-    ALQueue = require('./ALQueue.js');
-    ALQueue = ALQueue.ALQueue;
+    DS_DLList = require('./dataStructures/DS_DLList.js');
+    DS_DLList = DS_DLList.DS_DLList;
 }
 
 
@@ -46,9 +46,9 @@ function PeerSync(legion, objectStore, peerConnection) {
 
     /**
      * Contains updates to be sent after sync.
-     * @type {ALQueue}
+     * @type {DS_DLList}
      */
-    this.queueAfterSync = new ALQueue();
+    this.queueAfterSync = new DS_DLList();
 
     /**
      * A map of all objects the other peer maintains.
@@ -77,9 +77,9 @@ PeerSync.prototype.send = function (message) {
         if (this.queueAfterSync.size() == 0)
             this.peerConnection.send(message);
         else
-            this.queueAfterSync.push(message);
+            this.queueAfterSync.addLast(message);
     } else {
-        this.queueAfterSync.push(message);
+        this.queueAfterSync.addLast(message);
     }
 };
 
@@ -98,15 +98,15 @@ PeerSync.prototype.finalize = function () {
  */
 PeerSync.prototype.clearQueue = function () {
     if (!this.isSynced) {
-        console.error("Clearing queue before sync.");
+        console.error("Attempt to clear queue before sync.");
     } else {
-        var pop = this.queueAfterSync.pop();
+        var pop = this.queueAfterSync.removeFirst();
         if (pop) {
             console.log("Clearing queue to: " + this.peerConnection.remoteID + ". Size of queue: " + (this.queueAfterSync.size() + 1));
         }
         while (typeof pop != "undefined") {
             this.peerConnection.send(pop);
-            pop = this.queueAfterSync.pop();
+            pop = this.queueAfterSync.removeFirst();
         }
     }
 };
