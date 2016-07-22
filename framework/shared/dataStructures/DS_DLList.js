@@ -88,6 +88,11 @@ DS_DLList.prototype.removeLast = function () {
     }
 };
 
+DS_DLList.prototype.clear = function () {
+    this.count = 0;
+    this.head = this.tail = null;
+};
+
 function DS_DLL_Node(element) {
     this.next = null;
     this.previous = null;
