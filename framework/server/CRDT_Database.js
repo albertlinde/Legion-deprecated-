@@ -3,8 +3,8 @@ if (typeof exports != "undefined") {
 
     ALMap = require('./../shared/ALMap.js');
     ALMap = ALMap.ALMap;
-    ALQueue = require('./../shared/ALQueue.js');
-    ALQueue = ALQueue.ALQueue;
+    DS_DLList = require('./../shared/dataStructures/DS_DLList.js');
+    DS_DLList = DS_DLList.DS_DLList;
     util = require('util');
     Compressor = require('./../shared/Compressor.js');
     objectsDebug = false;
@@ -14,7 +14,7 @@ function CRDT_Database(messaging, peerSyncs) {
     var cb = this;
     //TODO: the non-constant constants must be put somewhere neat.
     this.peerSendInterval = 2000;
-    this.peersQueue = new ALQueue();
+    this.peersQueue = new DS_DLList();
 
     this.messagingAPI = messaging;
     this.peerSyncs = peerSyncs;
@@ -56,7 +56,7 @@ CRDT_Database.prototype.clearPeersQueue = function () {
     var os = this;
     if (this.peersQueue.size() > 0) {
         console.log("Messages in queue: " + this.peersQueue.size());
-        var pop = this.peersQueue.pop();
+        var pop = this.peersQueue.removeFirst();
         var done = new ALMap();
         while (pop) {
             (function (pop) {
@@ -148,7 +148,7 @@ CRDT_Database.prototype.clearPeersQueue = function () {
                 }
             })(pop);
 
-            pop = this.peersQueue.pop();
+            pop = this.peersQueue.removeFirst();
         }
     }
 };
@@ -198,12 +198,12 @@ CRDT_Database.prototype.propagate = function (objectID, clientID, operationID, o
         options: options,
         objectType: objectType
     };
-    this.peersQueue.push(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 CRDT_Database.prototype.propagateMessage = function (message, extra) {
     message.extra = extra;
-    this.peersQueue.push(message);
+    this.peersQueue.addLast(message);
 };
 
 
@@ -213,7 +213,7 @@ CRDT_Database.prototype.propagateDelta = function (objectID, options) {
         objectID: objectID,
         options: options
     };
-    this.peersQueue.push(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 CRDT_Database.prototype.propagateAll = function (objectID, ops, options) {
@@ -223,7 +223,7 @@ CRDT_Database.prototype.propagateAll = function (objectID, ops, options) {
         objectID: objectID,
         options: options
     };
-    this.peersQueue.push(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 CRDT_Database.prototype.propagateState = function (objectID, options) {
@@ -232,7 +232,7 @@ CRDT_Database.prototype.propagateState = function (objectID, options) {
         objectID: objectID,
         options: options
     };
-    this.peersQueue.push(queuedOP);
+    this.peersQueue.addLast(queuedOP);
 };
 
 CRDT_Database.prototype.defineCRDT = function (crdt) {
