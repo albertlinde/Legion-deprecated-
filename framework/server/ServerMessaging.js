@@ -3,8 +3,6 @@ if (typeof exports != "undefined") {
 
     ALMap = require('./../shared/ALMap.js');
     ALMap = ALMap.ALMap;
-    ALQueue = require('./../shared/ALQueue.js');
-    ALQueue = ALQueue.ALQueue;
     util = require('util');
     Compressor = require('./../shared/Compressor.js');
 }

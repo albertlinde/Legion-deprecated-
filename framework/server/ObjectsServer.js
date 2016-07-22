@@ -7,7 +7,6 @@ var ServerMessaging = require('./ServerMessaging.js').ServerMessaging;
 
 var Compressor = require('./../shared/Compressor.js');
 var D = require('./../shared/Duplicates.js');
-var ALQueue = require('./../shared/ALQueue.js').ALQueue;
 var ALMap = require('./../shared/ALMap.js').ALMap;
 
 var CRDT = require('./../shared/crdt.js').CRDT;
