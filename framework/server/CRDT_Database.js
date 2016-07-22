@@ -37,6 +37,19 @@ function CRDT_Database(messaging, peerSyncs) {
         cb.clearPeersQueue();
 
     }, this.peerSendInterval);
+
+    //Following code served as a tester for client example:set.html
+    /*
+    var n = 0;
+    setInterval(function () {
+        try {
+            cb.getCRDT("set_1_state").add("s:" + ++n);
+            cb.getCRDT("set_2_operations").add("s:" + ++n)
+        } catch (e) {
+            console.log("No data yet.");
+        }
+    }, 2000);
+     */
 }
 
 CRDT_Database.prototype.clearPeersQueue = function () {
@@ -170,13 +183,22 @@ CRDT_Database.prototype.saveToDisk = function () {
 
 /**
  *
- * @param clientID {number}
- * @param operationID {number}
- * @param l_ret {Object}
- * @param dependencyVV {Object}
+ * @param objectID
+ * @param clientID
+ * @param operationID
+ * @param options
+ * @param objectType
  */
-CRDT_Database.prototype.propagate = function (clientID, operationID, l_ret, dependencyVV) {
-    util.error("Not Implemented: propagate");
+CRDT_Database.prototype.propagate = function (objectID, clientID, operationID, options, objectType) {
+    var queuedOP = {
+        type: "OP",
+        clientID: clientID,
+        objectID: objectID,
+        operationID: operationID,
+        options: options,
+        objectType: objectType
+    };
+    this.peersQueue.push(queuedOP);
 };
 
 CRDT_Database.prototype.propagateMessage = function (message, extra) {
