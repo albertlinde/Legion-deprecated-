@@ -44,7 +44,7 @@
         <div id="navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li class="active"><a href="index.html">Back</a></li>
-                <li class="active"><a href="#">Overlay Cliques Examples</a></li>
+                <li class="active"><a href="#">Overlay Cliques Example</a></li>
             </ul>
         </div>
         <!--/.nav-collapse -->
@@ -55,7 +55,7 @@
 
     <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="jumbotron">
-        <h1>Legion Overlay Cliques examples</h1>
+        <h1>Legion Overlay Cliques example</h1>
 
         <p>This page contains examples of using the Legion framework.</p>
     </div>
@@ -69,7 +69,7 @@
 <pre class="prettyprint linenums">
     var options = {
         clientID: randInt(1000, 9000),
-        overlayProtocol: CliquesOverlay
+        overlayProtocol: {type: CliquesOverlay}
     };
     var objectStore, map;
     var legion = new Legion(options);
@@ -94,9 +94,19 @@
         <h1>Network</h1>
     </div>
     <div>
+        <div>
+            <p>
+                Both buttons start a client in this browser tab.
+                Only the first button keeps networking visualization active.
+                If you wish to run multiple clients it is suggested to run with no visualization in the other tabs.
+            </p>
+        </div>
         <div class="row">
-            <button onclick="start()" id="add_client" type="button"
+            <button onclick="start(true)" id="add_client_v" type="button"
                     class="btn btn-xs btn-success disabled">Add client
+            </button>
+            <button onclick="start(false)" id="add_client_nv" type="button"
+                    class="btn btn-xs btn-success disabled">Add client (no visualization)
             </button>
         </div>
         <div style="height: 500px; background-color: #FAFAFA" class="row col-md-8" id="mynetwork">
@@ -105,14 +115,20 @@
     </div>
 
     <script type="application/javascript">
-        var nodeTimeout = 35 * 1000;
+        var nodeTimeout = 45 * 1000;
         var dataReset = 20 * 1000;
         var visReset = 25 * 1000;
 
-        $("#add_client").removeClass("disabled");
+        $("#add_client_v").removeClass("disabled");
+        $("#add_client_nv").removeClass("disabled");
         var legion, map;
+        var vis_update;
 
-        function start() {
+        function start(visualization) {
+
+            $("#add_client_v").addClass("disabled");
+            $("#add_client_nv").addClass("disabled");
+            vis_update = visualization;
             var clientID = 1000 + Math.floor((Math.random() * 9999) % (10000));
             var options = {
                 clientID: clientID,
@@ -140,20 +156,21 @@
             legion.join();
 
             legion.onJoin(function () {
-
-
                 objectStore = legion.getObjectStore();
                 map = objectStore.get("overlay_map", Legion.OPERATIONS_Map);
 
-                map.setOnStateChange(function (updates, meta) {
-                    resetGraph(map.asArray());
-                });
-                setInterval(function () {
-                    resetGraph(map.asArray());
-                }, visReset)
+                if (vis_update) {
+                    setTimeout(function () {
+                        map.setOnStateChange(function (updates, meta) {
+                            resetGraph(map.asArray());
+                        });
+                    }, 15000);
+                    setInterval(function () {
+                        resetGraph(map.asArray());
+                    }, visReset)
+                }
             });
         }
-
 
         var resetGraph = function (array) {
             var nodes = new ALMap();
@@ -171,8 +188,7 @@
                     var id2 = parseInt(data.peers[j]);
                     if (!nodes[id2] || (nodes[id2] == 'red'))
                         nodes.set(id2, color);
-                    if (id1 < id2)
-                        edges.push({from: id1, to: id2, value: 1, title: 'pc', color: color});
+                    edges.push({from: id1, to: id2, value: 1, title: 'pc', color: color});
                 }
                 for (var j = 0; j < data.servers.length; j++) {
                     nodes.set(j, true);
@@ -226,7 +242,8 @@
             var options = {
                 autoResize: true
             };
-            network = new vis.Network(container, data, options);
+            if (vis_update)
+                network = new vis.Network(container, data, options);
         }
         draw();
     </script>
