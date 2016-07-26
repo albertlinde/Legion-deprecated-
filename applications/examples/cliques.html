@@ -105,6 +105,10 @@
     </div>
 
     <script type="application/javascript">
+        var nodeTimeout = 35 * 1000;
+        var dataReset = 20 * 1000;
+        var visReset = 25 * 1000;
+
         $("#add_client").removeClass("disabled");
         var legion, map;
 
@@ -120,8 +124,19 @@
 
             legion.overlay.setOnChange(function (change, peerIds, serverIds) {
                 if (map)
-                    map.set(clientID, {peers: peerIds, servers: serverIds});
+                    map.set(clientID, {peers: peerIds, servers: serverIds, time: Date.now()});
             });
+
+            setInterval(function () {
+                if (map) {
+                    map.set(clientID, {
+                        peers: legion.overlay.getPeerIDs(),
+                        servers: legion.overlay.getServerIDs(),
+                        time: Date.now()
+                    });
+                }
+            }, dataReset);
+
             legion.join();
 
             legion.onJoin(function () {
@@ -133,6 +148,9 @@
                 map.setOnStateChange(function (updates, meta) {
                     resetGraph(map.asArray());
                 });
+                setInterval(function () {
+                    resetGraph(map.asArray());
+                }, visReset)
             });
         }
 
@@ -144,25 +162,31 @@
             for (var i = 0; i < array.length; i++) {
                 var id1 = parseInt(array[i][0]);
                 var data = JSON.parse(array[i][1]);
+                var time = data.time;
+                var color = 'blue';
+                if (time + nodeTimeout < Date.now())
+                    color = 'red';
                 //console.log(data);
                 for (var j = 0; j < data.peers.length; j++) {
                     var id2 = parseInt(data.peers[j]);
-                    nodes.set(id2, true);
+                    if (!nodes[id2] || (nodes[id2] == 'red'))
+                        nodes.set(id2, color);
                     if (id1 < id2)
-                        edges.push({from: id1, to: id2, value: 1, title: 'pc'});
+                        edges.push({from: id1, to: id2, value: 1, title: 'pc', color: color});
                 }
                 for (var j = 0; j < data.servers.length; j++) {
                     nodes.set(j, true);
-                    edges.push({from: id1, to: j, value: 2, title: 'sc'});
+                    edges.push({from: id1, to: j, value: 1, title: 'sc', color: color});
                 }
-                nodes.set(id1, true);
+                if (!nodes[id1] || (nodes[id1] == 'red'))
+                    nodes.set(id1, color);
             }
 
             var nodes2 = nodes.keys().map(function (currentObject) {
                 if (parseInt(currentObject) < 100) {
-                    return {id: parseInt(currentObject), value: 10, label: currentObject}
+                    return {id: parseInt(currentObject), value: 2, label: currentObject, color: nodes[currentObject]}
                 } else
-                    return {id: parseInt(currentObject), value: 1, label: currentObject}
+                    return {id: parseInt(currentObject), value: 1, label: currentObject, color: nodes[currentObject]}
             });
 
             reset(nodes2, edges);
@@ -188,8 +212,7 @@
         // create connections between people
         // value corresponds with the amount of contact between two people
         var edges = [
-            {from: 1, to: 2, value: 1, title: 'pc'},
-            {from: 2, to: 4, value: 1, title: 'pc'}
+            {from: 0, to: 1, value: 1, title: 'sc', color: 'blue'}
         ];
 
         // Instantiate our network object.
