@@ -53,13 +53,13 @@ function initService() {
         for (var i = 0; i < nodes.size(); i++) {
             var node = nodes.getNodeByPos(i);
             if (node.readyState == 1) {
-                util.log("-Sending HB to " + node.remoteID);
+                util.log("   Sending HB to " + node.remoteID);
                 node.send(msg);
             } else {
-                deadNodes.push(nodes.getIDByPos(i));
+                deadNodes.push(node.remoteID);
             }
         }
-        //TODO: remove the deadNodes.
+        nodes.removeAllNodes(deadNodes);
 
     }, Config.signalling.SERVER_HB_INTERVAL);
 
@@ -82,7 +82,7 @@ function initService() {
                         if (!duplicates.contains(parsed.sender, parsed.ID)) {
                             duplicates.add(parsed.sender, parsed.ID);
                             if (!socket.remoteID) {
-                                if (nodes.containsByID(parsed.sender)) {
+                                if (nodes.contains(parsed.sender)) {
                                     util.log("Reconnected with new socket " + parsed.sender);
                                 } else {
                                     util.log("Connected " + parsed.sender);
@@ -93,7 +93,7 @@ function initService() {
 
                             if (parsed.destination != null) {
                                 //Try to send do destination, on failure back to default behaviour.
-                                var node = nodes.getNodeByID(parsed.destination);
+                                var node = nodes.getNode(parsed.destination);
                                 if (node && node.readyState == 1) {
                                     util.log("Destination message: " + parsed.type);
                                     util.log("   Sending to " + parsed.destination);
@@ -109,7 +109,7 @@ function initService() {
                             if (parsed.ttl) {
                                 parsed.ttl--;
                             }
-
+                            var message = JSON.stringify(parsed);
                             var deadNodes = [];
                             for (var i = 0; i < end; i++) {
                                 //TODO: if sending to N, randomize the nodes it is sent to.
@@ -121,10 +121,10 @@ function initService() {
                                     util.log("   Sending to " + node.remoteID);
                                     node.send(message);
                                 } else {
-                                    deadNodes.push(nodes.getIDByPos(i));
+                                    deadNodes.push(node.remoteID);
                                 }
                             }
-                            //TODO: remove the deadNodes.
+                            nodes.removeAllNodes(deadNodes);
                         }
                     }
                 }
@@ -137,46 +137,44 @@ function initService() {
 }
 
 function NodesStructure() {
-    this.nodesArray = [];
-    this.nodesMap = [];
-
-    this.arrayPosID = 0;
-    this.arrayPosSocket = 1;
+    this.nodesMap = {};
+    this.count = 0;
+    this.keys = [];
 }
 
 NodesStructure.prototype.size = function () {
-    return this.nodesArray.length;
+    return this.count;
 };
 
-NodesStructure.prototype.getNodeByPos = function (pos) {
-    return this.nodesArray[pos][this.arrayPosSocket];
-};
-
-NodesStructure.prototype.containsByID = function (id) {
+NodesStructure.prototype.contains = function (id) {
     return this.nodesMap[id] != null;
 };
 
-NodesStructure.prototype.getIDByPos = function (pos) {
-    return this.nodesArray[pos][this.arrayPosID];
+NodesStructure.prototype.getNode = function (id) {
+    return this.nodesMap[id];
 };
-
-NodesStructure.prototype.getNodeByID = function (id) {
-    return this.nodesArray[this.nodesMap[id]][this.arrayPosSocket];
+NodesStructure.prototype.getNodeByPos = function (pos) {
+    if (pos == 0) {
+        this.keys = Object.keys(this.nodesMap);
+    }
+    return this.nodesMap[this.keys[pos]];
 };
 
 NodesStructure.prototype.addNode = function (id, socket) {
-    this.nodesArray.push([id, socket]);
-    this.nodesMap[id] = this.nodesArray.length - 1;
+    if (!this.contains(id))
+        this.count++;
+    this.nodesMap[id] = socket;
+    console.log("Added: (" + [id] + "," + this.nodesMap[id].remoteID + ").");
 };
 
-NodesStructure.prototype.removeNodeByID = function (id) {
-    var pos = this.nodesMap[id];
-    delete this.nodesMap[id];
-    this.nodesArray = this.nodesArray.splice(pos, 1);
+NodesStructure.prototype.removeAllNodes = function (idArray) {
+    for (var i = 0; i < idArray.length; i++) {
+        this.removeNode(idArray[i]);
+    }
 };
 
-NodesStructure.prototype.removeNodeByPos = function (pos) {
-    var id = this.nodesArray[pos][this.arrayPosID];
+NodesStructure.prototype.removeNode = function (id) {
+    if (this.contains(id))
+        this.count--;
     delete this.nodesMap[id];
-    this.nodesArray = this.nodesArray.splice(pos, 1);
 };
