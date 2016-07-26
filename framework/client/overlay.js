@@ -37,20 +37,26 @@ Overlay.prototype.onServerConnection = function (serverConnection) {
 };
 
 Overlay.prototype.changedOverlay = function (change) {
-    var peers = this.peers.keys();
-    var servers = [];
-    if (!this.legion.bullyProtocol.amBullied()) {
-        servers.push("SignallingServer");
-        servers.push("ObjectServer");
-    }
-
     if (this.onChangeCallback) {
-        this.onChangeCallback(change, peers, servers);
+        this.onChangeCallback(change, this.getPeerIDs(), this.getServerIDs());
     }
 };
 
 Overlay.prototype.setOnChange = function (callback) {
     this.onChangeCallback = callback;
+};
+
+Overlay.prototype.getPeerIDs = function () {
+    return this.peers.keys();
+};
+
+Overlay.prototype.getServerIDs = function () {
+    var servers = [];
+    if (!this.legion.bullyProtocol.amBullied()) {
+        servers.push("SignallingServer");
+        servers.push("ObjectServer");
+    }
+    return servers;
 };
 
 /**
